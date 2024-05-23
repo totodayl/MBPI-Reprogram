@@ -147,8 +147,10 @@ class Ui_LoginWindow(object):
             t_end = [time(int(match[0]), int(match[1])) for match in matches]
 
             # Converts String To List
-            temperature = list(temperature)
+            temperature = temperature.replace("[","").replace("]","")
+            temperature = temperature.split(",")
 
+            print(temperature)
 
             # Clear all the widget first
             self.production_table.deleteLater()
@@ -358,6 +360,20 @@ class Ui_LoginWindow(object):
                 self.temp_table.setRowCount(12)
                 self.temp_table.setColumnCount(2)
                 self.temp_table.verticalHeader().setVisible(False)
+
+                # Populate the First Column
+                for i in range(13):
+                    item = QtWidgets.QTableWidgetItem("Z" + str(i+1))
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    self.temp_table.setItem(i,0, item)
+
+
+                # Populate the 2nd Column
+                for i in range(len(temperature)):
+                    item = QtWidgets.QTableWidgetItem(str(temperature[i]))
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    self.temp_table.setItem(i, 1, item)
+
                 self.temp_table.show()
 
             except Exception as e:
