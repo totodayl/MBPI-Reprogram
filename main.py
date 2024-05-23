@@ -1,8 +1,12 @@
+import datetime
+import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
-
+import re
 from PyQt5.QtWidgets import *
+from datetime import time
+import datetime as dt
 
 
 
@@ -125,6 +129,25 @@ class Ui_LoginWindow(object):
             rpm, screen_size, screw_config, output_percent, loss = selected[15:20]
             loss_percent, purge_start, purge_end, purge_duration, remarks = selected[20:25]
             temperature = selected[25]
+            machine = selected[26]
+
+            # Convert stringo of json to JSON
+            materials = materials.replace("'", '"')
+            materials = json.loads(materials)
+
+            # Regular expression pattern to match time values
+            time_pattern = r'datetime\.time\((\d+), (\d+)\)'
+
+            # Extract time values using regular expression
+            matches = re.findall(time_pattern, t_start)
+
+            # Convert matched values to time objects and create a list
+            t_start = [time(int(match[0]), int(match[1])) for match in matches]
+            matches = re.findall(time_pattern, t_end)
+            t_end = [time(int(match[0]), int(match[1])) for match in matches]
+
+            # Converts String To List
+            temperature = list(temperature)
 
 
             # Clear all the widget first
@@ -133,135 +156,212 @@ class Ui_LoginWindow(object):
             self.add_btn.deleteLater()
             self.update_btn.deleteLater()
 
-            font = QtGui.QFont("Arial", 15)
+            self.info_widget = QtWidgets.QWidget(self.main_widget)
+            self.info_widget.setGeometry(20, 20, 951, 450)
+            self.info_widget.setStyleSheet("border-radius: 30px; background-color: rgb(0,109,189);")
+            self.info_widget.show()
 
-            self.ordered_company = QtWidgets.QLabel(self.main_widget)
+            font = QtGui.QFont("Arial", 14) # Set Font for Labels
+
+            self.ordered_company = QtWidgets.QLabel(self.info_widget)
             self.ordered_company.setGeometry(20,30,950,30)
             self.ordered_company.setFont(QtGui.QFont("Arial", 30))
+            self.ordered_company.setStyleSheet("background-color: rgb(0,109,184);")
             self.ordered_company.setText(company)
             self.ordered_company.setAlignment(Qt.AlignCenter)
             self.ordered_company.show()
 
+            self.machine_label = QtWidgets.QLabel(self.info_widget)
+            self.machine_label.setText("Extruder:")
+            self.machine_label.setFont(font)
+            self.machine_label.setGeometry(50, 80, 150, 30)
+            self.machine_label.setStyleSheet("background-color: red;")
+            self.machine_label.show()
+
             # Product Code Label
-            self.code_label = QtWidgets.QLabel(self.main_widget)
+            self.code_label = QtWidgets.QLabel(self.info_widget)
             self.code_label.setText("Product Code:")
             self.code_label.setFont(font)
-            self.code_label.setGeometry(50,100,150,30)
+            self.code_label.setGeometry(50,125,150,30)
             self.code_label.setStyleSheet("background-color: red;")
             self.code_label.show()
 
             # Quantity Order Label
-            self.order_label = QtWidgets.QLabel(self.main_widget)
+            self.order_label = QtWidgets.QLabel(self.info_widget)
             self.order_label.setText("Quantity Order:")
             self.order_label.setFont(font)
-            self.order_label.setGeometry(50, 150, 150, 30)
+            self.order_label.setGeometry(50, 170, 150, 30)
             self.order_label.setStyleSheet("background-color: red;")
             self.order_label.show()
 
-            self.output_label = QtWidgets.QLabel(self.main_widget)
+            self.output_label = QtWidgets.QLabel(self.info_widget)
             self.output_label.setText("Output:")
             self.output_label.setFont(font)
-            self.output_label.setGeometry(50, 200, 150, 30)
+            self.output_label.setGeometry(50, 215, 150, 30)
             self.output_label.setStyleSheet("background-color: red;")
             self.output_label.show()
 
-            self.formula_label = QtWidgets.QLabel(self.main_widget)
+            self.formula_label = QtWidgets.QLabel(self.info_widget)
             self.formula_label.setText("Formula ID:")
             self.formula_label.setFont(font)
-            self.formula_label.setGeometry(50, 250, 150, 30)
+            self.formula_label.setGeometry(50, 260, 150, 30)
             self.formula_label.setStyleSheet("background-color: red;")
             self.formula_label.show()
 
-            self.resin_label = QtWidgets.QLabel(self.main_widget)
+            self.resin_label = QtWidgets.QLabel(self.info_widget)
             self.resin_label.setText("Resin:")
             self.resin_label.setFont(font)
-            self.resin_label.setGeometry(50, 300, 150, 30)
+            self.resin_label.setGeometry(50, 305, 150, 30)
             self.resin_label.setStyleSheet("background-color: red;")
             self.resin_label.show()
 
-            self.lot_label = QtWidgets.QLabel(self.main_widget)
+            self.lot_label = QtWidgets.QLabel(self.info_widget)
             self.lot_label.setText("LOT Number:")
             self.lot_label.setFont(font)
-            self.lot_label.setGeometry(350, 100, 150, 30)
+            self.lot_label.setGeometry(350, 80, 150, 30)
             self.lot_label.setStyleSheet("background-color: red;")
             self.lot_label.show()
 
-            self.feedrate_label = QtWidgets.QLabel(self.main_widget)
+            self.feedrate_label = QtWidgets.QLabel(self.info_widget)
             self.feedrate_label.setText("Feed Rate:")
             self.feedrate_label.setFont(font)
-            self.feedrate_label.setGeometry(350, 150, 150, 30)
+            self.feedrate_label.setGeometry(350, 125, 150, 30)
             self.feedrate_label.setStyleSheet("background-color: red;")
             self.feedrate_label.show()
 
-            self.rpm_label = QtWidgets.QLabel(self.main_widget)
+            self.rpm_label = QtWidgets.QLabel(self.info_widget)
             self.rpm_label.setText("RPM:")
             self.rpm_label.setFont(font)
-            self.rpm_label.setGeometry(350, 200, 150, 30)
+            self.rpm_label.setGeometry(350, 170, 150, 30)
             self.rpm_label.setStyleSheet("background-color: red;")
             self.rpm_label.show()
 
-            self.screen_size_label = QtWidgets.QLabel(self.main_widget)
+            self.screen_size_label = QtWidgets.QLabel(self.info_widget)
             self.screen_size_label.setText("Screen Size:")
             self.screen_size_label.setFont(font)
-            self.screen_size_label.setGeometry(350, 250, 150, 30)
+            self.screen_size_label.setGeometry(350, 215, 150, 30)
             self.screen_size_label.setStyleSheet("background-color: red;")
             self.screen_size_label.show()
 
-            self.screwconfig_label = QtWidgets.QLabel(self.main_widget)
+            self.screwconfig_label = QtWidgets.QLabel(self.info_widget)
             self.screwconfig_label.setText("Screw Config:")
             self.screwconfig_label.setFont(font)
-            self.screwconfig_label.setGeometry(350, 300, 150, 30)
+            self.screwconfig_label.setGeometry(350, 260, 150, 30)
             self.screwconfig_label.setStyleSheet("background-color: red;")
             self.screwconfig_label.show()
 
-            self.code_label = QtWidgets.QLabel(self.main_widget)
-            self.code_label.setText("Product Code:")
-            self.code_label.setFont(font)
-            self.code_label.setGeometry(50, 100, 150, 30)
-            self.code_label.setStyleSheet("background-color: red;")
-            self.code_label.show()
-
-            self.output_percentage_lbl = QtWidgets.QLabel(self.main_widget)
+            self.output_percentage_lbl = QtWidgets.QLabel(self.info_widget)
             self.output_percentage_lbl.setText("Output %:")
             self.output_percentage_lbl.setFont(font)
-            self.output_percentage_lbl.setGeometry(50, 100, 150, 30)
+            self.output_percentage_lbl.setGeometry(650, 80, 150, 30)
             self.output_percentage_lbl.setStyleSheet("background-color: red;")
             self.output_percentage_lbl.show()
 
-            self.loss_label = QtWidgets.QLabel(self.main_widget)
+            self.loss_label = QtWidgets.QLabel(self.info_widget)
             self.loss_label.setText("Loss:")
-            self.loss_label.setFont(QtGui.QFont("Arial", 20))
-            self.loss_label.setGeometry(50, 100, 150, 30)
+            self.loss_label.setFont(QtGui.QFont(font))
+            self.loss_label.setGeometry(650, 125, 150, 30)
             self.loss_label.setStyleSheet("background-color: red;")
             self.loss_label.show()
 
-            self.loss_percent_label = QtWidgets.QLabel(self.main_widget)
+            self.loss_percent_label = QtWidgets.QLabel(self.info_widget)
             self.loss_percent_label.setText("Loss %:")
-            self.loss_percent_label.setFont(QtGui.QFont("Arial", 20))
-            self.loss_percent_label.setGeometry(50, 100, 150, 30)
+            self.loss_percent_label.setFont(font)
+            self.loss_percent_label.setGeometry(650, 170, 150, 30)
             self.loss_percent_label.setStyleSheet("background-color: red;")
             self.loss_percent_label.show()
 
-            self.purge_start_label = QtWidgets.QLabel(self.main_widget)
+            self.purge_start_label = QtWidgets.QLabel(self.info_widget)
             self.purge_start_label.setText("Purge Start:")
-            self.purge_start_label.setFont(QtGui.QFont("Arial", 20))
-            self.purge_start_label.setGeometry(50, 100, 150, 30)
+            self.purge_start_label.setFont(font)
+            self.purge_start_label.setGeometry(650, 215, 150, 30)
             self.purge_start_label.setStyleSheet("background-color: red;")
             self.purge_start_label.show()
 
-            self.purge_end_label = QtWidgets.QLabel(self.main_widget)
+            self.purge_end_label = QtWidgets.QLabel(self.info_widget)
             self.purge_end_label.setText("Purge End:")
-            self.purge_end_label.setFont(QtGui.QFont("Arial", 20))
-            self.purge_end_label.setGeometry(50, 100, 150, 30)
+            self.purge_end_label.setFont(font)
+            self.purge_end_label.setGeometry(650, 260, 150, 30)
             self.purge_end_label.setStyleSheet("background-color: red;")
             self.purge_end_label.show()
 
-            self.purge_duration_label = QtWidgets.QLabel(self.main_widget)
+            self.purge_duration_label = QtWidgets.QLabel(self.info_widget)
             self.purge_duration_label.setText("Purge Duration:")
-            self.purge_duration_label.setFont(QtGui.QFont("Arial", 20))
-            self.purge_duration_label.setGeometry(50, 100, 150, 30)
+            self.purge_duration_label.setFont(font)
+            self.purge_duration_label.setGeometry(650, 305, 150, 30)
             self.purge_duration_label.setStyleSheet("background-color: red;")
             self.purge_duration_label.show()
+
+            try:
+                # Create 3 tables for Time, Materials and Temperature
+                self.time_table = QtWidgets.QTableWidget(self.main_widget)
+                self.time_table.setGeometry(0, 490, 330, 280)
+                self.time_table.setColumnCount(3)
+                self.time_table.setRowCount(len(t_start) + 2)
+                self.time_rows = len(t_start)
+                self.time_cols = 3
+                self.time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Time Diff"])
+                total_timediff = datetime.timedelta()
+                for i in range(self.time_rows):
+                    for j in range(self.time_cols):
+                        if j == 0:
+                            item = QtWidgets.QTableWidgetItem(t_start[i].strftime('%H:%M:%S'))  # Convert to string
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                            self.time_table.setItem(i, j, item)
+                        elif j == 1:
+                            item = QtWidgets.QTableWidgetItem(t_end[i].strftime('%H:%M:%S'))  # Convert to string
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                            self.time_table.setItem(i, j, item)
+                        else:
+
+                            datetime1 = dt.datetime.combine(dt.datetime.today(), t_start[i])
+                            datetime2 = dt.datetime.combine(dt.datetime.today(), t_end[i])
+                            t_diff = datetime2 - datetime1
+                            # Convert timedelta to a string representation (e.g., "X days, HH:MM:SS")
+                            total_timediff = total_timediff + t_diff
+                            t_diff_str = str(t_diff)
+                            item = QtWidgets.QTableWidgetItem(t_diff_str)
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            self.time_table.setItem(i, j, item)
+
+                # Convert it to Hours and Minutes only
+                total_hours = total_timediff.days * 24 + total_timediff.seconds // 3600
+                total_minutes = (total_timediff.seconds % 3600) // 60
+
+                self.time_table.setItem(self.time_rows + 1, 1, QtWidgets.QTableWidgetItem("Total"))
+                self.time_table.setItem(self.time_rows + 1, 2, QtWidgets.QTableWidgetItem(str(total_hours)+":"+str(total_minutes)))
+                self.time_table.show()
+
+                # Material Table
+                self.material_table = QtWidgets.QTableWidget(self.main_widget)
+                self.material_table.setRowCount(len(materials))
+                self.material_table.setColumnCount(3)
+                self.material_table.setGeometry(330,490,330,280)
+                self.material_table.setStyleSheet("gridline-color: rgb(255, 0, 0);")
+                self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity(Kg)",""])
+                self.material_table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid red; }")
+                self.material_table.verticalHeader().setVisible(False)
+
+                for key in list(materials.keys()):
+                    key_item = QtWidgets.QTableWidgetItem(str(key))
+                    value_item = QtWidgets.QTableWidgetItem(str(materials[key]))
+                    key_item.setFlags(key_item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    value_item.setFlags(value_item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.material_table.setItem(list(materials.keys()).index(key), 0, key_item)
+                    self.material_table.setItem(list(materials.keys()).index(key), 1, value_item)
+
+                self.material_table.show()
+
+                # Temperature Table
+                self.temp_table = QtWidgets.QTableWidget(self.main_widget)
+                self.temp_table.setGeometry(660,490,330,280)
+                self.temp_table.setRowCount(12)
+                self.temp_table.setColumnCount(2)
+                self.temp_table.verticalHeader().setVisible(False)
+                self.temp_table.show()
+
+            except Exception as e:
+                print(e)
 
 
 
@@ -271,6 +371,7 @@ class Ui_LoginWindow(object):
 
         def update_entry():
             pass
+
 
         self.production_table = QtWidgets.QTableWidget(self.main_widget)
         self.production_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
@@ -322,6 +423,8 @@ class Ui_LoginWindow(object):
         self.production_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.production_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.production_table.show()
+
+
 
 
 
