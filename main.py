@@ -1,15 +1,11 @@
-import datetime
+import re
 import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
-import re
 from PyQt5.QtWidgets import *
 from datetime import time
 import datetime as dt
-
-
-
 
 
 
@@ -440,7 +436,7 @@ class Ui_LoginWindow(object):
                 self.time_rows = len(t_start)
                 self.time_cols = 3
                 self.time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Time Diff"])
-                total_timediff = datetime.timedelta()
+                total_timediff = dt.datetime.timedelta()
                 for i in range(self.time_rows):
                     for j in range(self.time_cols):
                         if j == 0:
@@ -522,17 +518,60 @@ class Ui_LoginWindow(object):
         def add_entry():
 
             self.entry_widget = QtWidgets.QWidget()
-            self.entry_widget.setGeometry(300, 100, 600, 600)
-            self.entry_widget.setStyleSheet("background-color : rgb(0,109,189);")
+            self.entry_widget.setGeometry(300, 100, 800, 700)
+            self.entry_widget.setStyleSheet("background-color : white;")
             self.entry_widget.show()
+
+            def generate():
+                self.cursor.execute(f"""SELECT formulation from formula
+                                                            WHERE formula_id = {self.formulaID.text().strip()}
+                                                                                 """)
+                formulation = self.cursor.fetchall()
+                if len(formulation) == 0:
+                    QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
+
+                else:
+
+                    try:
+                        formulation = formulation[0]
+                        formulation = formulation[0]
+                        print(formulation)
+                        total_concentration = sum(formulation.values())
+                        # Get the total Concentration
+
+                        for mats, concentration in formulation.items():
+                            # print(f"Order : {float(orderedQuantity.text())}")
+                            # print(concentration)
+                            # print(total_concentration)
+                            new_value = ((float(orderedQuantity.text()) * (concentration / 100)) / total_concentration) * 100
+                            formulation[mats] = new_value
+
+                        self.material_table.setColumnCount(2)
+                        self.material_table.setRowCount(len(formulation))
+
+                        for key in list(formulation.keys()):
+                            mats = QtWidgets.QTableWidgetItem(str(key))
+                            quantity = QtWidgets.QTableWidgetItem(str(round(formulation[key],4)))
+                            self.material_table.setItem(list(formulation.keys()).index(key), 0, mats)
+                            self.material_table.setItem(list(formulation.keys()).index(key), 1, quantity)
+
+                        self.material_table.show()
+                    except Exception as e:
+                        print(e)
+
+            def reset():
+                # Reset the table
+                self.material_table.clearContents()
+                self.material_table.setRowCount(0)
+
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
-            self.leftInput_side.setGeometry(0, 0, 300, 400)
+            self.leftInput_side.setGeometry(0, 0, 400, 400)
             self.leftInput_side.show()
 
             self.right_side = QtWidgets.QWidget(self.entry_widget)
-            self.right_side.setGeometry(300, 0, 300, 400)
+            self.right_side.setGeometry(400, 0, 400, 400)
             self.right_side.show()
 
             # Create Vertical Box Layout
@@ -542,7 +581,6 @@ class Ui_LoginWindow(object):
             self.right_vbox.setSpacing(20)
 
             font = QtGui.QFont("Berlin Sans FB", 14)
-
 
             customer_label = QtWidgets.QLabel()
             customer_label.setText("Customer")
@@ -610,14 +648,18 @@ class Ui_LoginWindow(object):
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
             orderedQuantity = QtWidgets.QLineEdit()
+            orderedQuantity.setText("100")
+            orderedQuantity.setAlignment(Qt.AlignCenter)
             orderedQuantity.setFixedHeight(25)
             productCode = QtWidgets.QLineEdit()
             productCode.setFixedHeight(25)
             product_output = QtWidgets.QLineEdit()
             product_output.setFixedHeight(25)
-            formulaID = QtWidgets.QLineEdit()
-            formulaID.setFixedHeight(25)
+            self.formulaID = QtWidgets.QLineEdit()
+            self.formulaID.setAlignment(Qt.AlignCenter)
+            self.formulaID.setFixedHeight(25)
             lot_number = QtWidgets.QLineEdit()
+            lot_number.setAlignment(Qt.AlignCenter)
             lot_number.setFixedHeight(25)
             feedRate = QtWidgets.QLineEdit()
             feedRate.setFixedHeight(25)
@@ -643,12 +685,10 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(customer_label,customer_input)
             self.left_vbox.addRow(productCode_label,productCode)
             self.left_vbox.addRow(productOutput_label, product_output)
-            self.left_vbox.addRow(formulaID_label,formulaID)
+            self.left_vbox.addRow(formulaID_label,self.formulaID)
             self.left_vbox.addRow(lotnumber_label, lot_number)
             self.left_vbox.addRow(orderedQuantity_label, orderedQuantity)
             self.left_vbox.addRow(loss_label, loss)
-
-
 
             # Add widgets to the right Form Box
             self.right_vbox.addRow(feedrate_label,feedRate)
@@ -661,17 +701,69 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(supervisor_label, supervisor)
 
 
+            # Time Table Entry
+            time_table = QtWidgets.QTableWidget(self.entry_widget)
+            time_table.setGeometry(0, 500,250,200)
+            time_table.setColumnCount(2)
+            time_table.setRowCount(8)
+            time_table.setStyleSheet("background-color: white;")
+            time_table.setHorizontalHeaderLabels(["Time Start", "Time End"])
+            time_table.show()
+
+            # Material Table
+            self.material_table = QtWidgets.QTableWidget(self.entry_widget)
+            self.material_table.setGeometry(260, 500, 250, 200)
+            self.material_table.setColumnCount(2)
+            self.material_table.setRowCount(4)
+            self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity (Kg)"])
+            self.material_table.show()
+
+
+            # Temperature Table Entry
+            temperature_table = QtWidgets.QTableWidget(self.entry_widget)
+            temperature_table.setGeometry(520, 500, 250, 200)
+            temperature_table.setColumnCount(2)
+            temperature_table.setRowCount(12)
+            temperature_table.setStyleSheet("background-color: white;")
+            temperature_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
+            temperature_table.show()
+
+            # Create Clickable Icons for Materials
+            self.generate_icon = ClickableLabel(self.entry_widget)
+            self.generate_icon.setGeometry(320, 470, 30, 30)
+            self.generate_icon.setPixmap(QtGui.QIcon('generate.png').pixmap(30, 30))
+            self.generate_icon.setCursor(Qt.PointingHandCursor)
+            self.generate_icon.setStyleSheet("border: 1px solid red")
+            self.generate_icon.clicked.connect(generate)
+            self.generate_icon.show()
+
+            self.plus_icon = ClickableLabel(self.entry_widget)
+            self.plus_icon.setGeometry(360, 470, 30, 30)
+            self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
+            self.plus_icon.setCursor(Qt.PointingHandCursor)
+            self.plus_icon.setStyleSheet("border: 1px solid red")
+            self.plus_icon.show()
+
+            self.reset_icon = ClickableLabel(self.entry_widget)
+            self.reset_icon.setGeometry(400, 470, 30, 30)
+            self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(30, 30))
+            self.reset_icon.setCursor(Qt.PointingHandCursor)
+            self.reset_icon.setStyleSheet("border: 1px solid red")
+            self.reset_icon.clicked.connect(reset)
+            self.reset_icon.show()
+
+            # Functions for Buttons in Materials Icon
 
 
 
-
-
-
-
+            def add():
+                pass
+            def reset():
+                pass
 
 
         def update_entry():
-            pass
+             pass
 
 
         self.production_table = QtWidgets.QTableWidget(self.main_widget)
