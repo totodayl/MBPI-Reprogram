@@ -557,6 +557,10 @@ class Ui_LoginWindow(object):
                             for key in list(formulation.keys()):
                                 mats = QtWidgets.QTableWidgetItem(str(key))
                                 quantity = QtWidgets.QTableWidgetItem(str(round(formulation[key], 4)))
+                                mats.setFlags(
+                                    item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                                quantity.setFlags(
+                                    item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                                 self.material_table.setItem(list(formulation.keys()).index(key), 0, mats)
                                 self.material_table.setItem(list(formulation.keys()).index(key), 1, quantity)
 
@@ -567,15 +571,19 @@ class Ui_LoginWindow(object):
                     QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
                     self.conn.rollback()
 
-            def add():
+            def add_FG():
                 def clicked():
                     product_item = QTableWidgetItem(str(product.text().strip()))
                     quantity_item = QTableWidgetItem(str(quantity.text().strip()))
-                    self.material_table.setRowCount(row+1)
+                    self.material_table.setRowCount(row + 1)
                     self.material_table.setItem(row, 0, product_item)
                     self.material_table.setItem(row, 1, quantity_item)
+                    orderedQuantity.setText(
+                        str(float(orderedQuantity.text()) + float(quantity.text())))  # update the Ordered Quantity
                     self.finished_goods.close()
                     self.material_table.show()
+
+
                 row = self.material_table.rowCount()
                 self.finished_goods = QtWidgets.QWidget()
                 self.finished_goods.setGeometry(400, 200, 250, 250)
@@ -607,9 +615,73 @@ class Ui_LoginWindow(object):
                 append.clicked.connect(clicked)
                 append.show()
 
+
+
                 self.finished_goods.show()
 
+            def get_entries():
+                # get the data from the tables
 
+                #Time Table
+                temp_row = time_table.rowCount()
+                time_start = []
+                time_end = []
+
+                for i in range(temp_row):
+                    time_start.append(time_table.item(i, 0)) # time start
+                    time_end.append(time_table.item(i, 1)) # time end
+
+                time_start = [i for i in time_start if i is not None]
+                time_start = [i.text() for i in time_start]
+
+                time_end = [i for i in time_end if i is not None]
+                time_end = [i.text() for i in time_end]
+
+                print(time_start)
+
+
+                # Getting the Data for temperature
+                temperature = []
+                for i in range(temperature_table.rowCount()):
+                    temperature.append(temperature_table.item(i,1))
+
+                temperature = [i for i in temperature if i is not None]
+                temperature = [i.text() for i in temperature]
+                print(temperature)
+
+                # Material Table
+                materials = {}
+                try:
+                    for i in range(self.material_table.rowCount()):
+                        key = self.material_table.item(i, 0).text()
+                        value = self.material_table.item(i, 1).text()
+
+                        materials[key] = value
+                    materials = json.dumps(materials)
+                    print(materials)
+                except Exception as e:
+                    print(e)
+                print(time_start)
+                time_start = ', '.join(["'{}'".format(time) for time in time_start])
+                time_end = ', '.join(["'{}'".format(time) for time in time_end])
+                # temperature = ', '.join(str(temp) for temp in temperature)
+                print(time_start)
+                # SQL command here to insert Items
+                try:
+                    print("test")
+                    self.cursor.execute(f"""
+                                    INSERT INTO extruder(customer, product_code, qty_order, product_output, formula_code,
+                                    time_start, time_end, materials,temperature) 
+                                    VALUES('{customer_input.text()}', '{productCode.text()}', '{orderedQuantity.text()}', '{product_output.text()}',
+                                    '{self.formulaID.text()}', ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], '{materials}', array[{temperature}]::INTEGER[])
+
+                                    """)
+                    print("query successful")
+                    self.conn.commit()
+                except psycopg2.Error as e:
+                    print("Insert Failed")
+                    print(e)
+                    self.conn.rollback()
 
 
 
@@ -701,18 +773,21 @@ class Ui_LoginWindow(object):
             # QLineEdit Boxes
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
+            customer_input.setText("Cocal-Cola")
             orderedQuantity = QtWidgets.QLineEdit()
             orderedQuantity.setText("100")
             orderedQuantity.setAlignment(Qt.AlignCenter)
             orderedQuantity.setFixedHeight(25)
             productCode = QtWidgets.QLineEdit()
             productCode.setFixedHeight(25)
+            productCode.setText("LLA")
             product_output = QtWidgets.QLineEdit()
             product_output.setFixedHeight(25)
 
             self.formulaID = QtWidgets.QLineEdit()
             self.formulaID.setAlignment(Qt.AlignCenter)
             self.formulaID.setFixedHeight(25)
+            self.formulaID.setText("15280")
 
             lot_number = QtWidgets.QLineEdit()
             lot_number.setAlignment(Qt.AlignCenter)
@@ -793,6 +868,13 @@ class Ui_LoginWindow(object):
             temperature_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
             temperature_table.show()
 
+            # populatate the 1st column of temperature table
+            for i in range(12):
+                item = QTableWidgetItem(str("Z" + str(i+1)))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                temperature_table.setItem(i, 0, item)
+
+
             # Create Clickable Icons for Materials
             self.generate_icon = ClickableLabel(self.entry_widget)
             self.generate_icon.setGeometry(320, 470, 30, 30)
@@ -807,7 +889,7 @@ class Ui_LoginWindow(object):
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.setStyleSheet("border: 1px solid red")
-            self.plus_icon.clicked.connect(add)
+            self.plus_icon.clicked.connect(add_FG)
             self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
@@ -818,7 +900,17 @@ class Ui_LoginWindow(object):
             self.reset_icon.clicked.connect(reset)
             self.reset_icon.show()
 
-            # Functions for Buttons in Materials Icon
+            save_btn = QtWidgets.QPushButton(self.entry_widget)
+            save_btn.setGeometry(100, 400, 60, 25)
+            save_btn.clicked.connect(get_entries)
+            save_btn.setText("Save")
+            save_btn.show()
+
+
+
+
+
+
 
 
 
