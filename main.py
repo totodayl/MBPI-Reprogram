@@ -15,6 +15,7 @@ class ClickableLabel(QtWidgets.QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
 
+
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
         LoginWindow.setObjectName("LoginWindow")
@@ -63,14 +64,14 @@ class Ui_LoginWindow(object):
         self.password.deleteLater()
         self.login_btn.deleteLater()
 
-        conn = psycopg2.connect(
+        self.conn = psycopg2.connect(
             host="localhost",
             port=5432,
             dbname='postgres',
             user='postgres',
             password='postgres'
         )
-        self.cursor = conn.cursor()
+        self.cursor = self.conn.cursor()
 
         self.launch_main()
 
@@ -523,41 +524,94 @@ class Ui_LoginWindow(object):
             self.entry_widget.show()
 
             def generate():
-                self.cursor.execute(f"""SELECT formulation from formula
-                                                            WHERE formula_id = {self.formulaID.text().strip()}
-                                                                                 """)
-                formulation = self.cursor.fetchall()
-                if len(formulation) == 0:
+
+                try:
+                    self.cursor.execute(f"""SELECT formulation from formula
+                                                                                WHERE formula_id = {self.formulaID.text().strip()}
+                                                                                                     """)
+                    formulation = self.cursor.fetchall()
+                    if len(formulation) == 0 or self.formulaID.text().strip() == None:
+                        QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
+                        self.conn.rollback()
+                    else:
+
+                        try:
+                            formulation = formulation[0]
+                            formulation = formulation[0]
+                            print(formulation)
+                            total_concentration = sum(formulation.values())
+                            # Get the total Concentration
+
+
+                            for mats, concentration in formulation.items():
+                                # print(f"Order : {float(orderedQuantity.text())}")
+                                # print(concentration)
+                                # print(total_concentration)
+                                new_value = ((float(orderedQuantity.text()) * (
+                                            concentration / 100)) / total_concentration) * 100
+                                formulation[mats] = new_value
+
+                            self.material_table.setColumnCount(2)
+                            self.material_table.setRowCount(len(formulation))
+
+                            for key in list(formulation.keys()):
+                                mats = QtWidgets.QTableWidgetItem(str(key))
+                                quantity = QtWidgets.QTableWidgetItem(str(round(formulation[key], 4)))
+                                self.material_table.setItem(list(formulation.keys()).index(key), 0, mats)
+                                self.material_table.setItem(list(formulation.keys()).index(key), 1, quantity)
+
+                            self.material_table.show()
+                        except Exception as e:
+                            print(e)
+                except:
                     QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
+                    self.conn.rollback()
 
-                else:
+            def add():
+                def clicked():
+                    product_item = QTableWidgetItem(str(product.text().strip()))
+                    quantity_item = QTableWidgetItem(str(quantity.text().strip()))
+                    self.material_table.setRowCount(row+1)
+                    self.material_table.setItem(row, 0, product_item)
+                    self.material_table.setItem(row, 1, quantity_item)
+                    self.finished_goods.close()
+                    self.material_table.show()
+                row = self.material_table.rowCount()
+                self.finished_goods = QtWidgets.QWidget()
+                self.finished_goods.setGeometry(400, 200, 250, 250)
 
-                    try:
-                        formulation = formulation[0]
-                        formulation = formulation[0]
-                        print(formulation)
-                        total_concentration = sum(formulation.values())
-                        # Get the total Concentration
+                product = QtWidgets.QLineEdit(self.finished_goods)
+                product.setGeometry(50, 75, 150, 30)
+                product.setFont(QtGui.QFont("Arial", 12))
+                product.show()
 
-                        for mats, concentration in formulation.items():
-                            # print(f"Order : {float(orderedQuantity.text())}")
-                            # print(concentration)
-                            # print(total_concentration)
-                            new_value = ((float(orderedQuantity.text()) * (concentration / 100)) / total_concentration) * 100
-                            formulation[mats] = new_value
+                product_lbl = QtWidgets.QLabel(self.finished_goods)
+                product_lbl.setGeometry(50, 65, 100, 10)
+                product_lbl.setText("Finished Goods")
+                product_lbl.setStyleSheet("font: 10pt;")
+                product_lbl.show()
 
-                        self.material_table.setColumnCount(2)
-                        self.material_table.setRowCount(len(formulation))
+                quantity = QtWidgets.QLineEdit(self.finished_goods)
+                quantity.setGeometry(50, 135, 150, 30)
+                quantity.show()
 
-                        for key in list(formulation.keys()):
-                            mats = QtWidgets.QTableWidgetItem(str(key))
-                            quantity = QtWidgets.QTableWidgetItem(str(round(formulation[key],4)))
-                            self.material_table.setItem(list(formulation.keys()).index(key), 0, mats)
-                            self.material_table.setItem(list(formulation.keys()).index(key), 1, quantity)
+                quantity_lbl = QtWidgets.QLabel(self.finished_goods)
+                quantity_lbl.setGeometry(50, 125, 100, 10)
+                quantity_lbl.setText("Quantity")
+                quantity_lbl.setStyleSheet("font: 10pt;")
+                quantity_lbl.show()
 
-                        self.material_table.show()
-                    except Exception as e:
-                        print(e)
+                append = QtWidgets.QPushButton(self.finished_goods)
+                append.setGeometry(85, 200, 60, 25)
+                append.setText("Add")
+                append.clicked.connect(clicked)
+                append.show()
+
+                self.finished_goods.show()
+
+
+
+
 
             def reset():
                 # Reset the table
@@ -655,29 +709,40 @@ class Ui_LoginWindow(object):
             productCode.setFixedHeight(25)
             product_output = QtWidgets.QLineEdit()
             product_output.setFixedHeight(25)
+
             self.formulaID = QtWidgets.QLineEdit()
             self.formulaID.setAlignment(Qt.AlignCenter)
             self.formulaID.setFixedHeight(25)
+
             lot_number = QtWidgets.QLineEdit()
             lot_number.setAlignment(Qt.AlignCenter)
             lot_number.setFixedHeight(25)
+
             feedRate = QtWidgets.QLineEdit()
             feedRate.setFixedHeight(25)
+
             rpm = QtWidgets.QLineEdit()
             rpm.setFixedHeight(25)
+
             screenSize = QtWidgets.QLineEdit()
             screenSize.setFixedHeight(25)
+
             screwConf = QtWidgets.QLineEdit()
             screwConf.setFixedHeight(25)
+
             loss = QtWidgets.QLineEdit()
             loss.setFixedHeight(25)
+
             purgeStart = QtWidgets.QLineEdit()
             purgeStart.setFixedHeight(25)
+
             purgeEnd = QtWidgets.QLineEdit()
             purgeEnd.setFixedHeight(25)
+
             remarks = QtWidgets.QTextEdit()
             operator = QtWidgets.QLineEdit()
             operator.setFixedHeight(25)
+
             supervisor = QtWidgets.QLineEdit()
             supervisor.setFixedHeight(25)
 
@@ -703,7 +768,7 @@ class Ui_LoginWindow(object):
 
             # Time Table Entry
             time_table = QtWidgets.QTableWidget(self.entry_widget)
-            time_table.setGeometry(0, 500,250,200)
+            time_table.setGeometry(0, 500, 250, 200)
             time_table.setColumnCount(2)
             time_table.setRowCount(8)
             time_table.setStyleSheet("background-color: white;")
@@ -742,6 +807,7 @@ class Ui_LoginWindow(object):
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.setStyleSheet("border: 1px solid red")
+            self.plus_icon.clicked.connect(add)
             self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
@@ -756,10 +822,9 @@ class Ui_LoginWindow(object):
 
 
 
-            def add():
-                pass
-            def reset():
-                pass
+
+
+
 
 
         def update_entry():
