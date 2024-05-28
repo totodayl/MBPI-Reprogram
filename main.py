@@ -9,12 +9,12 @@ import datetime as dt
 
 
 
+# For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
     clicked = pyqtSignal()
 
     def mousePressEvent(self, event):
         self.clicked.emit()
-
 
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
@@ -46,9 +46,6 @@ class Ui_LoginWindow(object):
         self.login_btn.setObjectName("Login")
         self.login_btn.clicked.connect(self.login)
         LoginWindow.setCentralWidget(self.login_window)
-
-
-
         self.retranslateUi(LoginWindow)
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
 
@@ -64,6 +61,7 @@ class Ui_LoginWindow(object):
         self.password.deleteLater()
         self.login_btn.deleteLater()
 
+        # Connect to the Database
         self.conn = psycopg2.connect(
             host="localhost",
             port=5432,
@@ -72,12 +70,10 @@ class Ui_LoginWindow(object):
             password='postgres'
         )
         self.cursor = self.conn.cursor()
-
         self.launch_main()
 
     # This is the main window after login screen
     def launch_main(self):
-
         LoginWindow.move(0,0)
         LoginWindow.setFixedSize(1200,750)
         self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
@@ -93,7 +89,11 @@ class Ui_LoginWindow(object):
         self.production_btn = QtWidgets.QPushButton(self.login_window)
         self.production_btn.setGeometry(30,200,180,40)
         self.production_btn.setCursor(Qt.PointingHandCursor)
-        self.production_btn.setStyleSheet("border-top-left-radius: 10px; border-bottom-left-radius: 10px; background-color: rgb(125,125,125);")
+        self.production_btn.setStyleSheet("""
+        border-top-left-radius: 10px; 
+        border-bottom-left-radius: 10px; 
+        background-color: rgb(125,125,125);
+        """)
         self.production_btn.clicked.connect(self.production)
         self.production_btn.show()
 
@@ -113,13 +113,13 @@ class Ui_LoginWindow(object):
         self.production_icon.show()
 
     def production(self):
-
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
             self.temp_table.deleteLater()
             self.time_table.deleteLater()
             self.material_table.deleteLater()
+
         except Exception as e:
             print(e)
 
@@ -136,7 +136,7 @@ class Ui_LoginWindow(object):
             temperature = selected[25]
             machine = selected[26]
 
-            # Convert stringo of json to JSON
+            # Convert string of json to JSON
             materials = materials.replace("'", '"')
             materials = json.loads(materials)
 
@@ -155,19 +155,19 @@ class Ui_LoginWindow(object):
             temperature = temperature.replace("[","").replace("]","")
             temperature = temperature.split(",")
 
-
-
             # Clear all the widget first
             self.production_table.deleteLater()
             self.view_btn.deleteLater()
             self.add_btn.deleteLater()
             self.update_btn.deleteLater()
 
+            # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
             self.info_widget.setGeometry(20, 20, 951, 450)
             self.info_widget.setStyleSheet("border-radius: 30px; background-color: rgb(0,109,189);")
             self.info_widget.show()
 
+            # Set Font Style and Size
             font = QtGui.QFont("Arial", 14) # Set Font for Labels
 
             self.ordered_company = QtWidgets.QLabel(self.info_widget)
@@ -223,6 +223,7 @@ class Ui_LoginWindow(object):
             self.order_val.setFont(font)
             self.order_val.show()
 
+            # Show Output Label
             self.output_label = QtWidgets.QLabel(self.info_widget)
             self.output_label.setText("Output:")
             self.output_label.setFont(font)
@@ -237,6 +238,7 @@ class Ui_LoginWindow(object):
             self.output_val.setFont(font)
             self.output_val.show()
 
+            # Show formula Label
             self.formula_label = QtWidgets.QLabel(self.info_widget)
             self.formula_label.setText("Formula ID:")
             self.formula_label.setFont(font)
@@ -428,8 +430,8 @@ class Ui_LoginWindow(object):
             self.purgeDuration_val.setFont(font)
             self.purgeDuration_val.show()
 
+            # Create 3 tables for Time, Materials and Temperature
             try:
-                # Create 3 tables for Time, Materials and Temperature
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
                 self.time_table.setGeometry(0, 490, 330, 250)
                 self.time_table.setColumnCount(3)
@@ -464,6 +466,7 @@ class Ui_LoginWindow(object):
                 total_hours = total_timediff.days * 24 + total_timediff.seconds // 3600
                 total_minutes = (total_timediff.seconds % 3600) // 60
 
+                # Populate the Time Table
                 self.time_table.setItem(self.time_rows + 1, 1, QtWidgets.QTableWidgetItem("Total"))
                 self.time_table.setItem(self.time_rows + 1, 2, QtWidgets.QTableWidgetItem(str(total_hours)+":"+str(total_minutes)))
                 self.time_table.show()
@@ -478,6 +481,7 @@ class Ui_LoginWindow(object):
                 self.material_table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid red; }")
                 self.material_table.verticalHeader().setVisible(False)
 
+                # Populate the Materials Table
                 for key in list(materials.keys()):
                     key_item = QtWidgets.QTableWidgetItem(str(key))
                     value_item = QtWidgets.QTableWidgetItem(str(materials[key]))
@@ -504,7 +508,6 @@ class Ui_LoginWindow(object):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     self.temp_table.setItem(i,0, item)
 
-
                 # Populate the 2nd Column
                 for i in range(len(temperature)):
                     item = QtWidgets.QTableWidgetItem(str(temperature[i]))
@@ -512,7 +515,6 @@ class Ui_LoginWindow(object):
                     self.temp_table.setItem(i, 1, item)
 
                 self.temp_table.show()
-
             except Exception as e:
                 print(e)
 
@@ -526,9 +528,12 @@ class Ui_LoginWindow(object):
             def generate():
 
                 try:
-                    self.cursor.execute(f"""SELECT formulation from formula
-                                                                                WHERE formula_id = {self.formulaID.text().strip()}
-                                                                                                     """)
+                    self.cursor.execute(f"""SELECT formulation 
+                                            FROM formula
+                                            WHERE formula_id = {self.formulaID.text().strip()}
+                                        
+                                        """)
+
                     formulation = self.cursor.fetchall()
                     if len(formulation) == 0 or self.formulaID.text().strip() == None:
                         QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
@@ -536,6 +541,7 @@ class Ui_LoginWindow(object):
                     else:
 
                         try:
+                            self.formulaID.setReadOnly(True)
                             formulation = formulation[0]
                             formulation = formulation[0]
                             print(formulation)
@@ -615,8 +621,6 @@ class Ui_LoginWindow(object):
                 append.clicked.connect(clicked)
                 append.show()
 
-
-
                 self.finished_goods.show()
 
             def get_entries():
@@ -627,17 +631,16 @@ class Ui_LoginWindow(object):
                 time_start = []
                 time_end = []
 
+                # Getting the data from the Time Table
                 for i in range(temp_row):
                     time_start.append(time_table.item(i, 0)) # time start
                     time_end.append(time_table.item(i, 1)) # time end
 
+                # Removing Null Values
                 time_start = [i for i in time_start if i is not None]
                 time_start = [i.text() for i in time_start]
-
                 time_end = [i for i in time_end if i is not None]
                 time_end = [i.text() for i in time_end]
-
-                print(time_start)
 
 
                 # Getting the Data for temperature
@@ -653,18 +656,24 @@ class Ui_LoginWindow(object):
                 materials = {}
                 try:
                     for i in range(self.material_table.rowCount()):
-                        key = self.material_table.item(i, 0).text()
-                        value = self.material_table.item(i, 1).text()
-
-                        materials[key] = value
+                        if self.material_table.item(i,0) == None or self.material_table.item(i,0) == '':
+                            pass
+                        else:
+                            key = self.material_table.item(i, 0).text()
+                            if self.material_table.item(i, 1) == None:
+                                materials[key] = ''
+                            else:
+                                value = self.material_table.item(i, 1).text()
+                                materials[key] = value
+                    materials.pop('')
                     materials = json.dumps(materials)
                     print(materials)
                 except Exception as e:
                     print(e)
+
                 print(time_start)
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
-                # temperature = ', '.join(str(temp) for temp in temperature)
                 print(time_start)
                 # SQL command here to insert Items
                 try:
@@ -684,11 +693,12 @@ class Ui_LoginWindow(object):
                     self.conn.rollback()
 
 
-
             def reset():
                 # Reset the table
                 self.material_table.clearContents()
-                self.material_table.setRowCount(0)
+                self.material_table.setRowCount(5)
+                # Set Formula ID line edit to editable
+                self.formulaID.setReadOnly(False)
 
 
             # Create two new widget for the VBOX Layout
@@ -850,23 +860,22 @@ class Ui_LoginWindow(object):
             time_table.setHorizontalHeaderLabels(["Time Start", "Time End"])
             time_table.show()
 
-            # Material Table
-            self.material_table = QtWidgets.QTableWidget(self.entry_widget)
-            self.material_table.setGeometry(260, 500, 250, 200)
-            self.material_table.setColumnCount(2)
-            self.material_table.setRowCount(4)
-            self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity (Kg)"])
-            self.material_table.show()
-
-
             # Temperature Table Entry
             temperature_table = QtWidgets.QTableWidget(self.entry_widget)
-            temperature_table.setGeometry(520, 500, 250, 200)
+            temperature_table.setGeometry(260, 500, 250, 200)
             temperature_table.setColumnCount(2)
             temperature_table.setRowCount(12)
             temperature_table.setStyleSheet("background-color: white;")
             temperature_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
             temperature_table.show()
+
+            # Material Table
+            self.material_table = QtWidgets.QTableWidget(self.entry_widget)
+            self.material_table.setGeometry(520, 500, 250, 200)
+            self.material_table.setColumnCount(2)
+            self.material_table.setRowCount(4)
+            self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity (Kg)"])
+            self.material_table.show()
 
             # populatate the 1st column of temperature table
             for i in range(12):
@@ -877,7 +886,7 @@ class Ui_LoginWindow(object):
 
             # Create Clickable Icons for Materials
             self.generate_icon = ClickableLabel(self.entry_widget)
-            self.generate_icon.setGeometry(320, 470, 30, 30)
+            self.generate_icon.setGeometry(770, 500, 30, 30)
             self.generate_icon.setPixmap(QtGui.QIcon('generate.png').pixmap(30, 30))
             self.generate_icon.setCursor(Qt.PointingHandCursor)
             self.generate_icon.setStyleSheet("border: 1px solid red")
@@ -885,7 +894,7 @@ class Ui_LoginWindow(object):
             self.generate_icon.show()
 
             self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(360, 470, 30, 30)
+            self.plus_icon.setGeometry(770, 540, 30, 30)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.setStyleSheet("border: 1px solid red")
@@ -893,7 +902,7 @@ class Ui_LoginWindow(object):
             self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
-            self.reset_icon.setGeometry(400, 470, 30, 30)
+            self.reset_icon.setGeometry(770, 580, 30, 30)
             self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(30, 30))
             self.reset_icon.setCursor(Qt.PointingHandCursor)
             self.reset_icon.setStyleSheet("border: 1px solid red")
@@ -907,37 +916,38 @@ class Ui_LoginWindow(object):
             save_btn.show()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
         def update_entry():
              pass
 
-
         self.production_table = QtWidgets.QTableWidget(self.main_widget)
         self.production_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
+        self.production_table.verticalHeader().setVisible(False)
 
         try:
-            self.cursor.execute("SELECT * FROM extruder;")
+            self.cursor.execute("""
+            SELECT production_id, customer, product_code, qty_order, product_output, loss, 
+            formula_code, lot_number, remarks 
+            FROM extruder; 
+            
+            
+            """)
             result = self.cursor.fetchall()
         except Exception as e:
             print(e)
 
-        self.cursor.execute(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = 'extruder';")
-        column_names = self.cursor.fetchall()
+        column_names = ["production_id", "customer", "product_code", "qty_order", "product_output",
+                        "loss", "formula_code", "lot_number", "remarks"]
 
+        # Set Column Count
         self.production_table.setColumnCount(len(column_names))
+        # Set Row Count
         self.production_table.setRowCount(len(result))
+
+        self.production_table.setStyleSheet("""
+        gridline-color: rgb(0, 0, 127); 
+        color : rgb(0, 121, 0);
+        
+        """)
 
         # Populate table with data
         for i in range(len(result)):
@@ -946,7 +956,7 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 self.production_table.setItem(i, j, item)
 
-        self.production_table.setHorizontalHeaderLabels([col[0].upper() for col in column_names])  # Set column names
+        self.production_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
