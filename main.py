@@ -1,11 +1,13 @@
+import datetime
 import re
 import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
-from datetime import time
+from datetime import time, timedelta
 import datetime as dt
+
 
 
 
@@ -70,6 +72,7 @@ class Ui_LoginWindow(object):
             password='postgres'
         )
         self.cursor = self.conn.cursor()
+
         self.launch_main()
 
     # This is the main window after login screen
@@ -124,8 +127,34 @@ class Ui_LoginWindow(object):
             print(e)
 
         def show_form():
-            selected = self.production_table.selectedItems()
+            # selected = self.production_table.selectedItems()
+            # selected = [i.text() for i in selected]
+            print("test")
+            try:
+                view_btn.sender()
+                index = self.production_table.indexAt(view_btn.pos())
+                if index.isValid():
+                    row = index.row()
+            except Exception as e:
+                print(e)
+
+            try:
+                selected = []
+                for i in range(self.production_table.columnCount() - 1):
+                    item = self.production_table.item(row, i)
+                    selected.append(item)
+            except Exception as e:
+                print(e)
+
             selected = [i.text() for i in selected]
+            print(selected)
+
+            # Query the whole columns
+            self.cursor.execute(f"SELECT * FROM extruder WHERE production_id = {selected[0]}")
+            selected = self.cursor.fetchall()
+            selected = list(selected[0])
+            print(selected)
+
 
             # Unpack all the items for convenience
             company, product_code, quantity_ordered, product_output = selected[1:5]
@@ -137,23 +166,25 @@ class Ui_LoginWindow(object):
             machine = selected[26]
 
             # Convert string of json to JSON
-            materials = materials.replace("'", '"')
-            materials = json.loads(materials)
+
+            # materials = str(materials).replace("'", '"')
+            # materials = json.loads(materials)
 
             # Regular expression pattern to match time values
             time_pattern = r'datetime\.time\((\d+), (\d+)\)'
 
             # Extract time values using regular expression
-            matches = re.findall(time_pattern, t_start)
-
-            # Convert matched values to time objects and create a list
-            t_start = [time(int(match[0]), int(match[1])) for match in matches]
-            matches = re.findall(time_pattern, t_end)
-            t_end = [time(int(match[0]), int(match[1])) for match in matches]
-
-            # Converts String To List
-            temperature = temperature.replace("[","").replace("]","")
-            temperature = temperature.split(",")
+            # matches = re.findall(time_pattern, t_start)
+            # print(matches)
+            # # Convert matched values to time objects and create a list
+            # t_start = [time(int(match[0]), int(match[1])) for match in matches]
+            # matches = re.findall(time_pattern, t_end)
+            # t_end = [time(int(match[0]), int(match[1])) for match in matches]
+            # print("line 173")
+            #
+            # # Converts String To List
+            # temperature = temperature.replace("[","").replace("]","")
+            # temperature = temperature.split(",")
 
             # Clear all the widget first
             self.production_table.deleteLater()
@@ -173,7 +204,6 @@ class Ui_LoginWindow(object):
             self.ordered_company = QtWidgets.QLabel(self.info_widget)
             self.ordered_company.setGeometry(20,30,950,30)
             self.ordered_company.setFont(QtGui.QFont("Arial", 30))
-            self.ordered_company.setStyleSheet("background-color: rgb(0,109,184);")
             self.ordered_company.setText(company)
             self.ordered_company.setAlignment(Qt.AlignCenter)
             self.ordered_company.show()
@@ -183,7 +213,6 @@ class Ui_LoginWindow(object):
             self.machine_label.setText("Extruder:")
             self.machine_label.setFont(font)
             self.machine_label.setGeometry(50, 80, 80, 30)
-            self.machine_label.setStyleSheet("background-color: red;")
             self.machine_label.show()
 
             # Show Extruder Value
@@ -198,7 +227,6 @@ class Ui_LoginWindow(object):
             self.code_label.setText("Product Code:")
             self.code_label.setFont(font)
             self.code_label.setGeometry(50,125,130,30)
-            self.code_label.setStyleSheet("background-color: red;")
             self.code_label.show()
 
             # Show Product Code Value
@@ -213,28 +241,26 @@ class Ui_LoginWindow(object):
             self.order_label.setText("Quantity Order:")
             self.order_label.setFont(font)
             self.order_label.setGeometry(50, 170, 130, 30)
-            self.order_label.setStyleSheet("background-color: red;")
             self.order_label.show()
 
             # Show Order Value
             self.order_val = QtWidgets.QLabel(self.info_widget)
             self.order_val.setGeometry(200, 170, 150, 30)
-            self.order_val.setText(quantity_ordered)
+            self.order_val.setText(str(quantity_ordered))
             self.order_val.setFont(font)
             self.order_val.show()
-
+            print("192")
             # Show Output Label
             self.output_label = QtWidgets.QLabel(self.info_widget)
             self.output_label.setText("Output:")
             self.output_label.setFont(font)
             self.output_label.setGeometry(50, 215, 60, 30)
-            self.output_label.setStyleSheet("background-color: red;")
             self.output_label.show()
 
             # Show Output Value
             self.output_val = QtWidgets.QLabel(self.info_widget)
             self.output_val.setGeometry(200, 215, 150, 30)
-            self.output_val.setText(product_output)
+            self.output_val.setText(str(product_output))
             self.output_val.setFont(font)
             self.output_val.show()
 
@@ -243,13 +269,12 @@ class Ui_LoginWindow(object):
             self.formula_label.setText("Formula ID:")
             self.formula_label.setFont(font)
             self.formula_label.setGeometry(50, 260, 100, 30)
-            self.formula_label.setStyleSheet("background-color: red;")
             self.formula_label.show()
 
             # Show Formula ID Value
             self.formulaID_val = QtWidgets.QLabel(self.info_widget)
             self.formulaID_val.setGeometry(200, 260, 150, 30)
-            self.formulaID_val.setText(formula)
+            self.formulaID_val.setText(str(formula))
             self.formulaID_val.setFont(font)
             self.formulaID_val.show()
 
@@ -257,13 +282,12 @@ class Ui_LoginWindow(object):
             self.resin_label.setText("Resin:")
             self.resin_label.setFont(font)
             self.resin_label.setGeometry(50, 305, 60, 30)
-            self.resin_label.setStyleSheet("background-color: red;")
             self.resin_label.show()
 
             # Show Resin Value
             self.resin_val = QtWidgets.QLabel(self.info_widget)
             self.resin_val.setGeometry(200, 305, 100, 30)
-            self.resin_val.setText(resin)
+            self.resin_val.setText(str(resin))
             self.resin_val.setFont(font)
             self.resin_val.show()
 
@@ -272,7 +296,6 @@ class Ui_LoginWindow(object):
             self.lot_label.setText("LOT Number:")
             self.lot_label.setFont(font)
             self.lot_label.setGeometry(350, 80, 120, 30)
-            self.lot_label.setStyleSheet("background-color: red;")
             self.lot_label.show()
 
             # Show Lot Number Value
@@ -286,7 +309,6 @@ class Ui_LoginWindow(object):
             self.feedrate_label.setText("Feed Rate:")
             self.feedrate_label.setFont(font)
             self.feedrate_label.setGeometry(350, 125, 120, 30)
-            self.feedrate_label.setStyleSheet("background-color: red;")
             self.feedrate_label.show()
 
             # Show Feed Rate Value
@@ -301,7 +323,6 @@ class Ui_LoginWindow(object):
             self.rpm_label.setText("RPM:")
             self.rpm_label.setFont(font)
             self.rpm_label.setGeometry(350, 170, 120, 30)
-            self.rpm_label.setStyleSheet("background-color: red;")
             self.rpm_label.show()
 
             # Show RPM Value
@@ -316,7 +337,6 @@ class Ui_LoginWindow(object):
             self.screen_size_label.setText("Screen Size:")
             self.screen_size_label.setFont(font)
             self.screen_size_label.setGeometry(350, 215, 120, 30)
-            self.screen_size_label.setStyleSheet("background-color: red;")
             self.screen_size_label.show()
 
             # Show Screen Size Value
@@ -330,7 +350,6 @@ class Ui_LoginWindow(object):
             self.screwconfig_label.setText("Screw Config:")
             self.screwconfig_label.setFont(font)
             self.screwconfig_label.setGeometry(350, 260, 130, 30)
-            self.screwconfig_label.setStyleSheet("background-color: red;")
             self.screwconfig_label.show()
 
             # Show Screw Config Value
@@ -345,7 +364,6 @@ class Ui_LoginWindow(object):
             self.output_percentage_lbl.setText("Output %:")
             self.output_percentage_lbl.setFont(font)
             self.output_percentage_lbl.setGeometry(650, 80, 140, 30)
-            self.output_percentage_lbl.setStyleSheet("background-color: red;")
             self.output_percentage_lbl.show()
 
             # Show Output Percentage Value
@@ -360,7 +378,6 @@ class Ui_LoginWindow(object):
             self.loss_label.setText("Loss:")
             self.loss_label.setFont(QtGui.QFont(font))
             self.loss_label.setGeometry(650, 125, 140, 30)
-            self.loss_label.setStyleSheet("background-color: red;")
             self.loss_label.show()
 
             # Show Loss Value
@@ -375,7 +392,6 @@ class Ui_LoginWindow(object):
             self.loss_percent_label.setText("Loss %:")
             self.loss_percent_label.setFont(font)
             self.loss_percent_label.setGeometry(650, 170, 140, 30)
-            self.loss_percent_label.setStyleSheet("background-color: red;")
             self.loss_percent_label.show()
 
             # Show Loss Percentage Value
@@ -390,7 +406,6 @@ class Ui_LoginWindow(object):
             self.purge_start_label.setText("Purge Start:")
             self.purge_start_label.setFont(font)
             self.purge_start_label.setGeometry(650, 215, 140, 30)
-            self.purge_start_label.setStyleSheet("background-color: red;")
             self.purge_start_label.show()
 
             # Show Purge Start Value
@@ -405,7 +420,6 @@ class Ui_LoginWindow(object):
             self.purge_end_label.setText("Purge End:")
             self.purge_end_label.setFont(font)
             self.purge_end_label.setGeometry(650, 260, 140, 30)
-            self.purge_end_label.setStyleSheet("background-color: red;")
             self.purge_end_label.show()
 
             # Show Purge End Value
@@ -420,7 +434,6 @@ class Ui_LoginWindow(object):
             self.purge_duration_label.setText("Purge Duration:")
             self.purge_duration_label.setFont(font)
             self.purge_duration_label.setGeometry(650, 305, 140, 30)
-            self.purge_duration_label.setStyleSheet("background-color: red;")
             self.purge_duration_label.show()
 
             # Show Resin Value
@@ -429,6 +442,7 @@ class Ui_LoginWindow(object):
             self.purgeDuration_val.setText(resin)
             self.purgeDuration_val.setFont(font)
             self.purgeDuration_val.show()
+
 
             # Create 3 tables for Time, Materials and Temperature
             try:
@@ -439,7 +453,8 @@ class Ui_LoginWindow(object):
                 self.time_rows = len(t_start)
                 self.time_cols = 3
                 self.time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Time Diff"])
-                total_timediff = dt.datetime.timedelta()
+                total_timediff = timedelta()
+
                 for i in range(self.time_rows):
                     for j in range(self.time_cols):
                         if j == 0:
@@ -523,15 +538,14 @@ class Ui_LoginWindow(object):
             self.entry_widget = QtWidgets.QWidget()
             self.entry_widget.setGeometry(300, 100, 800, 700)
             self.entry_widget.setStyleSheet("background-color : white;")
+            self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
 
             def generate():
-
                 try:
                     self.cursor.execute(f"""SELECT formulation 
                                             FROM formula
-                                            WHERE formula_id = {self.formulaID.text().strip()}
-                                        
+                                            WHERE formula_id = {self.formulaID.text().strip()}                                       
                                         """)
 
                     formulation = self.cursor.fetchall()
@@ -545,17 +559,13 @@ class Ui_LoginWindow(object):
                             formulation = formulation[0]
                             formulation = formulation[0]
                             print(formulation)
-                            total_concentration = sum(formulation.values())
-                            # Get the total Concentration
+                            total_concentration = sum(formulation.values()) # Get the total Concentration
 
-
+                            print(orderedQuantity.text())
                             for mats, concentration in formulation.items():
-                                # print(f"Order : {float(orderedQuantity.text())}")
-                                # print(concentration)
-                                # print(total_concentration)
-                                new_value = ((float(orderedQuantity.text()) * (
-                                            concentration / 100)) / total_concentration) * 100
+                                new_value = ((float(orderedQuantity.text()) * (concentration / 100)) / total_concentration) * 100
                                 formulation[mats] = new_value
+                                print(mats, new_value)
 
                             self.material_table.setColumnCount(2)
                             self.material_table.setRowCount(len(formulation))
@@ -577,51 +587,9 @@ class Ui_LoginWindow(object):
                     QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
                     self.conn.rollback()
 
-            def add_FG():
-                def clicked():
-                    product_item = QTableWidgetItem(str(product.text().strip()))
-                    quantity_item = QTableWidgetItem(str(quantity.text().strip()))
-                    self.material_table.setRowCount(row + 1)
-                    self.material_table.setItem(row, 0, product_item)
-                    self.material_table.setItem(row, 1, quantity_item)
-                    orderedQuantity.setText(
-                        str(float(orderedQuantity.text()) + float(quantity.text())))  # update the Ordered Quantity
-                    self.finished_goods.close()
-                    self.material_table.show()
-
-
-                row = self.material_table.rowCount()
-                self.finished_goods = QtWidgets.QWidget()
-                self.finished_goods.setGeometry(400, 200, 250, 250)
-
-                product = QtWidgets.QLineEdit(self.finished_goods)
-                product.setGeometry(50, 75, 150, 30)
-                product.setFont(QtGui.QFont("Arial", 12))
-                product.show()
-
-                product_lbl = QtWidgets.QLabel(self.finished_goods)
-                product_lbl.setGeometry(50, 65, 100, 10)
-                product_lbl.setText("Finished Goods")
-                product_lbl.setStyleSheet("font: 10pt;")
-                product_lbl.show()
-
-                quantity = QtWidgets.QLineEdit(self.finished_goods)
-                quantity.setGeometry(50, 135, 150, 30)
-                quantity.show()
-
-                quantity_lbl = QtWidgets.QLabel(self.finished_goods)
-                quantity_lbl.setGeometry(50, 125, 100, 10)
-                quantity_lbl.setText("Quantity")
-                quantity_lbl.setStyleSheet("font: 10pt;")
-                quantity_lbl.show()
-
-                append = QtWidgets.QPushButton(self.finished_goods)
-                append.setGeometry(85, 200, 60, 25)
-                append.setText("Add")
-                append.clicked.connect(clicked)
-                append.show()
-
-                self.finished_goods.show()
+            def add_material_row():
+                self.material_table.setRowCount(self.material_table.rowCount()+1)
+                self.material_table.show()
 
             def get_entries():
                 # get the data from the tables
@@ -898,7 +866,7 @@ class Ui_LoginWindow(object):
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.setStyleSheet("border: 1px solid red")
-            self.plus_icon.clicked.connect(add_FG)
+            self.plus_icon.clicked.connect(add_material_row)
             self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
@@ -936,7 +904,7 @@ class Ui_LoginWindow(object):
             print(e)
 
         column_names = ["production_id", "customer", "product_code", "qty_order", "product_output",
-                        "loss", "formula_code", "lot_number", "remarks"]
+                        "loss", "formula_code", "lot_number", "remarks", "actions"]
 
         # Set Column Count
         self.production_table.setColumnCount(len(column_names))
@@ -949,14 +917,45 @@ class Ui_LoginWindow(object):
         
         """)
 
+
+        view_icon = QtGui.QIcon("view.png")
+        view_btn = QtWidgets.QPushButton("", self.production_table)
+        view_btn.setFixedSize(15, 15)
+        view_btn.clicked.connect(show_form)
+        view_btn.setCursor(Qt.PointingHandCursor)
+        view_btn.setIcon(view_icon)
         # Populate table with data
         for i in range(len(result)):
             for j in range(len(column_names)):
-                item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
-                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                self.production_table.setItem(i, j, item)
+                if j == 9:
+                    try:
+
+                        self.production_table.setCellWidget(0, 9, view_btn)
+                    except Exception as e:
+                        print(e)
+                else:
+                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.production_table.setItem(i, j, item)
+
+        bold_font = QtGui.QFont()
+        bold_font.setBold(True)
+        self.production_table.horizontalHeader().setFont(bold_font)
+        self.production_table.horizontalHeader().setStyleSheet("""
+        QHeaderView::section{
+        font-weight: bold;
+        background-color: black;
+        color: white;
+        }
+        
+        """)
 
         self.production_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
+
+        # Set selection mode to select entire rows and disable single item selection
+        self.production_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.production_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.production_table.show()
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
@@ -978,15 +977,6 @@ class Ui_LoginWindow(object):
         self.update_btn.setStyleSheet("background-color : red;")
         self.update_btn.clicked.connect(update_entry)
         self.update_btn.show()
-
-        # Set selection mode to select entire rows and disable single item selection
-        self.production_table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.production_table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.production_table.show()
-
-
-
-
 
 
 
