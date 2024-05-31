@@ -520,55 +520,6 @@ class Ui_LoginWindow(object):
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
 
-            def generate():
-                try:
-                    self.cursor.execute(f"""SELECT formulation 
-                                            FROM formula
-                                            WHERE formula_id = {self.formulaID_input.text().strip()}                                       
-                                        """)
-
-                    formulation = self.cursor.fetchall()
-                    if len(formulation) == 0 or self.formulaID_input.text().strip() == None:
-                        QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
-                        self.conn.rollback()
-                    else:
-
-                        try:
-                            self.formulaID_input.setReadOnly(True)
-                            formulation = formulation[0]
-                            formulation = formulation[0]
-                            print(formulation)
-                            total_concentration = sum(formulation.values()) # Get the total Concentration
-
-                            print(orderedQuantity_input.text())
-                            for mats, concentration in formulation.items():
-                                new_value = ((float(orderedQuantity_input.text()) * (concentration / 100)) / total_concentration) * 100
-                                formulation[mats] = new_value
-                                print(mats, new_value)
-
-                            self.material_table.setColumnCount(2)
-                            self.material_table.setRowCount(len(formulation))
-
-                            for key in list(formulation.keys()):
-                                mats = QtWidgets.QTableWidgetItem(str(key))
-                                quantity = QtWidgets.QTableWidgetItem(str(round(formulation[key], 4)))
-                                mats.setFlags(
-                                    item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                                quantity.setFlags(
-                                    item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                                self.material_table.setItem(list(formulation.keys()).index(key), 0, mats)
-                                self.material_table.setItem(list(formulation.keys()).index(key), 1, quantity)
-
-                            self.material_table.show()
-                        except Exception as e:
-                            print(e)
-                except:
-                    QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
-                    self.conn.rollback()
-
-            def add_material_row():
-                self.material_table.setRowCount(self.material_table.rowCount()+1)
-                self.material_table.show()
 
 
             def get_entries():
@@ -626,10 +577,15 @@ class Ui_LoginWindow(object):
                 try:
                     print("test")
                     self.cursor.execute(f"""
-                                    INSERT INTO extruder(customer, product_code, qty_order, product_output, formula_code,
-                                    time_start, time_end, materials,temperature) 
-                                    VALUES('{customer_input.text()}', '{productCode_input.text()}', '{orderedQuantity_input.text()}','{product_output_input.text()}',
-                                    '{self.formulaID_input.text()}', ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], '{materials}', array[{temperature}]::INTEGER[])
+                    INSERT INTO extruder( machine, qty_order, total_output, customer,
+                    formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
+                    loss, loss_percent, purging, resin, purge_duration, remarks, screw_config, feed_rate,
+                    rpm, screen_size, operator, supervisor, materials) 
+                    VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
+                    '{customer_input.text()}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
+                    '{order_number_input.text()}',                             
+                    ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], 
+                    '{materials}', array[{temperature}]::INTEGER[])
 
                                     """)
                     print("query successful")
@@ -1072,22 +1028,6 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 temperature_table.setItem(i, 0, item)
 
-            # Create Clickable Icons for Materials
-            self.generate_icon = ClickableLabel(self.entry_widget)
-            self.generate_icon.setGeometry(770, 500, 30, 30)
-            self.generate_icon.setPixmap(QtGui.QIcon('generate.png').pixmap(30, 30))
-            self.generate_icon.setCursor(Qt.PointingHandCursor)
-            self.generate_icon.setStyleSheet("border: 1px solid red")
-            self.generate_icon.clicked.connect(generate)
-            self.generate_icon.show()
-
-            self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(770, 540, 30, 30)
-            self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(30, 30))
-            self.plus_icon.setCursor(Qt.PointingHandCursor)
-            self.plus_icon.setStyleSheet("border: 1px solid red")
-            self.plus_icon.clicked.connect(add_material_row)
-            self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
             self.reset_icon.setGeometry(770, 580, 30, 30)
