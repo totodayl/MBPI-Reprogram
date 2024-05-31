@@ -1,5 +1,5 @@
 import datetime
-import re
+import traceback
 import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -67,7 +67,7 @@ class Ui_LoginWindow(object):
         self.conn = psycopg2.connect(
             host="localhost",
             port=5432,
-            dbname='postgres',
+            dbname='convertDB',
             user='postgres',
             password='postgres'
         )
@@ -127,34 +127,14 @@ class Ui_LoginWindow(object):
             print(e)
 
         def show_form():
-            # selected = self.production_table.selectedItems()
-            # selected = [i.text() for i in selected]
-            print("test")
-            try:
-                view_btn.sender()
-                index = self.production_table.indexAt(view_btn.pos())
-                if index.isValid():
-                    row = index.row()
-            except Exception as e:
-                print(e)
 
-            try:
-                selected = []
-                for i in range(self.production_table.columnCount() - 1):
-                    item = self.production_table.item(row, i)
-                    selected.append(item)
-            except Exception as e:
-                print(e)
-
+            selected = self.production_table.selectedItems()
             selected = [i.text() for i in selected]
-            print(selected)
 
             # Query the whole columns
             self.cursor.execute(f"SELECT * FROM extruder WHERE production_id = {selected[0]}")
             selected = self.cursor.fetchall()
             selected = list(selected[0])
-            print(selected)
-
 
             # Unpack all the items for convenience
             company, product_code, quantity_ordered, product_output = selected[1:5]
@@ -162,13 +142,13 @@ class Ui_LoginWindow(object):
             _operator, supervisor, materials, lot_number, feed_rate = selected[10:15]
             rpm, screen_size, screw_config, output_percent, loss = selected[15:20]
             loss_percent, purge_start, purge_end, purge_duration, remarks = selected[20:25]
-            temperature = selected[25]
+            temperature = selected[25][0]
             machine = selected[26]
 
             # Convert string of json to JSON
 
-            # materials = str(materials).replace("'", '"')
-            # materials = json.loads(materials)
+            materials = str(materials).replace("'", '"')
+            materials = json.loads(materials)
 
             # Regular expression pattern to match time values
             time_pattern = r'datetime\.time\((\d+), (\d+)\)'
@@ -249,7 +229,6 @@ class Ui_LoginWindow(object):
             self.order_val.setText(str(quantity_ordered))
             self.order_val.setFont(font)
             self.order_val.show()
-            print("192")
             # Show Output Label
             self.output_label = QtWidgets.QLabel(self.info_widget)
             self.output_label.setText("Output:")
@@ -301,7 +280,7 @@ class Ui_LoginWindow(object):
             # Show Lot Number Value
             self.lotNum_val = QtWidgets.QLabel(self.info_widget)
             self.lotNum_val.setGeometry(490, 80, 150, 30)
-            self.lotNum_val.setText(resin)
+            self.lotNum_val.setText(str(resin))
             self.lotNum_val.setFont(font)
             self.lotNum_val.show()
 
@@ -314,7 +293,7 @@ class Ui_LoginWindow(object):
             # Show Feed Rate Value
             self.feedrate_val = QtWidgets.QLabel(self.info_widget)
             self.feedrate_val.setGeometry(490, 125, 150, 30)
-            self.feedrate_val.setText(resin)
+            self.feedrate_val.setText(str(feed_rate))
             self.feedrate_val.setFont(font)
             self.feedrate_val.show()
 
@@ -328,7 +307,7 @@ class Ui_LoginWindow(object):
             # Show RPM Value
             self.rpm_val = QtWidgets.QLabel(self.info_widget)
             self.rpm_val.setGeometry(490, 170, 150, 30)
-            self.rpm_val.setText(resin)
+            self.rpm_val.setText(str(rpm))
             self.rpm_val.setFont(font)
             self.rpm_val.show()
 
@@ -342,7 +321,7 @@ class Ui_LoginWindow(object):
             # Show Screen Size Value
             self.screenSize_val = QtWidgets.QLabel(self.info_widget)
             self.screenSize_val.setGeometry(490, 215, 150, 30)
-            self.screenSize_val.setText(resin)
+            self.screenSize_val.setText(str(screen_size))
             self.screenSize_val.setFont(font)
             self.screenSize_val.show()
 
@@ -355,7 +334,7 @@ class Ui_LoginWindow(object):
             # Show Screw Config Value
             self.screwConf_val = QtWidgets.QLabel(self.info_widget)
             self.screwConf_val.setGeometry(490, 260, 150, 30)
-            self.screwConf_val.setText(resin)
+            self.screwConf_val.setText(str(screw_config))
             self.screwConf_val.setFont(font)
             self.screwConf_val.show()
 
@@ -369,7 +348,7 @@ class Ui_LoginWindow(object):
             # Show Output Percentage Value
             self.outputPercent_val = QtWidgets.QLabel(self.info_widget)
             self.outputPercent_val.setGeometry(800, 80, 150, 30)
-            self.outputPercent_val.setText(resin)
+            self.outputPercent_val.setText(str(output_percent))
             self.outputPercent_val.setFont(font)
             self.outputPercent_val.show()
 
@@ -383,7 +362,7 @@ class Ui_LoginWindow(object):
             # Show Loss Value
             self.loss_val = QtWidgets.QLabel(self.info_widget)
             self.loss_val.setGeometry(800, 125, 150, 30)
-            self.loss_val.setText(resin)
+            self.loss_val.setText(str(loss))
             self.loss_val.setFont(font)
             self.loss_val.show()
 
@@ -397,7 +376,7 @@ class Ui_LoginWindow(object):
             # Show Loss Percentage Value
             self.lossPercent_val = QtWidgets.QLabel(self.info_widget)
             self.lossPercent_val.setGeometry(800, 170, 150, 30)
-            self.lossPercent_val.setText(resin)
+            self.lossPercent_val.setText(str(loss_percent))
             self.lossPercent_val.setFont(font)
             self.lossPercent_val.show()
 
@@ -411,7 +390,7 @@ class Ui_LoginWindow(object):
             # Show Purge Start Value
             self.purgeStart_val = QtWidgets.QLabel(self.info_widget)
             self.purgeStart_val.setGeometry(800, 215, 150, 30)
-            self.purgeStart_val.setText(resin)
+            self.purgeStart_val.setText(str(purge_start))
             self.purgeStart_val.setFont(font)
             self.purgeStart_val.show()
 
@@ -425,7 +404,7 @@ class Ui_LoginWindow(object):
             # Show Purge End Value
             self.purgeEnd_val = QtWidgets.QLabel(self.info_widget)
             self.purgeEnd_val.setGeometry(800, 260, 150, 30)
-            self.purgeEnd_val.setText(resin)
+            self.purgeEnd_val.setText(str(purge_end))
             self.purgeEnd_val.setFont(font)
             self.purgeEnd_val.show()
 
@@ -439,7 +418,7 @@ class Ui_LoginWindow(object):
             # Show Resin Value
             self.purgeDuration_val = QtWidgets.QLabel(self.info_widget)
             self.purgeDuration_val.setGeometry(800, 305, 150, 30)
-            self.purgeDuration_val.setText(resin)
+            self.purgeDuration_val.setText(str(purge_duration))
             self.purgeDuration_val.setFont(font)
             self.purgeDuration_val.show()
 
@@ -541,6 +520,8 @@ class Ui_LoginWindow(object):
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
 
+
+
             def generate():
                 try:
                     self.cursor.execute(f"""SELECT formulation 
@@ -591,6 +572,7 @@ class Ui_LoginWindow(object):
                 self.material_table.setRowCount(self.material_table.rowCount()+1)
                 self.material_table.show()
 
+
             def get_entries():
                 # get the data from the tables
 
@@ -609,7 +591,6 @@ class Ui_LoginWindow(object):
                 time_start = [i.text() for i in time_start]
                 time_end = [i for i in time_end if i is not None]
                 time_end = [i.text() for i in time_end]
-
 
                 # Getting the Data for temperature
                 temperature = []
@@ -634,22 +615,22 @@ class Ui_LoginWindow(object):
                                 value = self.material_table.item(i, 1).text()
                                 materials[key] = value
                     materials.pop('')
-                    materials = json.dumps(materials)
-                    print(materials)
-                except Exception as e:
-                    print(e)
+                    materials = list(materials)
 
-                print(time_start)
+                except Exception as e:
+                    pass
+                print(materials)
+
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
-                print(time_start)
+
                 # SQL command here to insert Items
                 try:
                     print("test")
                     self.cursor.execute(f"""
                                     INSERT INTO extruder(customer, product_code, qty_order, product_output, formula_code,
                                     time_start, time_end, materials,temperature) 
-                                    VALUES('{customer_input.text()}', '{productCode.text()}', '{orderedQuantity.text()}', '{product_output.text()}',
+                                    VALUES('{customer_input.text()}', '{productCode.text()}', '{orderedQuantity.text()}','{product_output.text()}',
                                     '{self.formulaID.text()}', ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], '{materials}', array[{temperature}]::INTEGER[])
 
                                     """)
@@ -660,13 +641,170 @@ class Ui_LoginWindow(object):
                     print(e)
                     self.conn.rollback()
 
-
             def reset():
                 # Reset the table
                 self.material_table.clearContents()
                 self.material_table.setRowCount(5)
                 # Set Formula ID line edit to editable
                 self.formulaID.setReadOnly(False)
+
+            def select_production():
+
+                def show_table():
+                    self.table2.clearContents()
+
+                    item = self.table.selectedItems()
+                    item = [i.text() for i in item]
+
+                    self.cursor.execute(f"""
+                    SELECT production_id, lot_number, t_qtyreq, materials
+                    FROM production_merge
+                    WHERE production_id = '{item[0]}'
+                    """)
+                    result = self.cursor.fetchall()
+                    result = result[0]
+
+                    material = result[-1]
+
+                    try:
+
+
+                        for keys in list(material.keys()):
+
+                            key = QTableWidgetItem(str(keys))
+                            value = QTableWidgetItem(str(material[keys]))
+                            self.table2.setItem(list(material.keys()).index(keys), 0, key)
+                            key.setFlags(key.flags() & ~Qt.ItemIsEditable)
+                            self.table2.setItem(list(material.keys()).index(keys), 1, value)
+                            value.setFlags(value.flags() & ~Qt.ItemIsEditable)
+                            self.table2.show()
+
+                        label2.setText(str(result[2]))
+                        prod_id = QTableWidgetItem(str(result[0]))
+                        prod_id.setTextAlignment(Qt.AlignCenter) # Align Center
+                        lot_num = QTableWidgetItem(str(result[1]))
+                        lot_num.setTextAlignment(Qt.AlignCenter)
+                        self.table3.setItem(0, 0, prod_id)
+                        prod_id.setFlags(prod_id.flags() & ~Qt.ItemIsEditable)
+                        self.table3.setItem(0, 1, lot_num)
+                        lot_num.setFlags(lot_num.flags() & ~Qt.ItemIsEditable)
+
+                    except Exception as e:
+                        print(e)
+
+
+
+                self.cursor.execute("""
+                SELECT production_id, lot_number
+                FROM production_merge
+                
+                """)
+                result = self.cursor.fetchall()
+
+                self.selectProd_widget = QtWidgets.QWidget()
+                self.selectProd_widget.setGeometry(400, 200, 800, 630)
+                self.selectProd_widget.setFixedSize(800, 600)
+
+                # ProductionId and Lot Number Table widget
+                self.table = QtWidgets.QTableWidget(self.selectProd_widget)
+                self.table.setGeometry(0, 70, 350, 500)
+                self.table.setColumnCount(2)
+                self.table.setRowCount(len(result))
+                self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+                self.table.setColumnWidth(1, 180)
+                self.table.setColumnWidth(0, 150)
+                self.table.setFont(QtGui.QFont("Arial", 12))
+                self.table.setStyleSheet('color: rgb(0,109,189);')
+                self.table.verticalHeader().setVisible(False)
+                try:
+                    for i in range(len(result)):
+                        prod_id = QTableWidgetItem(str(result[i][0]))
+                        lot_num = QTableWidgetItem(str(result[i][1]))
+                        self.table.setItem(i, 0, prod_id)
+                        prod_id.setFlags(prod_id.flags() & ~Qt.ItemIsEditable)
+                        self.table.setItem(i, 1, lot_num)
+                        lot_num.setFlags(lot_num.flags() & ~Qt.ItemIsEditable)
+                except Exception as e:
+                    print(e)
+
+                self.table.show()
+                self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+                self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+                self.table.itemSelectionChanged.connect(show_table)
+
+                # Materials Table
+                self.table2 = QtWidgets.QTableWidget(self.selectProd_widget)
+                self.table2.setGeometry(350, 70, 450, 500)
+                self.table2.setColumnCount(2)
+                self.table2.setRowCount(16)
+                self.table2.setColumnWidth(0, 205)
+                self.table2.setColumnWidth(1, 225)
+                self.table2.verticalHeader().setVisible(False)
+                self.table2.setHorizontalHeaderLabels(["Materials", "Quantity"])
+                self.table2.show()
+
+                # Table 3 For showing Selected ProdID and Lot Number
+                self.table3 = QtWidgets.QTableWidget(self.selectProd_widget)
+                self.table3.setGeometry(380, 0, 402, 60)
+                self.table3.setColumnCount(2)
+                self.table3.setRowCount(1)
+                self.table3.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+                self.table3.setColumnWidth(0, 200)
+                self.table3.setColumnWidth(1, 200)
+                self.table3.setRowHeight(0, 35)
+                self.table3.horizontalHeader().setStyleSheet("""
+                    QHeaderView::section{
+                        font-weight: bold;
+                        background-color: rgb(0,109,189);
+                        color: white;
+                    }
+                """)
+
+                for i in range(2):
+                    item = QTableWidgetItem("")
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.table3.setItem(0, i, item)
+
+                self.table3.verticalHeader().setVisible(False)
+                self.table3.show()
+
+                label1 = QtWidgets.QLabel(self.selectProd_widget)
+                label1.setGeometry(230, 570, 120, 30)
+                label1.setText("Total QTY (Kg)")
+                label1.setFont(QtGui.QFont("Arial", 11))
+                label1.setAlignment(Qt.AlignCenter)
+                label1.setStyleSheet('border: 1px solid black;')
+                label1.show()
+
+                label2 = QtWidgets.QLabel(self.selectProd_widget)
+                label2.setGeometry(350, 570, 200, 30)
+                label2.setFont(QtGui.QFont("Arial", 15))
+                label2.setAlignment(Qt.AlignCenter)
+                label2.setStyleSheet("background-color: white; color: blue;")
+                label2.setText("Test")
+                label2.show()
+
+                # Save Button
+                save_prod = QtWidgets.QPushButton(self.selectProd_widget)
+                save_prod.setGeometry(590, 570, 70, 30)
+                save_prod.setText("Add")
+                save_prod.show()
+
+                refresh = QtWidgets.QPushButton(self.selectProd_widget)
+                refresh.setGeometry(660, 570, 70, 30)
+                refresh.setText("Refresh")
+                refresh.show()
+
+                close = QtWidgets.QPushButton(self.selectProd_widget)
+                close.setGeometry(730, 570, 70, 30)
+                close.setText("Close")
+                close.show()
+
+
+                self.selectProd_widget.setWindowModality(Qt.ApplicationModal)
+                self.selectProd_widget.show()
+
+
 
 
             # Create two new widget for the VBOX Layout
@@ -877,12 +1015,17 @@ class Ui_LoginWindow(object):
             self.reset_icon.clicked.connect(reset)
             self.reset_icon.show()
 
+            # Select Production Data Button
+            select_prod = QtWidgets.QPushButton(self.entry_widget)
+            select_prod.setGeometry(200, 400, 60, 25)
+            select_prod.clicked.connect(select_production)
+            select_prod.show()
+
             save_btn = QtWidgets.QPushButton(self.entry_widget)
             save_btn.setGeometry(100, 400, 60, 25)
             save_btn.clicked.connect(get_entries)
             save_btn.setText("Save")
             save_btn.show()
-
 
         def update_entry():
              pass
@@ -891,20 +1034,29 @@ class Ui_LoginWindow(object):
         self.production_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
         self.production_table.verticalHeader().setVisible(False)
 
+        self.cursor.execute("""
+        SELECT column_name FROM information_schema.columns
+        WHERE TABLE_NAME = 'extruder';
+        """)
+        # column_names = self.cursor.fetchall()
+        # column_names = [i[0] for i in column_names]
+
+        column_names = ["process_id", "machine", "customer", "qty_order", "total_output",  "formula_id", "product_code"]
+        
         try:
+
             self.cursor.execute("""
-            SELECT production_id, customer, product_code, qty_order, product_output, loss, 
-            formula_code, lot_number, remarks 
+            SELECT 
+            process_id, machine, customer, qty_order, total_output, formula_id, product_code
             FROM extruder; 
-            
             
             """)
             result = self.cursor.fetchall()
         except Exception as e:
             print(e)
 
-        column_names = ["production_id", "customer", "product_code", "qty_order", "product_output",
-                        "loss", "formula_code", "lot_number", "remarks", "actions"]
+        # Set Column Width
+        self.production_table.setColumnWidth(2, 150)
 
         # Set Column Count
         self.production_table.setColumnCount(len(column_names))
@@ -917,26 +1069,19 @@ class Ui_LoginWindow(object):
         
         """)
 
-
-        view_icon = QtGui.QIcon("view.png")
-        view_btn = QtWidgets.QPushButton("", self.production_table)
-        view_btn.setFixedSize(15, 15)
-        view_btn.clicked.connect(show_form)
-        view_btn.setCursor(Qt.PointingHandCursor)
-        view_btn.setIcon(view_icon)
         # Populate table with data
         for i in range(len(result)):
             for j in range(len(column_names)):
-                if j == 9:
-                    try:
-
-                        self.production_table.setCellWidget(0, 9, view_btn)
-                    except Exception as e:
-                        print(e)
+                item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                # Set Alignment for specific columns
+                if j == 3 or j == 4:
+                    item.setTextAlignment(Qt.AlignLeft)
+                elif j == 2 or j == 6:
+                    item.setTextAlignment(Qt.AlignCenter)
                 else:
-                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                    self.production_table.setItem(i, j, item)
+                    pass
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                self.production_table.setItem(i, j, item)
 
         bold_font = QtGui.QFont()
         bold_font.setBold(True)
@@ -980,13 +1125,15 @@ class Ui_LoginWindow(object):
 
 
 
-
 if __name__ == "__main__":
     import sys
 
-    app = QtWidgets.QApplication(sys.argv)
-    LoginWindow = QtWidgets.QMainWindow()
-    ui = Ui_LoginWindow()
-    ui.setupUi(LoginWindow)
-    LoginWindow.show()
-    sys.exit(app.exec_())
+    try:
+        app = QtWidgets.QApplication(sys.argv)
+        LoginWindow = QtWidgets.QMainWindow()
+        ui = Ui_LoginWindow()
+        ui.setupUi(LoginWindow)
+        LoginWindow.show()
+        sys.exit(app.exec_())
+    except Exception:
+        traceback.print_exc()
