@@ -520,31 +520,29 @@ class Ui_LoginWindow(object):
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
 
-
-
             def generate():
                 try:
                     self.cursor.execute(f"""SELECT formulation 
                                             FROM formula
-                                            WHERE formula_id = {self.formulaID.text().strip()}                                       
+                                            WHERE formula_id = {self.formulaID_input.text().strip()}                                       
                                         """)
 
                     formulation = self.cursor.fetchall()
-                    if len(formulation) == 0 or self.formulaID.text().strip() == None:
+                    if len(formulation) == 0 or self.formulaID_input.text().strip() == None:
                         QtWidgets.QMessageBox.information(self.entry_widget, "Error", "Formula Not Found")
                         self.conn.rollback()
                     else:
 
                         try:
-                            self.formulaID.setReadOnly(True)
+                            self.formulaID_input.setReadOnly(True)
                             formulation = formulation[0]
                             formulation = formulation[0]
                             print(formulation)
                             total_concentration = sum(formulation.values()) # Get the total Concentration
 
-                            print(orderedQuantity.text())
+                            print(orderedQuantity_input.text())
                             for mats, concentration in formulation.items():
-                                new_value = ((float(orderedQuantity.text()) * (concentration / 100)) / total_concentration) * 100
+                                new_value = ((float(orderedQuantity_input.text()) * (concentration / 100)) / total_concentration) * 100
                                 formulation[mats] = new_value
                                 print(mats, new_value)
 
@@ -630,8 +628,8 @@ class Ui_LoginWindow(object):
                     self.cursor.execute(f"""
                                     INSERT INTO extruder(customer, product_code, qty_order, product_output, formula_code,
                                     time_start, time_end, materials,temperature) 
-                                    VALUES('{customer_input.text()}', '{productCode.text()}', '{orderedQuantity.text()}','{product_output.text()}',
-                                    '{self.formulaID.text()}', ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], '{materials}', array[{temperature}]::INTEGER[])
+                                    VALUES('{customer_input.text()}', '{productCode_input.text()}', '{orderedQuantity_input.text()}','{product_output_input.text()}',
+                                    '{self.formulaID_input.text()}', ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], '{materials}', array[{temperature}]::INTEGER[])
 
                                     """)
                     print("query successful")
@@ -646,7 +644,7 @@ class Ui_LoginWindow(object):
                 self.material_table.clearContents()
                 self.material_table.setRowCount(5)
                 # Set Formula ID line edit to editable
-                self.formulaID.setReadOnly(False)
+                self.formulaID_input.setReadOnly(False)
 
             def select_production():
 
@@ -664,10 +662,10 @@ class Ui_LoginWindow(object):
                     result = self.cursor.fetchall()
                     result = result[0]
 
+
                     material = result[-1]
 
                     try:
-
 
                         for keys in list(material.keys()):
 
@@ -692,7 +690,44 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
+                def add_data():
+                    item = self.table.selectedItems()
+                    item = [i.text() for i in item]
 
+                    self.cursor.execute(f"""
+                    SELECT * FROM production_merge
+                    WHERE production_id = '{item[0]}' 
+                    
+                    """)
+                    result = self.cursor.fetchall()
+                    result = result[0]
+
+                    # Unpack the result
+                    prod_id = result[0]
+                    customer = result[2]
+                    formula_id = result[3]
+                    product_code = result[5]
+                    product_color = result[6]
+                    lot_number = result[9]
+                    order_number = result[10]
+                    machine_name = result[14]
+                    quantity_order = result[15]
+                    output_quantity = result[17]
+                    remarks = result[18]
+
+                    # Set the Text to the Extruder Entry Form
+                    productID_input.setText(prod_id)
+                    customer_input.setText(customer)
+                    productCode_input.setText(product_code)
+                    orderedQuantity_input.setText(str(quantity_order))
+                    lot_number_input.setText(str(lot_number))
+                    product_output_input.setText(str(output_quantity))
+                    machine_input.setText(machine_name)
+                    self.formulaID_input.setText(str(formula_id))
+                    order_number_input.setText(order_number)
+                    loss_input.setText(str(float(quantity_order) - float(output_quantity)))
+
+                    self.selectProd_widget.close()
 
                 self.cursor.execute("""
                 SELECT production_id, lot_number
@@ -788,6 +823,7 @@ class Ui_LoginWindow(object):
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
                 save_prod.setGeometry(590, 570, 70, 30)
                 save_prod.setText("Add")
+                save_prod.clicked.connect(add_data)
                 save_prod.show()
 
                 refresh = QtWidgets.QPushButton(self.selectProd_widget)
@@ -800,11 +836,8 @@ class Ui_LoginWindow(object):
                 close.setText("Close")
                 close.show()
 
-
                 self.selectProd_widget.setWindowModality(Qt.ApplicationModal)
                 self.selectProd_widget.show()
-
-
 
 
             # Create two new widget for the VBOX Layout
@@ -824,9 +857,17 @@ class Ui_LoginWindow(object):
 
             font = QtGui.QFont("Berlin Sans FB", 14)
 
+            productID_label = QtWidgets.QLabel()
+            productID_label.setText("Product ID")
+            productID_label.setFont(font)
+
             customer_label = QtWidgets.QLabel()
             customer_label.setText("Customer")
             customer_label.setFont(font)
+
+            machine_label = QtWidgets.QLabel()
+            machine_label.setText("Machine No.")
+            machine_label.setFont(font)
 
             productCode_label = QtWidgets.QLabel()
             productCode_label.setText("Product Code")
@@ -865,7 +906,7 @@ class Ui_LoginWindow(object):
             screwConf_label.setFont(font)
 
             loss_label = QtWidgets.QLabel()
-            loss_label.setText("Loss Label")
+            loss_label.setText("Loss")
             loss_label.setFont(font)
 
             purgeStart_label = QtWidgets.QLabel()
@@ -886,76 +927,118 @@ class Ui_LoginWindow(object):
             supervisor_label.setText("Supervisor")
             supervisor_label.setFont(font)
 
+            order_number_lbl = QtWidgets.QLabel()
+            order_number_lbl.setText("Order Number")
+            order_number_lbl.setFont(font)
+
+            resin_label = QtWidgets.QLabel()
+            resin_label.setText("Resin")
+            resin_label.setFont(font)
+
             # QLineEdit Boxes
+            productID_input = QtWidgets.QLineEdit()
+            productID_input.setFixedHeight(25)
+            productID_input.setEnabled(False)
+            productID_input.setAlignment(Qt.AlignCenter)
+
+            machine_input = QtWidgets.QLineEdit()
+            machine_input.setFixedHeight(25)
+            machine_input.setEnabled(False)
+            machine_input.setAlignment(Qt.AlignCenter)
+
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
-            customer_input.setText("Cocal-Cola")
-            orderedQuantity = QtWidgets.QLineEdit()
-            orderedQuantity.setText("100")
-            orderedQuantity.setAlignment(Qt.AlignCenter)
-            orderedQuantity.setFixedHeight(25)
-            productCode = QtWidgets.QLineEdit()
-            productCode.setFixedHeight(25)
-            productCode.setText("LLA")
-            product_output = QtWidgets.QLineEdit()
-            product_output.setFixedHeight(25)
+            customer_input.setEnabled(False)
+            customer_input.setAlignment(Qt.AlignCenter)
 
-            self.formulaID = QtWidgets.QLineEdit()
-            self.formulaID.setAlignment(Qt.AlignCenter)
-            self.formulaID.setFixedHeight(25)
-            self.formulaID.setText("15280")
+            orderedQuantity_input = QtWidgets.QLineEdit()
+            orderedQuantity_input.setAlignment(Qt.AlignCenter)
+            orderedQuantity_input.setFixedHeight(25)
+            orderedQuantity_input.setEnabled(False)
 
-            lot_number = QtWidgets.QLineEdit()
-            lot_number.setAlignment(Qt.AlignCenter)
-            lot_number.setFixedHeight(25)
+            productCode_input = QtWidgets.QLineEdit()
+            productCode_input.setFixedHeight(25)
+            productCode_input.setEnabled(False)
+            productCode_input.setAlignment(Qt.AlignCenter)
 
-            feedRate = QtWidgets.QLineEdit()
-            feedRate.setFixedHeight(25)
+            product_output_input = QtWidgets.QLineEdit()
+            product_output_input.setFixedHeight(25)
+            product_output_input.setEnabled(False)
+            product_output_input.setAlignment(Qt.AlignCenter)
 
-            rpm = QtWidgets.QLineEdit()
-            rpm.setFixedHeight(25)
+            self.formulaID_input = QtWidgets.QLineEdit()
+            self.formulaID_input.setAlignment(Qt.AlignCenter)
+            self.formulaID_input.setFixedHeight(25)
+            self.formulaID_input.setEnabled(False)
 
-            screenSize = QtWidgets.QLineEdit()
-            screenSize.setFixedHeight(25)
+            lot_number_input = QtWidgets.QLineEdit()
+            lot_number_input.setAlignment(Qt.AlignCenter)
+            lot_number_input.setFixedHeight(25)
+            lot_number_input.setEnabled(False)
 
-            screwConf = QtWidgets.QLineEdit()
-            screwConf.setFixedHeight(25)
+            feedRate_input = QtWidgets.QLineEdit()
+            feedRate_input.setFixedHeight(25)
 
-            loss = QtWidgets.QLineEdit()
-            loss.setFixedHeight(25)
+            rpm_input = QtWidgets.QLineEdit()
+            rpm_input.setFixedHeight(25)
 
-            purgeStart = QtWidgets.QLineEdit()
-            purgeStart.setFixedHeight(25)
+            screenSize_input = QtWidgets.QLineEdit()
+            screenSize_input.setFixedHeight(25)
 
-            purgeEnd = QtWidgets.QLineEdit()
-            purgeEnd.setFixedHeight(25)
+            screwConf_input = QtWidgets.QLineEdit()
+            screwConf_input.setFixedHeight(25)
+
+            loss_input = QtWidgets.QLineEdit()
+            loss_input.setFixedHeight(25)
+            loss_input.setEnabled(False)
+
+            purgeStart_input = QtWidgets.QLineEdit()
+            purgeStart_input.setFixedHeight(25)
+
+            purgeEnd_input = QtWidgets.QLineEdit()
+            purgeEnd_input.setFixedHeight(25)
 
             remarks = QtWidgets.QTextEdit()
-            operator = QtWidgets.QLineEdit()
-            operator.setFixedHeight(25)
 
-            supervisor = QtWidgets.QLineEdit()
-            supervisor.setFixedHeight(25)
+            operator_input = QtWidgets.QLineEdit()
+            operator_input.setFixedHeight(25)
+            operator_input.setAlignment(Qt.AlignCenter)
+
+            supervisor_input = QtWidgets.QLineEdit()
+            supervisor_input.setFixedHeight(25)
+            supervisor_input.setAlignment(Qt.AlignCenter)
+
+            order_number_input = QtWidgets.QLineEdit()
+            order_number_input.setFixedHeight(25)
+            order_number_input.setEnabled(False)
+            order_number_input.setAlignment(Qt.AlignCenter)
+
+            resin_input = QtWidgets.QLineEdit()
+            resin_input.setFixedHeight(25)
+            resin_input.setAlignment(Qt.AlignCenter)
 
             # Left Side of Vertical Box
+            self.left_vbox.addRow(productID_label, productID_input)
+            self.left_vbox.addRow(productCode_label, productCode_input)
             self.left_vbox.addRow(customer_label,customer_input)
-            self.left_vbox.addRow(productCode_label,productCode)
-            self.left_vbox.addRow(productOutput_label, product_output)
-            self.left_vbox.addRow(formulaID_label,self.formulaID)
-            self.left_vbox.addRow(lotnumber_label, lot_number)
-            self.left_vbox.addRow(orderedQuantity_label, orderedQuantity)
-            self.left_vbox.addRow(loss_label, loss)
+            self.left_vbox.addRow(orderedQuantity_label, orderedQuantity_input)
+            self.left_vbox.addRow(lotnumber_label, lot_number_input)
+            self.left_vbox.addRow(productOutput_label, product_output_input)
+            self.left_vbox.addRow(machine_label, machine_input)
+            self.left_vbox.addRow(formulaID_label, self.formulaID_input)
+            self.left_vbox.addRow(order_number_lbl, order_number_input)
 
             # Add widgets to the right Form Box
-            self.right_vbox.addRow(feedrate_label,feedRate)
-            self.right_vbox.addRow(rpm_label, rpm)
-            self.right_vbox.addRow(screenSize_label, screenSize)
-            self.right_vbox.addRow(screwConf_label, screwConf)
-            self.right_vbox.addRow(purgeStart_label, purgeStart)
-            self.right_vbox.addRow(purgeEnd_label, purgeEnd)
-            self.right_vbox.addRow(operator_label, operator)
-            self.right_vbox.addRow(supervisor_label, supervisor)
-
+            self.right_vbox.addRow(loss_label, loss_input)
+            self.right_vbox.addRow(feedrate_label,feedRate_input)
+            self.right_vbox.addRow(rpm_label, rpm_input)
+            self.right_vbox.addRow(resin_label, resin_input)
+            self.right_vbox.addRow(screenSize_label, screenSize_input)
+            self.right_vbox.addRow(screwConf_label, screwConf_input)
+            self.right_vbox.addRow(purgeStart_label, purgeStart_input)
+            self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
+            self.right_vbox.addRow(operator_label, operator_input)
+            self.right_vbox.addRow(supervisor_label, supervisor_input)
 
             # Time Table Entry
             time_table = QtWidgets.QTableWidget(self.entry_widget)
@@ -988,7 +1071,6 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str("Z" + str(i+1)))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 temperature_table.setItem(i, 0, item)
-
 
             # Create Clickable Icons for Materials
             self.generate_icon = ClickableLabel(self.entry_widget)
@@ -1044,7 +1126,6 @@ class Ui_LoginWindow(object):
         column_names = ["process_id", "machine", "customer", "qty_order", "total_output",  "formula_id", "product_code"]
         
         try:
-
             self.cursor.execute("""
             SELECT 
             process_id, machine, customer, qty_order, total_output, formula_id, product_code
