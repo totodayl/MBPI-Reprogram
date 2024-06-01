@@ -595,13 +595,6 @@ class Ui_LoginWindow(object):
                     print(e)
                     self.conn.rollback()
 
-            def reset():
-                # Reset the table
-                self.material_table.clearContents()
-                self.material_table.setRowCount(5)
-                # Set Formula ID line edit to editable
-                self.formulaID_input.setReadOnly(False)
-
             def select_production():
 
                 def show_table():
@@ -1028,14 +1021,6 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 temperature_table.setItem(i, 0, item)
 
-
-            self.reset_icon = ClickableLabel(self.entry_widget)
-            self.reset_icon.setGeometry(770, 580, 30, 30)
-            self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(30, 30))
-            self.reset_icon.setCursor(Qt.PointingHandCursor)
-            self.reset_icon.setStyleSheet("border: 1px solid red")
-            self.reset_icon.clicked.connect(reset)
-            self.reset_icon.show()
 
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
