@@ -1021,7 +1021,6 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 temperature_table.setItem(i, 0, item)
 
-
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
             select_prod.setGeometry(200, 400, 60, 25)
