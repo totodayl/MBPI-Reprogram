@@ -5,8 +5,9 @@ import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
-from datetime import time, timedelta
-import datetime as dt
+from datetime import timedelta, datetime
+
+
 
 
 
@@ -422,7 +423,6 @@ class Ui_LoginWindow(object):
             self.purgeDuration_val.setFont(font)
             self.purgeDuration_val.show()
 
-
             # Create 3 tables for Time, Materials and Temperature
             try:
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
@@ -541,6 +541,21 @@ class Ui_LoginWindow(object):
                 time_end = [i for i in time_end if i is not None]
                 time_end = [i.text() for i in time_end]
 
+                total_time = timedelta()
+                try:
+                    for i in range(len(time_start)):
+                        t_start = datetime.strptime(time_start[i], "%Y-%m-%d %H:%M:%S")
+                        t_end = datetime.strptime(time_end[i], "%Y-%m-%d %H:%M:%S")
+                        total_time = total_time + (t_start - t_end)
+                except Exception as e:
+                    print(e)
+
+                hours = str(int(total_time.total_seconds() // 3600)).replace('-','')
+                minutes = str((int(total_time.total_seconds() % 3600) // 60))
+                seconds = str(int(total_time.total_seconds() % 60))
+
+                total_time = f"{hours}:{minutes}:{seconds}" # Total Time as a String
+
                 # Getting the Data for temperature
                 temperature = []
                 for i in range(temperature_table.rowCount()):
@@ -548,44 +563,51 @@ class Ui_LoginWindow(object):
 
                 temperature = [i for i in temperature if i is not None]
                 temperature = [i.text() for i in temperature]
+
                 print(temperature)
-
-                # Material Table
-                materials = {}
-                try:
-                    for i in range(self.material_table.rowCount()):
-                        if self.material_table.item(i,0) == None or self.material_table.item(i,0) == '':
-                            pass
-                        else:
-                            key = self.material_table.item(i, 0).text()
-                            if self.material_table.item(i, 1) == None:
-                                materials[key] = ''
-                            else:
-                                value = self.material_table.item(i, 1).text()
-                                materials[key] = value
-                    materials.pop('')
-                    materials = list(materials)
-
-                except Exception as e:
-                    pass
-                print(materials)
 
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
-                # SQL command here to insert Items
+                # Declare additional variables need here like loss percentage
+                output_percent = (float(product_output_input.text()) / float(orderedQuantity_input.text())) * 100
+                loss_percent = (float(loss_input.text()) / float(orderedQuantity_input.text())) * 100
+                purge_duration = timedelta()
+                print(type(datetime.today().strftime("%Y-%m-%d")))
                 try:
+                    purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(purgeEnd_input.text(),"%Y-%m-%d %H:%M")
+                    purge_duration = purge_start - purge_end
+
+                except:
                     print("test")
+                    purge_start = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),"%Y-%m-%d %H:%M")
+                    print(purge_start, purge_end)
+                    purge_duration = (purge_start - purge_end).total_seconds()
+
+                purge_duration = purge_duration // 60
+                print("output_percent:",output_percent)
+                print("loss_percent:", loss_percent)
+                # SQL command here to insert Items
+                self.cursor.execute(f"SELECT materials FROM production_merge WHERE production_id = '{productID_input.text()}'")
+                material =self.cursor.fetchall()
+                material = material[0][0]
+                material = json.dumps(material)
+                try:
+
                     self.cursor.execute(f"""
                     INSERT INTO extruder( machine, qty_order, total_output, customer,
                     formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
-                    loss, loss_percent, purging, resin, purge_duration, remarks, screw_config, feed_rate,
-                    rpm, screen_size, operator, supervisor, materials) 
+                    loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
+                    rpm, screen_size, operator, supervisor, temperature) 
                     VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                     '{customer_input.text()}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
-                    '{order_number_input.text()}',                             
-                    ARRAY[{time_start}]::time[], ARRAY[{time_end}]::time[], 
-                    '{materials}', array[{temperature}]::INTEGER[])
+                    '{order_number_input.text()}', '{total_time}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
+                    '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
+                     '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
+                     '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
+                     ARRAY[{temperature}]::INTEGER[])
 
                                     """)
                     print("query successful")
@@ -884,6 +906,10 @@ class Ui_LoginWindow(object):
             resin_label.setText("Resin")
             resin_label.setFont(font)
 
+            purging_label = QtWidgets.QLabel()
+            purging_label.setText("Purging")
+            purging_label.setFont(font)
+
             # QLineEdit Boxes
             productID_input = QtWidgets.QLineEdit()
             productID_input.setFixedHeight(25)
@@ -940,14 +966,18 @@ class Ui_LoginWindow(object):
             loss_input = QtWidgets.QLineEdit()
             loss_input.setFixedHeight(25)
             loss_input.setEnabled(False)
+            loss_input.setAlignment(Qt.AlignCenter)
 
             purgeStart_input = QtWidgets.QLineEdit()
             purgeStart_input.setFixedHeight(25)
+            purgeStart_input.setAlignment(Qt.AlignCenter)
 
             purgeEnd_input = QtWidgets.QLineEdit()
             purgeEnd_input.setFixedHeight(25)
+            purgeEnd_input.setAlignment(Qt.AlignCenter)
 
             remarks = QtWidgets.QTextEdit()
+
 
             operator_input = QtWidgets.QLineEdit()
             operator_input.setFixedHeight(25)
@@ -966,6 +996,10 @@ class Ui_LoginWindow(object):
             resin_input.setFixedHeight(25)
             resin_input.setAlignment(Qt.AlignCenter)
 
+            purging_input = QtWidgets.QLineEdit()
+            purging_input.setFixedHeight(25)
+            purging_input.setAlignment(Qt.AlignCenter)
+
             # Left Side of Vertical Box
             self.left_vbox.addRow(productID_label, productID_input)
             self.left_vbox.addRow(productCode_label, productCode_input)
@@ -973,17 +1007,18 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(orderedQuantity_label, orderedQuantity_input)
             self.left_vbox.addRow(lotnumber_label, lot_number_input)
             self.left_vbox.addRow(productOutput_label, product_output_input)
+            self.left_vbox.addRow(loss_label, loss_input)
             self.left_vbox.addRow(machine_label, machine_input)
             self.left_vbox.addRow(formulaID_label, self.formulaID_input)
             self.left_vbox.addRow(order_number_lbl, order_number_input)
 
             # Add widgets to the right Form Box
-            self.right_vbox.addRow(loss_label, loss_input)
             self.right_vbox.addRow(feedrate_label,feedRate_input)
             self.right_vbox.addRow(rpm_label, rpm_input)
-            self.right_vbox.addRow(resin_label, resin_input)
             self.right_vbox.addRow(screenSize_label, screenSize_input)
             self.right_vbox.addRow(screwConf_label, screwConf_input)
+            self.right_vbox.addRow(purging_label, purging_input)
+            self.right_vbox.addRow(resin_label, resin_input)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
             self.right_vbox.addRow(operator_label, operator_input)
@@ -991,29 +1026,24 @@ class Ui_LoginWindow(object):
 
             # Time Table Entry
             time_table = QtWidgets.QTableWidget(self.entry_widget)
-            time_table.setGeometry(0, 500, 250, 200)
+            time_table.setGeometry(65, 450, 335, 200)
             time_table.setColumnCount(2)
             time_table.setRowCount(8)
+            time_table.setColumnWidth(0, 150)
+            time_table.setColumnWidth(1, 150)
             time_table.setStyleSheet("background-color: white;")
+
             time_table.setHorizontalHeaderLabels(["Time Start", "Time End"])
             time_table.show()
 
             # Temperature Table Entry
             temperature_table = QtWidgets.QTableWidget(self.entry_widget)
-            temperature_table.setGeometry(260, 500, 250, 200)
+            temperature_table.setGeometry(400, 450, 250, 200)
             temperature_table.setColumnCount(2)
             temperature_table.setRowCount(12)
             temperature_table.setStyleSheet("background-color: white;")
             temperature_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
             temperature_table.show()
-
-            # Material Table
-            self.material_table = QtWidgets.QTableWidget(self.entry_widget)
-            self.material_table.setGeometry(520, 500, 250, 200)
-            self.material_table.setColumnCount(2)
-            self.material_table.setRowCount(4)
-            self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity (Kg)"])
-            self.material_table.show()
 
             # populatate the 1st column of temperature table
             for i in range(12):
@@ -1023,14 +1053,19 @@ class Ui_LoginWindow(object):
 
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
-            select_prod.setGeometry(200, 400, 60, 25)
+            select_prod.setGeometry(600, 675, 150, 25)
+            select_prod.setFont(QtGui.QFont("Arial", 12))
+            select_prod.setText("Select Production")
+            select_prod.setStyleSheet("border: 3px solid black;")
             select_prod.clicked.connect(select_production)
+            select_prod.setCursor(Qt.PointingHandCursor)
             select_prod.show()
 
             save_btn = QtWidgets.QPushButton(self.entry_widget)
-            save_btn.setGeometry(100, 400, 60, 25)
+            save_btn.setGeometry(540, 675, 60, 25)
             save_btn.clicked.connect(get_entries)
             save_btn.setText("Save")
+            save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.show()
 
         def update_entry():
