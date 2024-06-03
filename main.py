@@ -516,11 +516,9 @@ class Ui_LoginWindow(object):
 
             self.entry_widget = QtWidgets.QWidget()
             self.entry_widget.setGeometry(300, 100, 800, 700)
-            self.entry_widget.setStyleSheet("background-color : white;")
+            self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
-
-
 
             def get_entries():
                 # get the data from the tables
@@ -529,23 +527,27 @@ class Ui_LoginWindow(object):
                 temp_row = time_table.rowCount()
                 time_start = []
                 time_end = []
+                outputs = []
 
                 # Getting the data from the Time Table
-                for i in range(temp_row):
+                for i in range(self.time_entry):
                     time_start.append(time_table.item(i, 0)) # time start
                     time_end.append(time_table.item(i, 1)) # time end
+                    outputs.append(time_table.item(i, 2))
 
                 # Removing Null Values
                 time_start = [i for i in time_start if i is not None]
                 time_start = [i.text() for i in time_start]
                 time_end = [i for i in time_end if i is not None]
                 time_end = [i.text() for i in time_end]
+                outputs = [i for i in outputs if i is not None]
+                outputs = [i.text() for i in outputs]
 
                 total_time = timedelta()
                 try:
                     for i in range(len(time_start)):
-                        t_start = datetime.strptime(time_start[i], "%Y-%m-%d %H:%M:%S")
-                        t_end = datetime.strptime(time_end[i], "%Y-%m-%d %H:%M:%S")
+                        t_start = datetime.strptime(time_start[i], "%m-%d-%Y %H:%M")
+                        t_end = datetime.strptime(time_end[i], "%m-%d-%Y %H:%M")
                         total_time = total_time + (t_start - t_end)
                 except Exception as e:
                     print(e)
@@ -554,20 +556,22 @@ class Ui_LoginWindow(object):
                 minutes = str((int(total_time.total_seconds() % 3600) // 60))
                 seconds = str(int(total_time.total_seconds() % 60))
 
-                total_time = f"{hours}:{minutes}:{seconds}" # Total Time as a String
+                total_hours = abs(total_time.total_seconds() / 3600)
+                print(total_hours)
+
+
+                time_start = ', '.join(["'{}'".format(time) for time in time_start])
+                time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
                 # Getting the Data for temperature
                 temperature = []
                 for i in range(temperature_table.rowCount()):
-                    temperature.append(temperature_table.item(i,1))
+                    temperature.append(temperature_table.item(i,0))
 
                 temperature = [i for i in temperature if i is not None]
                 temperature = [i.text() for i in temperature]
 
                 print(temperature)
-
-                time_start = ', '.join(["'{}'".format(time) for time in time_start])
-                time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
                 # Declare additional variables need here like loss percentage
                 output_percent = (float(product_output_input.text()) / float(orderedQuantity_input.text())) * 100
@@ -600,14 +604,14 @@ class Ui_LoginWindow(object):
                     INSERT INTO extruder( machine, qty_order, total_output, customer,
                     formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                     loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
-                    rpm, screen_size, operator, supervisor, temperature) 
+                    rpm, screen_size, operator, supervisor, temperature, outputs) 
                     VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                     '{customer_input.text()}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
-                    '{order_number_input.text()}', '{total_time}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
+                    '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                     '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
                      '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                      '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
-                     ARRAY[{temperature}]::INTEGER[])
+                     ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[])
 
                                     """)
                     print("query successful")
@@ -632,7 +636,6 @@ class Ui_LoginWindow(object):
                     """)
                     result = self.cursor.fetchall()
                     result = result[0]
-
 
                     material = result[-1]
 
@@ -758,6 +761,10 @@ class Ui_LoginWindow(object):
                 self.table3.setColumnWidth(0, 200)
                 self.table3.setColumnWidth(1, 200)
                 self.table3.setRowHeight(0, 35)
+                font = QtGui.QFont("Arial", 12)
+                font.setBold(True)
+                self.table3.setFont(font)
+                self.table3.setStyleSheet("color: rgb(0,109,189) ")
                 self.table3.horizontalHeader().setStyleSheet("""
                     QHeaderView::section{
                         font-weight: bold;
@@ -809,6 +816,26 @@ class Ui_LoginWindow(object):
 
                 self.selectProd_widget.setWindowModality(Qt.ApplicationModal)
                 self.selectProd_widget.show()
+
+            self.time_entry = 0
+            def add_time():
+
+                item1 = QTableWidgetItem(date_input.text() + " " + timestart_input.text())
+                item2 = QTableWidgetItem(date_input.text() + " " + timeend_input.text())
+                item3 = QTableWidgetItem(output_lineEdit.text())
+
+                item3.setTextAlignment(Qt.AlignCenter)
+
+                time_table.setItem(self.time_entry, 0, item1)
+                time_table.setItem(self.time_entry, 1, item2)
+                time_table.setItem(self.time_entry, 2, item3)
+
+                self.time_entry += 1
+
+                timestart_input.clear()
+                timeend_input.clear()
+                output_lineEdit.clear()
+                timestart_input.setFocus()
 
 
             # Create two new widget for the VBOX Layout
@@ -915,90 +942,109 @@ class Ui_LoginWindow(object):
             productID_input.setFixedHeight(25)
             productID_input.setEnabled(False)
             productID_input.setAlignment(Qt.AlignCenter)
+            productID_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             machine_input = QtWidgets.QLineEdit()
             machine_input.setFixedHeight(25)
             machine_input.setEnabled(False)
             machine_input.setAlignment(Qt.AlignCenter)
+            machine_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
             customer_input.setEnabled(False)
             customer_input.setAlignment(Qt.AlignCenter)
+            customer_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             orderedQuantity_input = QtWidgets.QLineEdit()
             orderedQuantity_input.setAlignment(Qt.AlignCenter)
             orderedQuantity_input.setFixedHeight(25)
             orderedQuantity_input.setEnabled(False)
+            orderedQuantity_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             productCode_input = QtWidgets.QLineEdit()
             productCode_input.setFixedHeight(25)
             productCode_input.setEnabled(False)
             productCode_input.setAlignment(Qt.AlignCenter)
+            productCode_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             product_output_input = QtWidgets.QLineEdit()
             product_output_input.setFixedHeight(25)
             product_output_input.setEnabled(False)
             product_output_input.setAlignment(Qt.AlignCenter)
+            product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             self.formulaID_input = QtWidgets.QLineEdit()
             self.formulaID_input.setAlignment(Qt.AlignCenter)
             self.formulaID_input.setFixedHeight(25)
             self.formulaID_input.setEnabled(False)
+            self.formulaID_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             lot_number_input = QtWidgets.QLineEdit()
             lot_number_input.setAlignment(Qt.AlignCenter)
             lot_number_input.setFixedHeight(25)
             lot_number_input.setEnabled(False)
+            lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             feedRate_input = QtWidgets.QLineEdit()
             feedRate_input.setFixedHeight(25)
+            feedRate_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             rpm_input = QtWidgets.QLineEdit()
             rpm_input.setFixedHeight(25)
+            rpm_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             screenSize_input = QtWidgets.QLineEdit()
             screenSize_input.setFixedHeight(25)
+            screenSize_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             screwConf_input = QtWidgets.QLineEdit()
             screwConf_input.setFixedHeight(25)
+            screwConf_input.setStyleSheet("background-color: white; border: 1px solid black ")
 
             loss_input = QtWidgets.QLineEdit()
             loss_input.setFixedHeight(25)
             loss_input.setEnabled(False)
             loss_input.setAlignment(Qt.AlignCenter)
+            loss_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             purgeStart_input = QtWidgets.QLineEdit()
             purgeStart_input.setFixedHeight(25)
             purgeStart_input.setAlignment(Qt.AlignCenter)
+            purgeStart_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             purgeEnd_input = QtWidgets.QLineEdit()
             purgeEnd_input.setFixedHeight(25)
             purgeEnd_input.setAlignment(Qt.AlignCenter)
+            purgeEnd_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             remarks = QtWidgets.QTextEdit()
-
 
             operator_input = QtWidgets.QLineEdit()
             operator_input.setFixedHeight(25)
             operator_input.setAlignment(Qt.AlignCenter)
+            operator_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             supervisor_input = QtWidgets.QLineEdit()
             supervisor_input.setFixedHeight(25)
             supervisor_input.setAlignment(Qt.AlignCenter)
+            supervisor_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             order_number_input = QtWidgets.QLineEdit()
             order_number_input.setFixedHeight(25)
             order_number_input.setEnabled(False)
             order_number_input.setAlignment(Qt.AlignCenter)
+            order_number_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             resin_input = QtWidgets.QLineEdit()
             resin_input.setFixedHeight(25)
             resin_input.setAlignment(Qt.AlignCenter)
+            resin_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             purging_input = QtWidgets.QLineEdit()
             purging_input.setFixedHeight(25)
             purging_input.setAlignment(Qt.AlignCenter)
+            purging_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             # Left Side of Vertical Box
             self.left_vbox.addRow(productID_label, productID_input)
@@ -1026,47 +1072,73 @@ class Ui_LoginWindow(object):
 
             # Time Table Entry
             time_table = QtWidgets.QTableWidget(self.entry_widget)
-            time_table.setGeometry(65, 450, 335, 200)
-            time_table.setColumnCount(2)
+            time_table.setGeometry(0, 450, 450, 200)
+            time_table.setColumnCount(3)
             time_table.setRowCount(8)
+            time_table.setEnabled(False)
             time_table.setColumnWidth(0, 150)
             time_table.setColumnWidth(1, 150)
             time_table.setStyleSheet("background-color: white;")
+            time_table.setFont(QtGui.QFont("Arial", 10))
 
-            time_table.setHorizontalHeaderLabels(["Time Start", "Time End"])
+            time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             time_table.show()
 
             # Temperature Table Entry
             temperature_table = QtWidgets.QTableWidget(self.entry_widget)
-            temperature_table.setGeometry(400, 450, 250, 200)
-            temperature_table.setColumnCount(2)
+            temperature_table.setGeometry(450, 450, 150, 200)
+            temperature_table.setColumnCount(1)
             temperature_table.setRowCount(12)
             temperature_table.setStyleSheet("background-color: white;")
-            temperature_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
+            temperature_table.setHorizontalHeaderLabels(["Temperature"])
+            temperature_index = ["Z"+str(i+1) for i in range(12)] # set the index
+            temperature_table.setVerticalHeaderLabels(temperature_index)
             temperature_table.show()
-
-            # populatate the 1st column of temperature table
-            for i in range(12):
-                item = QTableWidgetItem(str("Z" + str(i+1)))
-                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                temperature_table.setItem(i, 0, item)
 
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
-            select_prod.setGeometry(600, 675, 150, 25)
-            select_prod.setFont(QtGui.QFont("Arial", 12))
-            select_prod.setText("Select Production")
-            select_prod.setStyleSheet("border: 3px solid black;")
+            select_prod.setGeometry(600, 655, 60, 25)
+            select_prod.setText("Select")
             select_prod.clicked.connect(select_production)
             select_prod.setCursor(Qt.PointingHandCursor)
             select_prod.show()
 
             save_btn = QtWidgets.QPushButton(self.entry_widget)
-            save_btn.setGeometry(540, 675, 60, 25)
+            save_btn.setGeometry(540, 655, 60, 25)
             save_btn.clicked.connect(get_entries)
             save_btn.setText("Save")
             save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.show()
+
+            date_input =QtWidgets.QLineEdit(self.entry_widget)
+            date_input.setGeometry(10, 425, 70, 25)
+            date_input.setStyleSheet("background-color: white; border: 1px solid black")
+            date_input.show()
+
+            timestart_input = QtWidgets.QLineEdit(self.entry_widget)
+            timestart_input.setGeometry(100, 425, 100, 25)
+            timestart_input.setAlignment(Qt.AlignCenter)
+            timestart_input.setStyleSheet("background-color: white; border: 1px solid black")
+            timestart_input.show()
+
+            timeend_input = QtWidgets.QLineEdit(self.entry_widget)
+            timeend_input.setGeometry(220, 425, 100, 25)
+            timeend_input.setAlignment(Qt.AlignCenter)
+            timeend_input.setStyleSheet("background-color: white; border: 1px solid black")
+            timeend_input.show()
+
+            output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
+            output_lineEdit.setGeometry(340, 425, 80, 25)
+            output_lineEdit.setAlignment(Qt.AlignCenter)
+            output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
+            output_lineEdit.show()
+
+            self.plus_icon = ClickableLabel(self.entry_widget)
+            self.plus_icon.setGeometry(420, 425, 25, 25)
+            self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
+            self.plus_icon.setCursor(Qt.PointingHandCursor)
+            self.plus_icon.clicked.connect(add_time)
+            self.plus_icon.show()
 
         def update_entry():
              pass
