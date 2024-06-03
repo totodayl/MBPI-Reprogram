@@ -8,10 +8,6 @@ from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime
 
 
-
-
-
-
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
     clicked = pyqtSignal()
@@ -546,8 +542,6 @@ class Ui_LoginWindow(object):
 
                 total_hours = abs(total_time.total_seconds() / 3600)
 
-
-
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
@@ -690,7 +684,7 @@ class Ui_LoginWindow(object):
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
                     order_number_input.setText(order_number)
-                    loss_input.setText(str(float(quantity_order) - float(output_quantity)))
+
 
                     self.selectProd_widget.close()
 
@@ -828,6 +822,12 @@ class Ui_LoginWindow(object):
                 output_lineEdit.clear()
                 timestart_input.setFocus()
 
+            def loss_auto():
+                if product_output_input.text() != "":
+                    try:
+                        loss_input.setText(str(float(product_input.text()) - float(product_output_input.text())))
+                    except:
+                        loss_input.setText("INVALID")
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
@@ -1045,6 +1045,7 @@ class Ui_LoginWindow(object):
             product_input.setFixedHeight(25)
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
+            product_input.textChanged.connect(loss_auto)
 
             # Left Side of Vertical Box
             self.left_vbox.addRow(productID_label, productID_input)
@@ -1058,7 +1059,6 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(machine_label, machine_input)
             self.left_vbox.addRow(formulaID_label, self.formulaID_input)
             self.left_vbox.addRow(order_number_lbl, order_number_input)
-
 
             # Add widgets to the right Form Box
             self.right_vbox.addRow(feedrate_label,feedRate_input)
@@ -1172,7 +1172,6 @@ class Ui_LoginWindow(object):
             print(e)
 
 
-
         # Set Column Count
         self.extruder_table.setColumnCount(len(column_names))
         # Set Row Count
@@ -1209,7 +1208,7 @@ class Ui_LoginWindow(object):
         """)
 
         # Set Column Width
-        self.extruder_table.setColumnWidth(2, 175   )
+        self.extruder_table.setColumnWidth(2, 175)
 
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
 
@@ -1240,16 +1239,14 @@ class Ui_LoginWindow(object):
         self.update_btn.show()
 
 
-
 if __name__ == "__main__":
     import sys
 
-    try:
-        app = QtWidgets.QApplication(sys.argv)
-        LoginWindow = QtWidgets.QMainWindow()
-        ui = Ui_LoginWindow()
-        ui.setupUi(LoginWindow)
-        LoginWindow.show()
-        sys.exit(app.exec_())
-    except Exception:
-        traceback.print_exc()
+    app = QtWidgets.QApplication(sys.argv)
+    LoginWindow = QtWidgets.QMainWindow()
+    ui = Ui_LoginWindow()
+    ui.setupUi(LoginWindow)
+    LoginWindow.show()
+    sys.exit(app.exec_())
+
+
