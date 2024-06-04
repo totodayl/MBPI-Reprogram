@@ -157,7 +157,7 @@ class Ui_LoginWindow(object):
             materials = str(materials).replace("'", '"')
             materials = json.loads(materials)
 
-            temperature = temperature[0] # Unpack
+
             # Regular expression pattern to match time values
             time_pattern = r'datetime\.time\((\d+), (\d+)\)'
 
@@ -879,8 +879,8 @@ class Ui_LoginWindow(object):
             self.time_entry = 0
             def add_time():
 
-                item1 = QTableWidgetItem(date_input.text() + " " + timestart_input.text())
-                item2 = QTableWidgetItem(date_input.text() + " " + timeend_input.text())
+                item1 = QTableWidgetItem(time_start_input.text())
+                item2 = QTableWidgetItem(time_end_input.text())
                 item3 = QTableWidgetItem(output_lineEdit.text())
 
                 item3.setTextAlignment(Qt.AlignCenter)
@@ -891,10 +891,9 @@ class Ui_LoginWindow(object):
 
                 self.time_entry += 1
 
-                timestart_input.clear()
-                timeend_input.clear()
+
                 output_lineEdit.clear()
-                timestart_input.setFocus()
+
 
             def loss_auto():
                 if product_output_input.text() != "":
@@ -1185,25 +1184,20 @@ class Ui_LoginWindow(object):
             save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.show()
 
-            date_input =QtWidgets.QLineEdit(self.entry_widget)
-            date_input.setGeometry(10, 475, 70, 25)
-            date_input.setStyleSheet("background-color: white; border: 1px solid black")
-            date_input.setPlaceholderText("MM-DD-YYYY")
-            date_input.show()
+            default_date = QtCore.QDateTime(2024, 1, 1, 0, 0)
 
-            timestart_input = QtWidgets.QLineEdit(self.entry_widget)
-            timestart_input.setGeometry(100, 475, 100, 25)
-            timestart_input.setAlignment(Qt.AlignCenter)
-            timestart_input.setStyleSheet("background-color: white; border: 1px solid black")
-            timestart_input.setPlaceholderText("HH:MM")
-            timestart_input.show()
+            time_start_input = QtWidgets.QDateTimeEdit(self.entry_widget)
+            time_start_input.setGeometry(30, 475, 120, 25)
+            time_start_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            time_start_input.setDateTime(default_date)
+            time_start_input.show()
 
-            timeend_input = QtWidgets.QLineEdit(self.entry_widget)
-            timeend_input.setGeometry(220, 475, 100, 25)
-            timeend_input.setAlignment(Qt.AlignCenter)
-            timeend_input.setStyleSheet("background-color: white; border: 1px solid black")
-            timeend_input.setPlaceholderText("HH:MM")
-            timeend_input.show()
+            time_end_input = QtWidgets.QDateTimeEdit(self.entry_widget)
+            time_end_input.setGeometry(180, 475, 120, 25)
+            time_end_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            time_end_input.setDateTime(default_date)
+            time_end_input.show()
+
 
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
             output_lineEdit.setGeometry(340, 475, 80, 25)
