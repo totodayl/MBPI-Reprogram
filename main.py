@@ -590,7 +590,7 @@ class Ui_LoginWindow(object):
                     loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                     rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour) 
                     VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
-                    '{customer_input.text()}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
+                    '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                     '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                     '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
                      '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
@@ -601,7 +601,7 @@ class Ui_LoginWindow(object):
                     print("query successful")
                     self.conn.commit()
                     self.entry_widget.close()
-                except psycopg2.Error as e:
+                except Exception as e:
                     print("Insert Failed")
                     print(e)
                     self.conn.rollback()
