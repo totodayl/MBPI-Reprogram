@@ -98,7 +98,7 @@ class Ui_LoginWindow(object):
         self.production_btn.show()
 
         self.production_lbl = QtWidgets.QLabel(self.production_btn)
-        self.production_lbl.setText("Production")
+        self.production_lbl.setText("Extruder")
         self.production_lbl.setGeometry(50, 5, 100, 30)
         self.production_lbl.setFont(QtGui.QFont("Arial", 13))
         self.production_lbl.setStyleSheet("color: blue;")
@@ -556,8 +556,8 @@ class Ui_LoginWindow(object):
                 print(temperature)
 
                 # Declare additional variables need here like loss percentage
-                output_percent = (float(product_output_input.text()) / float(orderedQuantity_input.text())) * 100
-                loss_percent = (float(loss_input.text()) / float(orderedQuantity_input.text())) * 100
+                output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
+                loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
                 purge_duration = timedelta()
                 outputPerHour = float(product_output_input.text()) / total_hours
                 print(outputPerHour)
@@ -607,6 +607,13 @@ class Ui_LoginWindow(object):
                     self.conn.rollback()
 
             def select_production():
+
+                try:
+                    self.table.deleteLater()
+                    self.table2.deleteLater()
+                    self.table3.deleteLater()
+                except:
+                    pass
 
                 def show_table():
                     self.table2.clearContents()
@@ -684,9 +691,73 @@ class Ui_LoginWindow(object):
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
                     order_number_input.setText(order_number)
-
-
                     self.selectProd_widget.close()
+
+                def search():
+                    try:
+                        self.table.itemSelectionChanged.disconnect(show_table)
+                        self.table.clearContents()
+                        self.cursor.execute(f"""
+                                            SELECT production_id, lot_number
+                                            FROM production_merge
+                                            WHERE production_id = '{search_bar.text()}'
+                                            """)
+                        search_result = self.cursor.fetchall()
+                        print(search_result)
+                        search_result = search_result[0]
+                        print(search_result)
+                        item = QTableWidgetItem(search_result[0])
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item2 = QTableWidgetItem(search_result[1])
+                        item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
+                        self.table.setItem(0, 0, item)
+                        self.table.setItem(0, 1, item2)
+                        self.table.itemSelectionChanged.connect(show_table)
+                    except Exception as e:
+                        print(e)
+
+                def clear():
+
+                    try:
+                        self.cursor.execute("""
+                                                                                SELECT production_id, lot_number
+                                                                                FROM production_merge
+
+                                                                                """)
+                        result = self.cursor.fetchall()
+                        self.table.setRowCount(len(result))
+                        self.table.setColumnCount(2)
+                        self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+
+                        self.table.itemSelectionChanged.disconnect(show_table)
+                        self.table.clearSelection()
+                        self.table.clear()
+                        search_bar.clear()
+
+                        self.table2.clearContents()
+                        self.table3.clearContents()
+                        self.table.itemSelectionChanged.connect(show_table)
+
+                    except Exception as e:
+                        self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+                        self.table.itemSelectionChanged.connect(show_table)
+
+
+
+                    try:
+                        self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+                        for i in range(len(result)):
+
+                            prod_id = QTableWidgetItem(str(result[i][0]))
+                            lot_num = QTableWidgetItem(str(result[i][1]))
+                            self.table.setItem(i, 0, prod_id)
+                            prod_id.setFlags(prod_id.flags() & ~Qt.ItemIsEditable)
+                            self.table.setItem(i, 1, lot_num)
+                            lot_num.setFlags(lot_num.flags() & ~Qt.ItemIsEditable)
+                            self.table.show()
+
+                    except Exception as e:
+                        print(e)
 
                 self.cursor.execute("""
                 SELECT production_id, lot_number
@@ -698,6 +769,24 @@ class Ui_LoginWindow(object):
                 self.selectProd_widget = QtWidgets.QWidget()
                 self.selectProd_widget.setGeometry(400, 200, 800, 630)
                 self.selectProd_widget.setFixedSize(800, 600)
+
+                search_bar = QtWidgets.QLineEdit(self.selectProd_widget)
+                search_bar.setGeometry(40, 25, 170, 25)
+                search_bar.setFont(QtGui.QFont("Arial", 10))
+                search_bar.setPlaceholderText("Search Production ID")
+                search_bar.show()
+
+                search_btn = QtWidgets.QPushButton(self.selectProd_widget)
+                search_btn.setGeometry(210, 25, 70, 27)
+                search_btn.setText("Search")
+                search_btn.clicked.connect(search)
+                search_btn.show()
+
+                clear_btn = QtWidgets.QPushButton(self.selectProd_widget)
+                clear_btn.setGeometry(280, 25, 70, 27)
+                clear_btn.setText("Clear")
+                clear_btn.clicked.connect(clear)
+                clear_btn.show()
 
                 # ProductionId and Lot Number Table widget
                 self.table = QtWidgets.QTableWidget(self.selectProd_widget)
@@ -825,7 +914,7 @@ class Ui_LoginWindow(object):
             def loss_auto():
                 if product_output_input.text() != "":
                     try:
-                        loss_input.setText(str(float(product_input.text()) - float(product_output_input.text())))
+                        loss_input.setText(str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
                     except:
                         loss_input.setText("INVALID")
 
