@@ -184,13 +184,9 @@ class Ui_LoginWindow(object):
             right_info_widget = QtWidgets.QWidget(self.info_widget)
             right_info_widget.setGeometry(629, 100, 307, 300)
 
-            left_info_layout = QFormLayout(left_info_widget)
-            mid_info_layout = QFormLayout(mid_info_widget)
-            right_info_widget = QFormLayout(right_info_widget)
-
-
-
-
+            left_info_layout = QGridLayout(left_info_widget)
+            mid_info_layout = QGridLayout(mid_info_widget)
+            right_info_widget = QGridLayout(right_info_widget)
 
 
             self.ordered_company = QtWidgets.QLabel(self.info_widget)
@@ -205,7 +201,6 @@ class Ui_LoginWindow(object):
             self.machine_label.setText("Extruder:")
             self.machine_label.setFont(font)
             self.machine_label.setGeometry(50, 80, 80, 30)
-            self.machine_label.show()
 
             # Show Extruder Value
             self.extruder_val = QtWidgets.QLabel(self.info_widget)
@@ -218,193 +213,167 @@ class Ui_LoginWindow(object):
             self.code_label = QtWidgets.QLabel(self.info_widget)
             self.code_label.setText("Product Code:")
             self.code_label.setFont(font)
-            self.code_label.setGeometry(50, 125, 130, 30)
-            self.code_label.show()
 
             # Show Product Code Value
             self.product_code_val = QtWidgets.QLabel(self.info_widget)
-            self.product_code_val.setGeometry(200, 125, 150, 30)
             self.product_code_val.setText(product_code)
             self.product_code_val.setFont(font)
-            self.product_code_val.show()
 
             # Quantity Order Label
             self.order_label = QtWidgets.QLabel(self.info_widget)
             self.order_label.setText("Quantity Order:")
             self.order_label.setFont(font)
-            self.order_label.setGeometry(50, 170, 130, 30)
-            self.order_label.show()
 
             # Show Order Value
             self.order_val = QtWidgets.QLabel(self.info_widget)
-            self.order_val.setGeometry(200, 170, 150, 30)
             self.order_val.setText(str(ordered_qty))
             self.order_val.setFont(font)
-            self.order_val.show()
+
             # Show Output Label
             self.output_label = QtWidgets.QLabel(self.info_widget)
             self.output_label.setText("Output:")
             self.output_label.setFont(font)
-            self.output_label.setGeometry(50, 215, 60, 30)
-            self.output_label.show()
 
             # Show Output Value
             self.output_val = QtWidgets.QLabel(self.info_widget)
-            self.output_val.setGeometry(200, 215, 150, 30)
             self.output_val.setText(str(product_output))
             self.output_val.setFont(font)
-            self.output_val.show()
 
             # Show formula Label
             self.formula_label = QtWidgets.QLabel(self.info_widget)
             self.formula_label.setText("Formula ID:")
             self.formula_label.setFont(font)
-            self.formula_label.setGeometry(50, 260, 100, 30)
-            self.formula_label.show()
 
             # Show Formula ID Value
             self.formulaID_val = QtWidgets.QLabel(self.info_widget)
-            self.formulaID_val.setGeometry(200, 260, 150, 30)
             self.formulaID_val.setText(str(formula_id))
             self.formulaID_val.setFont(font)
-            self.formulaID_val.show()
 
             self.resin_label = QtWidgets.QLabel(self.info_widget)
             self.resin_label.setText("Resin:")
             self.resin_label.setFont(font)
-            self.resin_label.setGeometry(50, 305, 60, 30)
-            self.resin_label.show()
 
             # Show Resin Value
             self.resin_val = QtWidgets.QLabel(self.info_widget)
-            self.resin_val.setGeometry(200, 305, 100, 30)
             self.resin_val.setText(str(resin))
             self.resin_val.setFont(font)
-            self.resin_val.show()
 
             # Lot Label
             self.lot_label = QtWidgets.QLabel(self.info_widget)
             self.lot_label.setText("LOT Number:")
             self.lot_label.setFont(font)
-            self.lot_label.setGeometry(350, 80, 120, 30)
-            self.lot_label.show()
 
             # Show Lot Number Value
             self.lotNum_val = QtWidgets.QLabel(self.info_widget)
-            self.lotNum_val.setGeometry(490, 80, 150, 30)
             self.lotNum_val.setText(str(resin))
             self.lotNum_val.setFont(font)
-            self.lotNum_val.show()
 
             self.feedrate_label = QtWidgets.QLabel(self.info_widget)
             self.feedrate_label.setText("Feed Rate:")
             self.feedrate_label.setFont(font)
-            self.feedrate_label.setGeometry(350, 125, 120, 30)
-            self.feedrate_label.show()
 
             # Show Feed Rate Value
             self.feedrate_val = QtWidgets.QLabel(self.info_widget)
-            self.feedrate_val.setGeometry(490, 125, 150, 30)
             self.feedrate_val.setText(str(feed_rate))
             self.feedrate_val.setFont(font)
-            self.feedrate_val.show()
 
             # RPM label
             self.rpm_label = QtWidgets.QLabel(self.info_widget)
             self.rpm_label.setText("RPM:")
             self.rpm_label.setFont(font)
-            self.rpm_label.setGeometry(350, 170, 120, 30)
-            self.rpm_label.show()
 
             # Show RPM Value
             self.rpm_val = QtWidgets.QLabel(self.info_widget)
-            self.rpm_val.setGeometry(490, 170, 150, 30)
             self.rpm_val.setText(str(rpm))
             self.rpm_val.setFont(font)
-            self.rpm_val.show()
 
             # Screen Size Label
             self.screen_size_label = QtWidgets.QLabel(self.info_widget)
             self.screen_size_label.setText("Screen Size:")
             self.screen_size_label.setFont(font)
-            self.screen_size_label.setGeometry(350, 215, 120, 30)
-            self.screen_size_label.show()
 
             # Show Screen Size Value
             self.screenSize_val = QtWidgets.QLabel(self.info_widget)
-            self.screenSize_val.setGeometry(490, 215, 150, 30)
             self.screenSize_val.setText(str(screen_size))
             self.screenSize_val.setFont(font)
-            self.screenSize_val.show()
+
 
             self.screwconfig_label = QtWidgets.QLabel(self.info_widget)
             self.screwconfig_label.setText("Screw Config:")
             self.screwconfig_label.setFont(font)
-            self.screwconfig_label.setGeometry(350, 260, 130, 30)
-            self.screwconfig_label.show()
+
 
             # Show Screw Config Value
             self.screwConf_val = QtWidgets.QLabel(self.info_widget)
-            self.screwConf_val.setGeometry(490, 260, 150, 30)
             self.screwConf_val.setText(str(screw_config))
             self.screwConf_val.setFont(font)
-            self.screwConf_val.show()
+
 
             # Output % Label
             self.output_percentage_lbl = QtWidgets.QLabel(self.info_widget)
             self.output_percentage_lbl.setText("Output %:")
             self.output_percentage_lbl.setFont(font)
-            self.output_percentage_lbl.setGeometry(650, 80, 140, 30)
-            self.output_percentage_lbl.show()
+
 
             # Show Output Percentage Value
             self.outputPercent_val = QtWidgets.QLabel(self.info_widget)
-            self.outputPercent_val.setGeometry(800, 80, 150, 30)
             self.outputPercent_val.setText(str(output_percent))
             self.outputPercent_val.setFont(font)
-            self.outputPercent_val.show()
 
             # Loss Label
             self.loss_label = QtWidgets.QLabel(self.info_widget)
             self.loss_label.setText("Loss:")
             self.loss_label.setFont(QtGui.QFont(font))
-            self.loss_label.setGeometry(650, 125, 140, 30)
-            self.loss_label.show()
 
             # Show Loss Value
             self.loss_val = QtWidgets.QLabel(self.info_widget)
-            self.loss_val.setGeometry(800, 125, 150, 30)
             self.loss_val.setText(str(loss))
             self.loss_val.setFont(font)
-            self.loss_val.show()
 
             # loss percentage Label
             self.loss_percent_label = QtWidgets.QLabel(self.info_widget)
             self.loss_percent_label.setText("Loss %:")
             self.loss_percent_label.setFont(font)
-            self.loss_percent_label.setGeometry(650, 170, 140, 30)
-            self.loss_percent_label.show()
 
             # Show Loss Percentage Value
             self.lossPercent_val = QtWidgets.QLabel(self.info_widget)
-            self.lossPercent_val.setGeometry(800, 170, 150, 30)
             self.lossPercent_val.setText(str(loss_percent))
             self.lossPercent_val.setFont(font)
-            self.lossPercent_val.show()
 
             # Purge Duration Label
             self.purge_duration_label = QtWidgets.QLabel(self.info_widget)
             self.purge_duration_label.setText("Purge Duration:")
             self.purge_duration_label.setFont(font)
-            self.purge_duration_label.setGeometry(650, 305, 140, 30)
-            self.purge_duration_label.show()
 
             # Show Resin Value
             self.purgeDuration_val = QtWidgets.QLabel(self.info_widget)
-            self.purgeDuration_val.setGeometry(800, 305, 150, 30)
             self.purgeDuration_val.setText(str(purge_duration))
             self.purgeDuration_val.setFont(font)
-            self.purgeDuration_val.show()
+
+
+            try:
+                left_info_layout.addWidget(self.machine_label, 0, 0)
+                left_info_layout.addWidget(self.extruder_val, 0, 1)
+
+                left_info_layout.addWidget(self.code_label, 1, 0)
+                left_info_layout.addWidget(self.product_code_val, 1, 1)
+
+                left_info_layout.addWidget(self.prod, 1, 0)
+                left_info_layout.addWidget(self.product_code_val, 1, 1)
+
+                left_info_layout.addWidget(self.code_label, 1, 0)
+                left_info_layout.addWidget(self.product_code_val, 1, 1)
+
+                left_info_layout.addWidget(self.code_label, 1, 0)
+                left_info_layout.addWidget(self.product_code_val, 1, 1)
+
+
+
+
+                left_info_widget.show()
+            except Exception as e:
+                print("test")
+                print(e)
 
             # Create 3 tables for Time, Materials and Temperature
             try:
@@ -582,15 +551,14 @@ class Ui_LoginWindow(object):
                     INSERT INTO extruder( machine, qty_order, total_output, customer,
                     formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                     loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
-                    rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour) 
+                    rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id) 
                     VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                     '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                     '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                     '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
                      '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                      '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
-                     ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour})
-
+                     ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productID_input.text()})
                                     """)
                     print("query successful")
                     self.conn.commit()
