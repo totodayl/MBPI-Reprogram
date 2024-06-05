@@ -15,6 +15,7 @@ class ClickableLabel(QtWidgets.QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
 
+
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
         LoginWindow.setObjectName("LoginWindow")
@@ -34,7 +35,7 @@ class Ui_LoginWindow(object):
         self.password.setAutoFillBackground(False)
         self.password.setStyleSheet("background-color: rgb(255, 255, 255); border-radius: 5px")
         self.password.setObjectName("password")
-        self.password.setEchoMode(QtWidgets.QLineEdit.Password) # Make the input hidden
+        self.password.setEchoMode(QtWidgets.QLineEdit.Password)  # Make the input hidden
         self.password.setText("mbpi")
         self.login_btn = QtWidgets.QPushButton(self.login_window)
         self.login_btn.setGeometry(QtCore.QRect(360, 340, 75, 23))
@@ -74,8 +75,8 @@ class Ui_LoginWindow(object):
 
     # This is the main window after login screen
     def launch_main(self):
-        LoginWindow.move(0,0)
-        LoginWindow.setFixedSize(1200,750)
+        LoginWindow.move(0, 0)
+        LoginWindow.setFixedSize(1200, 750)
         self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
         self.main_widget = QtWidgets.QWidget(self.login_window)
         self.main_widget.setStyleSheet("""
@@ -87,7 +88,7 @@ class Ui_LoginWindow(object):
         self.main_widget.show()
 
         self.production_btn = QtWidgets.QPushButton(self.login_window)
-        self.production_btn.setGeometry(30,200,180,40)
+        self.production_btn.setGeometry(30, 200, 180, 40)
         self.production_btn.setCursor(Qt.PointingHandCursor)
         self.production_btn.setStyleSheet("""
         border-top-left-radius: 10px; 
@@ -156,17 +157,13 @@ class Ui_LoginWindow(object):
             screen_size, operator, supervisor, materials, temperature = selected[20:25]
             purge_duration, outputs, output_per_hour = selected[25:28]
 
-            print(output_per_hour)
             # Convert string of json to JSON
 
             materials = str(materials).replace("'", '"')
             materials = json.loads(materials)
 
-
             # Regular expression pattern to match time values
             time_pattern = r'datetime\.time\((\d+), (\d+)\)'
-
-
 
             # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
@@ -175,10 +172,29 @@ class Ui_LoginWindow(object):
             self.info_widget.show()
 
             # Set Font Style and Size
-            font = QtGui.QFont("Arial", 14) # Set Font for Labels
+            font = QtGui.QFont("Arial", 14)  # Set Font for Labels
+
+            # Create QFormLayout
+            left_info_widget = QtWidgets.QWidget(self.info_widget)
+            left_info_widget.setGeometry(15, 100, 307, 300)
+
+            mid_info_widget = QtWidgets.QWidget(self.info_widget)
+            mid_info_widget.setGeometry(322, 100, 307, 300)
+
+            right_info_widget = QtWidgets.QWidget(self.info_widget)
+            right_info_widget.setGeometry(629, 100, 307, 300)
+
+            left_info_layout = QFormLayout(left_info_widget)
+            mid_info_layout = QFormLayout(mid_info_widget)
+            right_info_widget = QFormLayout(right_info_widget)
+
+
+
+
+
 
             self.ordered_company = QtWidgets.QLabel(self.info_widget)
-            self.ordered_company.setGeometry(20,30,950,30)
+            self.ordered_company.setGeometry(20, 30, 950, 30)
             self.ordered_company.setFont(QtGui.QFont("Arial", 30))
             self.ordered_company.setText(customer)
             self.ordered_company.setAlignment(Qt.AlignCenter)
@@ -193,7 +209,7 @@ class Ui_LoginWindow(object):
 
             # Show Extruder Value
             self.extruder_val = QtWidgets.QLabel(self.info_widget)
-            self.extruder_val.setGeometry(200,80,120,30)
+            self.extruder_val.setGeometry(200, 80, 120, 30)
             self.extruder_val.setText(machine)
             self.extruder_val.setFont(font)
             self.extruder_val.show()
@@ -413,7 +429,6 @@ class Ui_LoginWindow(object):
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         else:
-                            print(time_start[i], type(time_start[i]))
                             datetime1 = time_start[i]
                             datetime2 = time_end[i]
                             t_diff = datetime2 - datetime1
@@ -430,7 +445,8 @@ class Ui_LoginWindow(object):
 
                 # Populate the Time Table
                 self.time_table.setItem(self.time_rows + 1, 1, QtWidgets.QTableWidgetItem("Total"))
-                self.time_table.setItem(self.time_rows + 1, 2, QtWidgets.QTableWidgetItem(str(total_hours)+":"+str(total_minutes)))
+                self.time_table.setItem(self.time_rows + 1, 2,
+                                        QtWidgets.QTableWidgetItem(str(total_hours) + ":" + str(total_minutes)))
                 self.time_table.show()
 
                 # Material Table
@@ -440,7 +456,6 @@ class Ui_LoginWindow(object):
                 self.material_table.setRowCount(9)
                 self.material_table.setGeometry(410, 400, 225, 300)
                 self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity(Kg)"])
-
 
                 # Populate the Materials Table
                 for key in list(materials.keys()):
@@ -458,10 +473,8 @@ class Ui_LoginWindow(object):
                 self.temp_table.setGeometry(700, 400, 140, 300)
                 self.temp_table.setRowCount(12)
                 self.temp_table.setColumnCount(1)
-                self.temp_table.setVerticalHeaderLabels(["Z" + str(i+1) for i in range(12)])
+                self.temp_table.setVerticalHeaderLabels(["Z" + str(i + 1) for i in range(12)])
                 self.temp_table.setHorizontalHeaderLabels(["Temperature"])
-
-                print(temperature)
 
                 # Populate the Table
                 for i in range(len(temperature)):
@@ -493,8 +506,8 @@ class Ui_LoginWindow(object):
 
                 # Getting the data from the Time Table
                 for i in range(self.time_entry):
-                    time_start.append(time_table.item(i, 0)) # time start
-                    time_end.append(time_table.item(i, 1)) # time end
+                    time_start.append(time_table.item(i, 0))  # time start
+                    time_end.append(time_table.item(i, 1))  # time end
                     outputs.append(time_table.item(i, 2))
 
                 # Removing Null Values
@@ -514,7 +527,7 @@ class Ui_LoginWindow(object):
                 except Exception as e:
                     print(e)
 
-                hours = str(int(total_time.total_seconds() // 3600)).replace('-','')
+                hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
                 minutes = str((int(total_time.total_seconds() % 3600) // 60))
                 seconds = str(int(total_time.total_seconds() % 60))
 
@@ -526,40 +539,42 @@ class Ui_LoginWindow(object):
                 # Getting the Data for temperature
                 temperature = []
                 for i in range(temperature_table.rowCount()):
-                    temperature.append(temperature_table.item(i,0))
+                    temperature.append(temperature_table.item(i, 0))
 
                 temperature = [i for i in temperature if i is not None]
                 temperature = [i.text() for i in temperature]
 
-
                 # Declare additional variables need here like loss percentage
-                output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
-                loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
+                output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100,
+                                       4)  # Round to the 4th decimal
+                loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100,
+                                     4)  # Round to the 4th decimal
                 purge_duration = timedelta()
                 outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
                 try:
                     purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(purgeEnd_input.text(),"%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
                     purge_duration = purge_start - purge_end
 
                 except:
-                    print("test")
-                    purge_start = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),"%Y-%m-%d %H:%M")
-                    print(purge_start, purge_end)
+                    purge_start = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                                                  "%Y-%m-%d %H:%M")
                     purge_duration = (purge_start - purge_end).total_seconds()
 
                 purge_duration = purge_duration // 60
                 # SQL command here to insert Items
-                self.cursor.execute(f"SELECT materials FROM production_merge WHERE production_id = '{productID_input.text()}'")
-                material =self.cursor.fetchall()
+                self.cursor.execute(
+                    f"SELECT materials FROM production_merge WHERE production_id = '{productID_input.text()}'")
+                material = self.cursor.fetchall()
                 material = material[0][0]
                 material = json.dumps(material)
 
                 # Convert the list to string
-                temperature = str(temperature).replace("[", "").replace("]","")
-                outputs = str(outputs).replace("[", "").replace("]","")
+                temperature = str(temperature).replace("[", "").replace("]", "")
+                outputs = str(outputs).replace("[", "").replace("]", "")
 
                 try:
 
@@ -613,7 +628,6 @@ class Ui_LoginWindow(object):
                     try:
 
                         for keys in list(material.keys()):
-
                             key = QTableWidgetItem(str(keys))
                             value = QTableWidgetItem(str(material[keys]))
                             self.table2.setItem(list(material.keys()).index(keys), 0, key)
@@ -624,7 +638,7 @@ class Ui_LoginWindow(object):
 
                         label2.setText(str(result[2]))
                         prod_id = QTableWidgetItem(str(result[0]))
-                        prod_id.setTextAlignment(Qt.AlignCenter) # Align Center
+                        prod_id.setTextAlignment(Qt.AlignCenter)  # Align Center
                         lot_num = QTableWidgetItem(str(result[1]))
                         lot_num.setTextAlignment(Qt.AlignCenter)
                         self.table3.setItem(0, 0, prod_id)
@@ -682,9 +696,7 @@ class Ui_LoginWindow(object):
                                             WHERE production_id = '{search_bar.text()}'
                                             """)
                         search_result = self.cursor.fetchall()
-                        print(search_result)
                         search_result = search_result[0]
-                        print(search_result)
                         item = QTableWidgetItem(search_result[0])
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         item2 = QTableWidgetItem(search_result[1])
@@ -721,12 +733,9 @@ class Ui_LoginWindow(object):
                         self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
                         self.table.itemSelectionChanged.connect(show_table)
 
-
-
                     try:
                         self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
                         for i in range(len(result)):
-
                             prod_id = QTableWidgetItem(str(result[i][0]))
                             lot_num = QTableWidgetItem(str(result[i][1]))
                             self.table.setItem(i, 0, prod_id)
@@ -871,6 +880,7 @@ class Ui_LoginWindow(object):
                 self.selectProd_widget.show()
 
             self.time_entry = 0
+
             def add_time():
 
                 item1 = QTableWidgetItem(time_start_input.text())
@@ -885,14 +895,13 @@ class Ui_LoginWindow(object):
 
                 self.time_entry += 1
 
-
                 output_lineEdit.clear()
-
 
             def loss_auto():
                 if product_output_input.text() != "":
                     try:
-                        loss_input.setText(str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
+                        loss_input.setText(
+                            str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
                     except:
                         loss_input.setText("INVALID")
 
@@ -1117,7 +1126,7 @@ class Ui_LoginWindow(object):
             # Left Side of Vertical Box
             self.left_vbox.addRow(productID_label, productID_input)
             self.left_vbox.addRow(productCode_label, productCode_input)
-            self.left_vbox.addRow(customer_label,customer_input)
+            self.left_vbox.addRow(customer_label, customer_input)
             self.left_vbox.addRow(orderedQuantity_label, orderedQuantity_input)
             self.left_vbox.addRow(lotnumber_label, lot_number_input)
             self.left_vbox.addRow(product_input_label, product_input)
@@ -1128,7 +1137,7 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(order_number_lbl, order_number_input)
 
             # Add widgets to the right Form Box
-            self.right_vbox.addRow(feedrate_label,feedRate_input)
+            self.right_vbox.addRow(feedrate_label, feedRate_input)
             self.right_vbox.addRow(rpm_label, rpm_input)
             self.right_vbox.addRow(screenSize_label, screenSize_input)
             self.right_vbox.addRow(screwConf_label, screwConf_input)
@@ -1159,7 +1168,7 @@ class Ui_LoginWindow(object):
             temperature_table.setRowCount(12)
             temperature_table.setStyleSheet("background-color: white;")
             temperature_table.setHorizontalHeaderLabels(["Temperature"])
-            temperature_index = ["Z"+str(i+1) for i in range(12)] # set the index
+            temperature_index = ["Z" + str(i + 1) for i in range(12)]  # set the index
             temperature_table.setVerticalHeaderLabels(temperature_index)
             temperature_table.show()
 
@@ -1192,7 +1201,6 @@ class Ui_LoginWindow(object):
             time_end_input.setDateTime(default_date)
             time_end_input.show()
 
-
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
             output_lineEdit.setGeometry(340, 475, 80, 25)
             output_lineEdit.setAlignment(Qt.AlignCenter)
@@ -1207,7 +1215,7 @@ class Ui_LoginWindow(object):
             self.plus_icon.show()
 
         def update_entry():
-             pass
+            pass
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
@@ -1220,8 +1228,9 @@ class Ui_LoginWindow(object):
         # column_names = self.cursor.fetchall()
         # column_names = [i[0] for i in column_names]
 
-        column_names = ["process_id", "machine", "customer", "qty_order", "total_output",  "formula_id", "product_code", "total time(hr)"]
-        
+        column_names = ["process_id", "machine", "customer", "qty_order", "total_output", "formula_id", "product_code",
+                        "total time(hr)"]
+
         try:
             self.cursor.execute("""
             SELECT 
@@ -1308,5 +1317,3 @@ if __name__ == "__main__":
     ui.setupUi(LoginWindow)
     LoginWindow.show()
     sys.exit(app.exec_())
-
-
