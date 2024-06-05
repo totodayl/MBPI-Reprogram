@@ -79,11 +79,11 @@ class Ui_LoginWindow(object):
         self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
         self.main_widget = QtWidgets.QWidget(self.login_window)
         self.main_widget.setStyleSheet("""
-        background-color: white;
+        background-color: rgb(240,240,240);     
         border-top-left-radius: 30px;
         border-bottom-left-radius: 30px;
         """)
-        self.main_widget.setGeometry(QtCore.QRect(210, 0, 991, 751))
+        self.main_widget.setGeometry(210, 0, 991, 751)
         self.main_widget.show()
 
         self.production_btn = QtWidgets.QPushButton(self.login_window)
@@ -126,22 +126,27 @@ class Ui_LoginWindow(object):
         def show_form():
 
             try:
-                self.view_btn.deleteLater()
-                self.add_btn.deleteLater()
-                self.update_btn.deleteLater()
+                # Clear all the widget first
+                self.extruder_table.setVisible(False)
+                self.view_btn.setVisible(False)
+                self.add_btn.setVisible(False)
+                self.update_btn.setVisible(False)
             except:
                 pass
 
-            selected = self.extruder_table.selectedItems()
-            selected = [i.text() for i in selected]
+            try:
+                selected = self.extruder_table.selectedItems()
+                selected = [i.text() for i in selected]
 
-
-            # Query the whole columns
-            self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
-            selected = self.cursor.fetchall()
+                # Query the whole columns
+                self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
+                selected = self.cursor.fetchall()
+            except Exception as e:
+                print(e)
+                QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
+                return
 
             selected = selected[0]
-
 
             # Unpack all the items for convenience
             machine, ordered_qty, product_output, customer = selected[1:5]
@@ -161,15 +166,11 @@ class Ui_LoginWindow(object):
             # Regular expression pattern to match time values
             time_pattern = r'datetime\.time\((\d+), (\d+)\)'
 
-            # Clear all the widget first
-            self.extruder_table.deleteLater()
-            self.view_btn.deleteLater()
-            self.add_btn.deleteLater()
-            self.update_btn.deleteLater()
+
 
             # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
-            self.info_widget.setGeometry(20, 20, 951, 450)
+            self.info_widget.setGeometry(20, 20, 951, 350)
             self.info_widget.setStyleSheet("border-radius: 30px; background-color: rgb(0,109,189);")
             self.info_widget.show()
 
@@ -392,9 +393,10 @@ class Ui_LoginWindow(object):
             # Create 3 tables for Time, Materials and Temperature
             try:
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
-                self.time_table.setGeometry(0, 470, 330, 250)
+                self.time_table.setGeometry(50, 400, 330, 300)
                 self.time_table.setColumnCount(3)
                 self.time_table.setRowCount(len(time_start) + 2)
+                self.time_table.setRowCount(9)
                 self.time_rows = len(time_end)
                 self.time_cols = 3
                 self.time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Time Diff"])
@@ -434,12 +436,11 @@ class Ui_LoginWindow(object):
                 # Material Table
                 self.material_table = QtWidgets.QTableWidget(self.main_widget)
                 self.material_table.setRowCount(len(materials))
-                self.material_table.setColumnCount(3)
-                self.material_table.setGeometry(360,470,300,250)
-                self.material_table.setStyleSheet("gridline-color: rgb(255, 0, 0);")
-                self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity(Kg)",""])
-                self.material_table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid red; }")
-                self.material_table.verticalHeader().setVisible(False)
+                self.material_table.setColumnCount(2)
+                self.material_table.setRowCount(9)
+                self.material_table.setGeometry(410, 400, 225, 300)
+                self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity(Kg)"])
+
 
                 # Populate the Materials Table
                 for key in list(materials.keys()):
@@ -454,27 +455,20 @@ class Ui_LoginWindow(object):
 
                 # Temperature Table
                 self.temp_table = QtWidgets.QTableWidget(self.main_widget)
-                self.temp_table.setGeometry(650, 470, 230, 250)
+                self.temp_table.setGeometry(700, 400, 140, 300)
                 self.temp_table.setRowCount(12)
-                self.temp_table.setColumnCount(2)
-                self.temp_table.setHorizontalHeaderLabels(["Zone", "Temperature"])
-                self.temp_table.setStyleSheet("gridline-color: red;")
-                self.temp_table.horizontalHeader().setStyleSheet("QHeaderView::section { border: 1px solid red; }")
-                self.temp_table.verticalHeader().setVisible(False)
+                self.temp_table.setColumnCount(1)
+                self.temp_table.setVerticalHeaderLabels(["Z" + str(i+1) for i in range(12)])
+                self.temp_table.setHorizontalHeaderLabels(["Temperature"])
 
                 print(temperature)
 
-                # Populate the First Column
-                for i in range(13):
-                    item = QtWidgets.QTableWidgetItem("Z" + str(i+1))
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                    self.temp_table.setItem(i,0, item)
-
-                # Populate the 2nd Column
+                # Populate the Table
                 for i in range(len(temperature)):
                     item = QtWidgets.QTableWidgetItem(str(temperature[i]))
+                    item.setTextAlignment(Qt.AlignCenter)
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                    self.temp_table.setItem(i, 1, item)
+                    self.temp_table.setItem(i, 0, item)
 
                 self.temp_table.show()
             except Exception as e:
@@ -1239,7 +1233,6 @@ class Ui_LoginWindow(object):
         except Exception as e:
             print(e)
 
-
         # Set Column Count
         self.extruder_table.setColumnCount(len(column_names))
         # Set Row Count
@@ -1248,7 +1241,6 @@ class Ui_LoginWindow(object):
         self.extruder_table.setStyleSheet("""
         gridline-color: rgb(0, 0, 127); 
         color : rgb(0, 121, 0);
-        
         """)
 
         # Populate table with data
