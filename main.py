@@ -518,7 +518,7 @@ class Ui_LoginWindow(object):
                 minutes = str((int(total_time.total_seconds() % 3600) // 60))
                 seconds = str(int(total_time.total_seconds() % 60))
 
-                total_hours = abs(total_time.total_seconds() / 3600)
+                total_hours = round(abs(total_time.total_seconds() / 3600), 2)
 
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
@@ -536,7 +536,7 @@ class Ui_LoginWindow(object):
                 output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
                 loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100, 4) # Round to the 4th decimal
                 purge_duration = timedelta()
-                outputPerHour = float(product_output_input.text()) / total_hours
+                outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
                 try:
                     purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
