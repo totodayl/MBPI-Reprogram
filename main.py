@@ -627,6 +627,7 @@ class Ui_LoginWindow(object):
             def get_entries():
                 # get the data from the tables
 
+                print(type(self.remarks_textBox.toPlainText()))
                 # Time Table
                 temp_row = time_table.rowCount()
                 time_start = []
@@ -708,13 +709,16 @@ class Ui_LoginWindow(object):
                 temperature = str(temperature).replace("[", "").replace("]", "")
                 outputs = str(outputs).replace("[", "").replace("]", "")
 
+
+
                 try:
 
                     self.cursor.execute(f"""
                     INSERT INTO extruder( machine, qty_order, total_output, customer,
                     formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                     loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
-                    rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input) 
+                    rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
+                    remarks) 
                     VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                     '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                     '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
@@ -722,7 +726,7 @@ class Ui_LoginWindow(object):
                      '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                      '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                      ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                     {product_input.text()})
+                     {product_input.text()},'{self.remarks_textBox.toPlainText()}')
 
                                     """)
                     print("query successful")
@@ -1257,6 +1261,15 @@ class Ui_LoginWindow(object):
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.textChanged.connect(loss_auto)
+
+            self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
+            self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
+            self.groupBoxRemarks.setTitle("Remarks")
+            self.groupBoxRemarks.show()
+
+            self.remarks_textBox = QtWidgets.QTextEdit(self.groupBoxRemarks)
+            self.remarks_textBox.setGeometry(0, 20, 200, 130)
+            self.remarks_textBox.show()
 
             # Left Side of Vertical Box
             self.left_vbox.addRow(productionID_label, productionID_input)
