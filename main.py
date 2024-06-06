@@ -609,6 +609,21 @@ class Ui_LoginWindow(object):
             except Exception as e:
                 print(e)
 
+            self.group_box = QtWidgets.QGroupBox(self.main_widget)
+            self.group_box.setGeometry(730, 460, 230, 150)
+            self.group_box.setTitle("Remarks")
+            self.group_box.setFont(QtGui.QFont("Arial", 10))
+
+
+            self.show_remarks = QtWidgets.QTextEdit(self.group_box)
+            self.show_remarks.setGeometry(0, 20, 230, 130)
+            self.show_remarks.setAutoFillBackground(True)
+            self.show_remarks.setText(remarks)
+            self.show_remarks.setEnabled(False)
+            self.show_remarks.show()
+
+            self.group_box.show()
+
         def add_entry():
 
             self.entry_widget = QtWidgets.QWidget()
