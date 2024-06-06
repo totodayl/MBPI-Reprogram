@@ -178,22 +178,22 @@ class Ui_LoginWindow(object):
 
             # Create 3 widgets for division
             info_widget1 = QtWidgets.QWidget(self.info_widget)
-            info_widget1.setGeometry(0, 80, 158, 290)
+            info_widget1.setGeometry(0, 80, 158, 380)
 
             info_widget2 = QtWidgets.QWidget(self.info_widget)
-            info_widget2.setGeometry(158, 80, 158, 290)
+            info_widget2.setGeometry(158, 80, 158, 380)
 
             info_widget3 = QtWidgets.QWidget(self.info_widget)
-            info_widget3.setGeometry(316, 80, 158, 290)
+            info_widget3.setGeometry(316, 80, 158, 380)
 
             info_widget4 = QtWidgets.QWidget(self.info_widget)
-            info_widget4.setGeometry(474, 80, 158, 290)
+            info_widget4.setGeometry(474, 80, 158, 380)
 
             info_widget5 = QtWidgets.QWidget(self.info_widget)
-            info_widget5.setGeometry(632, 80, 158, 290)
+            info_widget5.setGeometry(632, 80, 158, 380)
 
             info_widget6 = QtWidgets.QWidget(self.info_widget)
-            info_widget6.setGeometry(790, 80, 158, 290)
+            info_widget6.setGeometry(790, 80, 158, 380)
 
             # create Vertical Layouts
             left_vertical_layout = QVBoxLayout()
@@ -510,13 +510,6 @@ class Ui_LoginWindow(object):
             info_vbox6.addWidget(self.operator_value)
             info_vbox6.addWidget(self.supervisor_value)
 
-
-
-
-
-
-
-
             info_widget1.show()
             info_widget2.show()
             info_widget3.show()
@@ -614,7 +607,6 @@ class Ui_LoginWindow(object):
             self.group_box.setTitle("Remarks")
             self.group_box.setFont(QtGui.QFont("Arial", 10))
 
-
             self.show_remarks = QtWidgets.QTextEdit(self.group_box)
             self.show_remarks.setGeometry(0, 20, 230, 130)
             self.show_remarks.setAutoFillBackground(True)
@@ -692,7 +684,8 @@ class Ui_LoginWindow(object):
                 try:
                     purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
                     purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
-                    purge_duration = purge_start - purge_end
+                    purge_duration = abs(purge_start - purge_end)
+
 
                 except:
                     print("test")
