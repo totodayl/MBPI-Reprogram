@@ -168,7 +168,7 @@ class Ui_LoginWindow(object):
 
             # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
-            self.info_widget.setGeometry(20, 0, 951, 370)
+            self.info_widget.setGeometry(20, 0, 951, 450)
             self.info_widget.setStyleSheet("background-color: rgb(0,109,189);")
             self.info_widget.show()
 
@@ -211,12 +211,10 @@ class Ui_LoginWindow(object):
             self.machine_label.setStyleSheet(label_stylesheet)
             self.machine_label.setFont(font)
 
-
             # Show Extruder Value
             self.extruder_val = QtWidgets.QLabel(self.info_widget)
             self.extruder_val.setText(machine)
             self.extruder_val.setFont(font)
-
 
             # Product Code Label
             self.code_label = QtWidgets.QLabel(self.info_widget)
@@ -224,19 +222,16 @@ class Ui_LoginWindow(object):
             self.code_label.setFont(font)
             self.code_label.setStyleSheet(label_stylesheet)
 
-
             # Show Product Code Value
             self.product_code_val = QtWidgets.QLabel(self.info_widget)
             self.product_code_val.setText(product_code)
             self.product_code_val.setFont(font)
-
 
             # Quantity Order Label
             self.order_label = QtWidgets.QLabel(self.info_widget)
             self.order_label.setText("Quantity Order:")
             self.order_label.setFont(font)
             self.order_label.setStyleSheet(label_stylesheet)
-
 
             # Show Order Value
             self.order_val = QtWidgets.QLabel(self.info_widget)
@@ -249,12 +244,10 @@ class Ui_LoginWindow(object):
             self.output_label.setFont(font)
             self.output_label.setStyleSheet(label_stylesheet)
 
-
             # Show Output Value
             self.output_val = QtWidgets.QLabel(self.info_widget)
             self.output_val.setText(str(product_output))
             self.output_val.setFont(font)
-
 
             # Show formula Label
             self.formula_label = QtWidgets.QLabel(self.info_widget)
@@ -262,24 +255,20 @@ class Ui_LoginWindow(object):
             self.formula_label.setFont(font)
             self.formula_label.setStyleSheet(label_stylesheet)
 
-
             # Show Formula ID Value
             self.formulaID_val = QtWidgets.QLabel(self.info_widget)
             self.formulaID_val.setText(str(formula_id))
             self.formulaID_val.setFont(font)
-
 
             self.resin_label = QtWidgets.QLabel(self.info_widget)
             self.resin_label.setText("Resin:")
             self.resin_label.setFont(font)
             self.resin_label.setStyleSheet(label_stylesheet)
 
-
             # Show Resin Value
             self.resin_val = QtWidgets.QLabel(self.info_widget)
             self.resin_val.setText(str(resin))
             self.resin_val.setFont(font)
-
 
             # Lot Label
             self.lot_label = QtWidgets.QLabel(self.info_widget)
@@ -287,24 +276,20 @@ class Ui_LoginWindow(object):
             self.lot_label.setFont(font)
             self.lot_label.setStyleSheet(label_stylesheet)
 
-
             # Show Lot Number Value
             self.lotNum_val = QtWidgets.QLabel(self.info_widget)
             self.lotNum_val.setText(str(resin))
             self.lotNum_val.setFont(font)
-
 
             self.feedrate_label = QtWidgets.QLabel(self.info_widget)
             self.feedrate_label.setText("Feed Rate:")
             self.feedrate_label.setFont(font)
             self.feedrate_label.setStyleSheet(label_stylesheet)
 
-
             # Show Feed Rate Value
             self.feedrate_val = QtWidgets.QLabel(self.info_widget)
             self.feedrate_val.setText(str(feed_rate))
             self.feedrate_val.setFont(font)
-
 
             # RPM label
             self.rpm_label = QtWidgets.QLabel(self.info_widget)
@@ -317,7 +302,6 @@ class Ui_LoginWindow(object):
             self.rpm_val.setText(str(rpm))
             self.rpm_val.setFont(font)
 
-
             # Screen Size Label
             self.screen_size_label = QtWidgets.QLabel(self.info_widget)
             self.screen_size_label.setFont(font)
@@ -329,25 +313,21 @@ class Ui_LoginWindow(object):
             self.screenSize_val.setText(str(screen_size))
             self.screenSize_val.setFont(font)
 
-
             self.screwconfig_label = QtWidgets.QLabel(self.info_widget)
             self.screwconfig_label.setFont(font)
             self.screwconfig_label.setText("Screw Config:")
             self.screwconfig_label.setStyleSheet(label_stylesheet)
-
 
             # Show Screw Config Value
             self.screwConf_val = QtWidgets.QLabel(self.info_widget)
             self.screwConf_val.setText(str(screw_config))
             self.screwConf_val.setFont(font)
 
-
             # Output % Label
             self.output_percentage_lbl = QtWidgets.QLabel(self.info_widget)
             self.output_percentage_lbl.setText("Output %:")
             self.output_percentage_lbl.setFont(font)
             self.output_percentage_lbl.setStyleSheet(label_stylesheet)
-
 
             # Show Output Percentage Value
             self.outputPercent_val = QtWidgets.QLabel(self.info_widget)
@@ -548,7 +528,7 @@ class Ui_LoginWindow(object):
             # Create 3 tables for Time, Materials and Temperature
             try:
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
-                self.time_table.setGeometry(50, 400, 330, 300)
+                self.time_table.setGeometry(20, 450, 330, 300)
                 self.time_table.setColumnCount(3)
                 self.time_table.setRowCount(len(time_start) + 2)
                 self.time_table.setRowCount(9)
@@ -594,7 +574,7 @@ class Ui_LoginWindow(object):
                 self.material_table.setRowCount(len(materials))
                 self.material_table.setColumnCount(2)
                 self.material_table.setRowCount(9)
-                self.material_table.setGeometry(410, 400, 225, 300)
+                self.material_table.setGeometry(350, 450, 225, 300)
                 self.material_table.setHorizontalHeaderLabels(["Materials", "Quantity(Kg)"])
 
                 # Populate the Materials Table
@@ -610,7 +590,7 @@ class Ui_LoginWindow(object):
 
                 # Temperature Table
                 self.temp_table = QtWidgets.QTableWidget(self.main_widget)
-                self.temp_table.setGeometry(700, 400, 140, 300)
+                self.temp_table.setGeometry(575, 450, 140, 300)
                 self.temp_table.setRowCount(12)
                 self.temp_table.setColumnCount(1)
                 self.temp_table.setVerticalHeaderLabels(["Z" + str(i + 1) for i in range(12)])
