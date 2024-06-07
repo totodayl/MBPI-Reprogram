@@ -1464,14 +1464,13 @@ class Ui_LoginWindow(object):
 
                     self.cursor.execute(f"""
                                 UPDATE extruder
-                                SET  total_time = {total_hours}, input = {productionID_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
+                                SET  total_time = {total_hours}, total_input = {productionID_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                                 temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                                 feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                                 screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.text()}',
                                 purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                                 time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
-                                output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
-                                purging = 
+                                output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}' ;
                                 
                                 """)
                     print("query successful")
