@@ -7,14 +7,12 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime
 
-
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
     clicked = pyqtSignal()
 
     def mousePressEvent(self, event):
         self.clicked.emit()
-
 
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
@@ -57,18 +55,23 @@ class Ui_LoginWindow(object):
     def login(self):
         username = self.username.text()
         pass1 = self.password.text()
-        self.username.deleteLater()
-        self.password.deleteLater()
-        self.login_btn.deleteLater()
+
 
         # Connect to the Database
-        self.conn = psycopg2.connect(
-            host="localhost",
-            port=5432,
-            dbname='convertDB',
-            user='postgres',
-            password='postgres'
-        )
+        try:
+            self.conn = psycopg2.connect(
+                host="localhost",
+                port=5432,
+                dbname='convertDB',
+                user=f'{username}',
+                password=f'{pass1}'
+            )
+            self.username.deleteLater()
+            self.password.deleteLater()
+            self.login_btn.deleteLater()
+        except psycopg2.Error:
+            QMessageBox.information(self.login_window, "INVALID CREDENTIALS", "Check your Username and Password")
+            return
         self.cursor = self.conn.cursor()
         self.launch_main()
 
@@ -687,7 +690,7 @@ class Ui_LoginWindow(object):
                 try:
                     purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
                     purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
-                    purge_duration = abs(purge_start - purge_end)
+                    purge_duration = purge_end - purge_start
 
 
                 except:
@@ -697,7 +700,7 @@ class Ui_LoginWindow(object):
                     purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
                                                   "%Y-%m-%d %H:%M")
                     print(purge_start, purge_end)
-                    purge_duration = (purge_start - purge_end).total_seconds()
+                    purge_duration = (purge_end - purge_start).total_seconds()
 
                 purge_duration = purge_duration // 60
                 # SQL command here to insert Items
@@ -1365,6 +1368,17 @@ class Ui_LoginWindow(object):
             self.plus_icon.show()
 
         def update_entry():
+            try:
+                selected = self.extruder_table.selectedItems()
+                selected = [i.text() for i in selected]
+
+                self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
+                result = self.cursor.fetchall()
+                result = result[0]
+            except:
+                QMessageBox.critical(self.main_widget,"ERROR", "No Data Selected")
+                return
+
             self.entry_widget = QtWidgets.QWidget()
             self.entry_widget.setGeometry(300, 100, 800, 750)
             self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
@@ -1430,25 +1444,31 @@ class Ui_LoginWindow(object):
                                        4)  # Round to the 4th decimal
                 loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100,
                                      4)  # Round to the 4th decimal
-                purge_duration = timedelta()
+
                 outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
                 try:
-                    purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
-                    purge_duration = abs(purge_end - purge_start)
+                    purge_duration = timedelta()
+                    try:
+                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
+                        purge_duration = abs(purge_end - purge_start)
 
 
+                    except:
+                        purge_start = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                        purge_end = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                            "%Y-%m-%d %H:%M")
+                        print(purge_start, purge_end)
+                        purge_duration = (purge_end - purge_start).total_seconds()
+
+                    purge_duration = purge_duration // 60
                 except:
+                    purge_duration = result[25]
 
-                    purge_start = datetime.strptime(
-                        datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
-                                                  "%Y-%m-%d %H:%M")
-                    print(purge_start, purge_end)
-                    purge_duration = (purge_end - purge_start).total_seconds()
 
-                purge_duration = purge_duration // 60
                 # SQL command here to insert Items
                 self.cursor.execute(
                     f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
@@ -1508,12 +1528,9 @@ class Ui_LoginWindow(object):
                     except:
                         loss_input.setText("INVALID")
 
-            selected = self.extruder_table.selectedItems()
-            selected = [i.text() for i in selected]
 
-            self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
-            result = self.cursor.fetchall()
-            result = result[0]
+
+
 
 
 
