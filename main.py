@@ -5,7 +5,7 @@ import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
@@ -665,7 +665,7 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
-                    hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
+                    hours = str(int(total_time.total_seconds() // 3600))
                     minutes = str((int(total_time.total_seconds() % 3600) // 60))
                     seconds = str(int(total_time.total_seconds() % 60))
 
@@ -842,18 +842,21 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                                             SELECT production_id, lot_number
                                             FROM production_merge
-                                            WHERE production_id = '{search_bar.text()}'
+                                            WHERE lot_number ILIKE '%{search_bar.text()}%'
                                             """)
                         search_result = self.cursor.fetchall()
-                        print(search_result)
-                        search_result = search_result[0]
-                        print(search_result)
-                        item = QTableWidgetItem(search_result[0])
-                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                        item2 = QTableWidgetItem(search_result[1])
-                        item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
-                        self.table.setItem(0, 0, item)
-                        self.table.setItem(0, 1, item2)
+
+                        for i in range(len(search_result)):
+
+                            item_pair = search_result[i]
+
+                            item = QTableWidgetItem(item_pair[0])
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            item2 = QTableWidgetItem(item_pair[1])
+                            item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
+                            self.table.setItem(i, 0, item)
+                            self.table.setItem(i, 1, item2)
+
                         self.table.itemSelectionChanged.connect(show_table)
                     except Exception as e:
                         print(e)
@@ -912,7 +915,7 @@ class Ui_LoginWindow(object):
                 search_bar = QtWidgets.QLineEdit(self.selectProd_widget)
                 search_bar.setGeometry(40, 25, 170, 25)
                 search_bar.setFont(QtGui.QFont("Arial", 10))
-                search_bar.setPlaceholderText("Search Production ID")
+                search_bar.setPlaceholderText("Search Lot Number")
                 search_bar.show()
 
                 search_btn = QtWidgets.QPushButton(self.selectProd_widget)
@@ -1380,10 +1383,10 @@ class Ui_LoginWindow(object):
             try:
                 selected = self.extruder_table.selectedItems()
                 selected = [i.text() for i in selected]
-
                 self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
                 result = self.cursor.fetchall()
                 result = result[0]
+
             except:
                 QMessageBox.critical(self.main_widget,"ERROR", "No Data Selected")
                 return
@@ -1502,8 +1505,7 @@ class Ui_LoginWindow(object):
                                 output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                                 output_per_hour = '{outputPerHour}' 
                                 WHERE process_id = {selected[0]};
-                                ;
-                                
+                                ;      
                                 """)
                     print("query successful")
                     self.conn.commit()
@@ -1539,12 +1541,6 @@ class Ui_LoginWindow(object):
                             str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
                     except:
                         loss_input.setText("INVALID")
-
-
-
-
-
-
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
@@ -1648,7 +1644,6 @@ class Ui_LoginWindow(object):
             product_input_label = QtWidgets.QLabel()
             product_input_label.setText("Input")
             product_input_label.setFont(font)
-
 
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
@@ -1899,6 +1894,11 @@ class Ui_LoginWindow(object):
             self.plus_icon.show()
 
         def print_file():
+
+
+            from openpyxl.styles import Font
+            from openpyxl.styles import Alignment
+
             selected = self.extruder_table.selectedItems()
 
             process_id = selected[0].text()
@@ -1911,23 +1911,68 @@ class Ui_LoginWindow(object):
             
             """)
             items = self.cursor.fetchall()[0]
-
+            print(len(items))
             # Unpack the Items
             machine_number = items[1]
             quantity_order = items[2]
             customer = items[4]
-            code = items = items[6]
+            code = items[6]
             total_input = items[-2]
             total_time = items[8]
+            time_start = items[9]
+            time_end = items[10]
+            outputPerHour = items[27]
+            total_output = items[3]
+            outputPercent = items[11]
+            loss = items[12]
+            lossPercent = items[13]
+            outputs = items[-5]
+            materials = items[-8]
 
-
-
-            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Form Template.xlsx")
+            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
             worksheet = wb.active
 
+            font = Font(size=8, bold=True, name='Arial')
+            center_Alignment = Alignment(horizontal='center', vertical='center')
 
+            worksheet["F6"] = "Extruder Machine No. " + machine_number[-1]
+            worksheet["A9"] = machine_number[-1]
+            worksheet["B9"] = quantity_order  # quantity order
+            worksheet["C9"].font = font
+            worksheet["C9"].alignment = center_Alignment
+            worksheet["C9"] = customer  # customer
+
+            worksheet["F9"] = code  # product code
+            worksheet["G10"] = total_input  # total input
+            worksheet["H10"] = total_time  # total time used
+            worksheet["I10"] = outputPerHour  # output Per Hour
+            worksheet["K10"] = total_output  # total Output
+            worksheet["L10"] = outputPercent  # Total Output Percentage
+            worksheet["M10"] = loss
+            worksheet["N10"] = lossPercent
+
+            total_sec = timedelta()
+            for row in range(len(time_start)):
+                worksheet["A" + str(13 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["D" + str(13 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["F" + str(13 + row)] = time_end[row] - time_start[row]
+                worksheet["G" + str(13 + row)] = outputs[row]
+                total_sec = total_sec + (time_end[row] - time_start[row])
+
+            hour = str(int(total_sec.total_seconds() // 3600))
+            minute = str((int(total_sec.total_seconds() % 3600) // 60))
+            total_time_used = time(int(hour),int(minute))
+
+            worksheet["F24"] = total_time_used
+
+            for key in list(materials.keys()):
+                worksheet["I" + str(13 + list(materials.keys()).index(key))] = key
+                worksheet["J" + str(13 + list(materials.keys()).index(key))] = materials[key]
+
+
+
+            wb.save("text.xlsx")
             print("load successful")
-
 
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
