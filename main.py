@@ -1,5 +1,5 @@
 import datetime
-import traceback
+from openpyxl import Workbook, load_workbook
 import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -56,16 +56,16 @@ class Ui_LoginWindow(object):
         username = self.username.text()
         pass1 = self.password.text()
 
-
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="localhost",
+                host="192.168.1.13",
                 port=5432,
-                dbname='convertDB',
+                dbname='postgres',
                 user=f'{username}',
                 password=f'{pass1}'
             )
+
             self.username.deleteLater()
             self.password.deleteLater()
             self.login_btn.deleteLater()
@@ -77,7 +77,7 @@ class Ui_LoginWindow(object):
 
     # This is the main window after login screen
     def launch_main(self):
-        LoginWindow.move(0, 0)
+        LoginWindow.move(37, 100)
         LoginWindow.setFixedSize(1200, 750)
         self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
         self.main_widget = QtWidgets.QWidget(self.login_window)
@@ -625,6 +625,8 @@ class Ui_LoginWindow(object):
 
             self.entry_widget = QtWidgets.QWidget()
             self.entry_widget.setGeometry(300, 100, 800, 750)
+            self.entry_widget.setWindowIcon(QtGui.QIcon("setting.png"))
+            self.entry_widget.setWindowTitle("ADD EXTRUDER DATA")
             self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
@@ -632,115 +634,120 @@ class Ui_LoginWindow(object):
             def get_entries():
                 # get the data from the tables
 
-                print(type(self.remarks_textBox.toPlainText()))
-                # Time Table
-                temp_row = time_table.rowCount()
-                time_start = []
-                time_end = []
-                outputs = []
-
-                # Getting the data from the Time Table
-                for i in range(self.time_entry):
-                    time_start.append(time_table.item(i, 0))  # time start
-                    time_end.append(time_table.item(i, 1))  # time end
-                    outputs.append(time_table.item(i, 2))
-
-                # Removing Null Values
-                time_start = [i for i in time_start if i is not None]
-                time_start = [i.text() for i in time_start]
-                time_end = [i for i in time_end if i is not None]
-                time_end = [i.text() for i in time_end]
-                outputs = [i for i in outputs if i is not None]
-                outputs = [i.text() for i in outputs]
-
-                total_time = timedelta()
                 try:
-                    for i in range(len(time_start)):
-                        t_start = datetime.strptime(time_start[i], "%m-%d-%Y %H:%M")
-                        t_end = datetime.strptime(time_end[i], "%m-%d-%Y %H:%M")
-                        total_time = total_time + (t_start - t_end)
-                except Exception as e:
-                    print(e)
+                    print(type(self.remarks_textBox.toPlainText()))
+                    # Time Table
+                    temp_row = time_table.rowCount()
+                    time_start = []
+                    time_end = []
+                    outputs = []
 
-                hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
-                minutes = str((int(total_time.total_seconds() % 3600) // 60))
-                seconds = str(int(total_time.total_seconds() % 60))
+                    # Getting the data from the Time Table
+                    for i in range(self.time_entry):
+                        time_start.append(time_table.item(i, 0))  # time start
+                        time_end.append(time_table.item(i, 1))  # time end
+                        outputs.append(time_table.item(i, 2))
 
-                total_hours = round(abs(total_time.total_seconds() / 3600), 2)
+                    # Removing Null Values
+                    time_start = [i for i in time_start if i is not None]
+                    time_start = [i.text() for i in time_start]
+                    time_end = [i for i in time_end if i is not None]
+                    time_end = [i.text() for i in time_end]
+                    outputs = [i for i in outputs if i is not None]
+                    outputs = [i.text() for i in outputs]
 
-                time_start = ', '.join(["'{}'".format(time) for time in time_start])
-                time_end = ', '.join(["'{}'".format(time) for time in time_end])
+                    total_time = timedelta()
+                    try:
+                        for i in range(len(time_start)):
+                            t_start = datetime.strptime(time_start[i], "%m-%d-%Y %H:%M")
+                            t_end = datetime.strptime(time_end[i], "%m-%d-%Y %H:%M")
+                            total_time = total_time + (t_start - t_end)
+                    except Exception as e:
+                        print(e)
 
-                # Getting the Data for temperature
-                temperature = []
-                for i in range(temperature_table.rowCount()):
-                    temperature.append(temperature_table.item(i, 0))
+                    hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
+                    minutes = str((int(total_time.total_seconds() % 3600) // 60))
+                    seconds = str(int(total_time.total_seconds() % 60))
 
-                temperature = [i for i in temperature if i is not None]
-                temperature = [i.text() for i in temperature]
+                    total_hours = round(abs(total_time.total_seconds() / 3600), 2)
 
-                # Declare additional variables need here like loss percentage
-                output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100,
-                                       4)  # Round to the 4th decimal
-                loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100,
-                                     4)  # Round to the 4th decimal
-                purge_duration = timedelta()
-                outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
+                    time_start = ', '.join(["'{}'".format(time) for time in time_start])
+                    time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
-                try:
-                    purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
-                    purge_duration = purge_end - purge_start
+                    # Getting the Data for temperature
+                    temperature = []
+                    for i in range(temperature_table.rowCount()):
+                        temperature.append(temperature_table.item(i, 0))
+
+                    temperature = [i for i in temperature if i is not None]
+                    temperature = [i.text() for i in temperature]
+
+                    # Declare additional variables need here like loss percentage
+                    output_percent = round((float(product_output_input.text()) / float(product_input.text())) * 100,
+                                           4)  # Round to the 4th decimal
+                    loss_percent = round((float(loss_input.text()) / float(product_input.text())) * 100,
+                                         4)  # Round to the 4th decimal
+                    purge_duration = timedelta()
+                    outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
 
+                    try:
+                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
+                        purge_duration = purge_end - purge_start
+
+
+                    except:
+                        print("test")
+                        purge_start = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                        purge_end = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                            "%Y-%m-%d %H:%M")
+                        print(purge_start, purge_end)
+                        purge_duration = (purge_end - purge_start).total_seconds()
+
+                    purge_duration = purge_duration // 60
+                    # SQL command here to insert Items
+                    self.cursor.execute(
+                        f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
+                    material = self.cursor.fetchall()
+                    material = material[0][0]
+                    material = json.dumps(material)
+
+                    # Convert the list to string
+                    temperature = str(temperature).replace("[", "").replace("]", "")
+                    outputs = str(outputs).replace("[", "").replace("]", "")
+
+                    try:
+
+                        self.cursor.execute(f"""
+                                        INSERT INTO extruder( machine, qty_order, total_output, customer,
+                                        formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
+                                        loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
+                                        rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
+                                        remarks, lot_number) 
+                                        VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
+                                        '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
+                                        '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
+                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
+                                         '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
+                                         '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
+                                         ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
+                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', '{lot_number_input.text()}')
+
+                                                        """)
+                        print("query successful")
+                        self.conn.commit()
+                        self.entry_widget.close()
+                    except Exception as e:
+                        print("Insert Failed")
+                        QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
+                        print(e)
+                        self.conn.rollback()
                 except:
-                    print("test")
-                    purge_start = datetime.strptime(
-                        datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                    purge_end = datetime.strptime(datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
-                                                  "%Y-%m-%d %H:%M")
-                    print(purge_start, purge_end)
-                    purge_duration = (purge_end - purge_start).total_seconds()
-
-                purge_duration = purge_duration // 60
-                # SQL command here to insert Items
-                self.cursor.execute(
-                    f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
-                material = self.cursor.fetchall()
-                material = material[0][0]
-                material = json.dumps(material)
-
-                # Convert the list to string
-                temperature = str(temperature).replace("[", "").replace("]", "")
-                outputs = str(outputs).replace("[", "").replace("]", "")
-
-
-
-                try:
-
-                    self.cursor.execute(f"""
-                    INSERT INTO extruder( machine, qty_order, total_output, customer,
-                    formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
-                    loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
-                    rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
-                    remarks, lot_number) 
-                    VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
-                    '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
-                    '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
-                    '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
-                     '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
-                     '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
-                     ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                     {product_input.text()},'{self.remarks_textBox.toPlainText()}', '{lot_number_input.text()}')
-
-                                    """)
-                    print("query successful")
-                    self.conn.commit()
-                    self.entry_widget.close()
-                except Exception as e:
-                    print("Insert Failed")
-                    print(e)
-                    self.conn.rollback()
+                    QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
+                    return
 
             def select_production():
 
@@ -1227,11 +1234,13 @@ class Ui_LoginWindow(object):
             purgeStart_input.setFixedHeight(25)
             purgeStart_input.setAlignment(Qt.AlignCenter)
             purgeStart_input.setStyleSheet("background-color: white; border: 1px solid black")
+            purgeStart_input.setText("00:00")
 
             purgeEnd_input = QtWidgets.QLineEdit()
             purgeEnd_input.setFixedHeight(25)
             purgeEnd_input.setAlignment(Qt.AlignCenter)
             purgeEnd_input.setStyleSheet("background-color: white; border: 1px solid black")
+            purgeEnd_input.setText("00:00")
 
             remarks = QtWidgets.QTextEdit()
 
@@ -1484,13 +1493,16 @@ class Ui_LoginWindow(object):
 
                     self.cursor.execute(f"""
                                 UPDATE extruder
-                                SET  total_time = {total_hours}, total_input = {productionID_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
+                                SET  total_time = {total_hours}, total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                                 temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                                 feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                                 screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.text()}',
                                 purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                                 time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
-                                output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}' ;
+                                output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
+                                output_per_hour = '{outputPerHour}' 
+                                WHERE process_id = {selected[0]};
+                                ;
                                 
                                 """)
                     print("query successful")
@@ -1851,8 +1863,6 @@ class Ui_LoginWindow(object):
             temperature_table.show()
 
 
-
-
             save_btn = QtWidgets.QPushButton(self.entry_widget)
             save_btn.setGeometry(540, 705, 60, 25)
             save_btn.clicked.connect(update)
@@ -1887,6 +1897,36 @@ class Ui_LoginWindow(object):
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.clicked.connect(add_time)
             self.plus_icon.show()
+
+        def print_file():
+            selected = self.extruder_table.selectedItems()
+
+            process_id = selected[0].text()
+
+            print(id)
+
+            self.cursor.execute(f"""
+            SELECT * FROM extruder 
+            WHERE process_id = '{process_id}';
+            
+            """)
+            items = self.cursor.fetchall()[0]
+
+            # Unpack the Items
+            machine_number = items[1]
+            quantity_order = items[2]
+            customer = items[4]
+            code = items = items[6]
+            total_input = items[-2]
+            total_time = items[8]
+
+
+
+            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Form Template.xlsx")
+            worksheet = wb.active
+
+
+            print("load successful")
 
 
 
@@ -1981,6 +2021,12 @@ class Ui_LoginWindow(object):
         self.update_btn.clicked.connect(update_entry)
         self.update_btn.show()
 
+        self.print_btn = QtWidgets.QPushButton(self.main_widget)
+        self.print_btn.setGeometry(550, 500, 100, 30)
+        self.print_btn.setText("Print")
+        self.print_btn.setStyleSheet("background-color: red;")
+        self.print_btn.clicked.connect(print_file)
+        self.print_btn.show()
 
 if __name__ == "__main__":
     import sys
