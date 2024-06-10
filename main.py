@@ -372,7 +372,6 @@ class Ui_LoginWindow(object):
             self.purgeDuration_val.setText(str(purge_duration))
             self.purgeDuration_val.setFont(font)
 
-
             # Production ID
             self.productionID_value = QtWidgets.QLabel(self.info_widget)
             self.productionID_value.setText(str(production_ID))
@@ -546,7 +545,6 @@ class Ui_LoginWindow(object):
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         else:
-                            print(time_start[i], type(time_start[i]))
                             datetime1 = time_start[i]
                             datetime2 = time_end[i]
                             t_diff = datetime2 - datetime1
@@ -594,7 +592,6 @@ class Ui_LoginWindow(object):
                 self.temp_table.setVerticalHeaderLabels(["Z" + str(i + 1) for i in range(12)])
                 self.temp_table.setHorizontalHeaderLabels(["Temperature"])
 
-                print(temperature)
 
                 # Populate the Table
                 for i in range(len(temperature)):
@@ -699,22 +696,24 @@ class Ui_LoginWindow(object):
 
 
                     except:
-                        print("test")
+
                         purge_start = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
                             "%Y-%m-%d %H:%M")
-                        print(purge_start, purge_end)
                         purge_duration = (purge_end - purge_start).total_seconds()
 
                     purge_duration = purge_duration // 60
                     # SQL command here to insert Items
                     self.cursor.execute(
                         f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
-                    material = self.cursor.fetchall()
-                    material = material[0][0]
-                    material = json.dumps(material)
+
+                    self.total_mats = json.dumps(self.total_mats)
+                    print(type(self.total_mats))
+                    for key,value in self.total_mats.items():
+                        self.total_mats[key] = round(value, 4)
+
 
                     # Convert the list to string
                     temperature = str(temperature).replace("[", "").replace("]", "")
@@ -731,11 +730,11 @@ class Ui_LoginWindow(object):
                                         VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
-                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
+                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
                                          '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', '{lot_number_input.text()}')
+                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', ARRAY[{self.lot_numberList}]::VARCHAR[])
 
                                                 """)
                         print("query successful")
@@ -746,7 +745,8 @@ class Ui_LoginWindow(object):
                         QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
                         print(e)
                         self.conn.rollback()
-                except:
+                except Exception as e:
+                    print(e)
                     QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
                     return
 
@@ -767,7 +767,6 @@ class Ui_LoginWindow(object):
 
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
-                    print(item)
                     self.cursor.execute(f"""
                     SELECT production_id, lot_number, t_qtyreq, materials
                     FROM production_merge
@@ -810,7 +809,6 @@ class Ui_LoginWindow(object):
                 self.lot_numberList = []
                 self.total_outputPercent = 0
                 def push_data():
-                    print("test")
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
 
