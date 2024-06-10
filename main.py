@@ -162,7 +162,7 @@ class Ui_LoginWindow(object):
             production_ID = selected[28]
             total_input = selected[29]
 
-            print(output_per_hour)
+
             # Convert string of json to JSON
 
             materials = str(materials).replace("'", '"')
@@ -538,11 +538,11 @@ class Ui_LoginWindow(object):
                 for i in range(self.time_rows):
                     for j in range(self.time_cols):
                         if j == 0:
-                            item = QtWidgets.QTableWidgetItem(time_start[i].strftime('%H:%M:%S'))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(time_start[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         elif j == 1:
-                            item = QtWidgets.QTableWidgetItem(time_end[i].strftime('%H:%M:%S'))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(time_end[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         else:
@@ -630,6 +630,7 @@ class Ui_LoginWindow(object):
             self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
+
 
             def get_entries():
                 # get the data from the tables
@@ -736,7 +737,7 @@ class Ui_LoginWindow(object):
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', '{lot_number_input.text()}')
 
-                                                        """)
+                                                """)
                         print("query successful")
                         self.conn.commit()
                         self.entry_widget.close()
@@ -758,17 +759,21 @@ class Ui_LoginWindow(object):
                 except:
                     pass
 
+                def add_data():
+                    pass
+
                 def show_table():
                     self.table2.clearContents()
 
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
-
+                    print(item)
                     self.cursor.execute(f"""
                     SELECT production_id, lot_number, t_qtyreq, materials
                     FROM production_merge
                     WHERE production_id = '{item[0]}'
                     """)
+
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -798,15 +803,22 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
-                def add_data():
+                self.added_entry = 0  # for counting the lot numbers added
+                self.total_mats = {}
+                self.total_quantity_order = 0
+                self.total_output = 0
+                self.lot_numberList = []
+                self.total_outputPercent = 0
+                def push_data():
+                    print("test")
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
 
                     self.cursor.execute(f"""
-                    SELECT * FROM production_merge
-                    WHERE production_id = '{item[0]}' 
+                                                                SELECT * FROM production_merge
+                                                                WHERE production_id = '{item[0]}' 
 
-                    """)
+                                                                """)
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -822,18 +834,67 @@ class Ui_LoginWindow(object):
                     quantity_order = result[15]
                     output_quantity = result[17]
                     remarks = result[18]
+                    materials = result[-1]
+
+                    self.added_entry += 1
+                    self.lot_numberList.append(lot_number)
+                    self.total_output += output_quantity
+                    self.total_quantity_order += quantity_order
+
+                    for key in materials.keys():
+                        if key in list(self.total_mats.keys()):
+                            self.total_mats[key] = self.total_mats[key] + materials[key]
+                        else:
+                            self.total_mats[key] = materials[key]
+
+
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(prod_id)
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
-                    orderedQuantity_input.setText(str(quantity_order))
                     lot_number_input.setText(str(lot_number))
-                    product_output_input.setText(str(output_quantity))
+                    product_output_input.setText(str(round(self.total_output,2)))
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
-                    order_number_input.setText(order_number)
-                    self.selectProd_widget.close()
+                    order_number_input.setText(str(order_number))
+
+                    self.cursor.execute(f"""
+                    SELECT production_id, lot_number
+                    FROM production_merge
+                    WHERE product_code = '{product_code}' AND 
+                    machine = '{machine_name}' AND t_fid = '{formula_id}';
+                    
+                    """)
+                    query_result = self.cursor.fetchall()
+                    self.table.itemSelectionChanged.disconnect(show_table)
+                    self.table.clearSelection()
+                    self.table.clear()
+                    self.table.setRowCount(len(query_result))
+                    self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+
+                    for row in range(len(query_result)):
+                        prod = QTableWidgetItem(query_result[row][0])
+                        prod.setFlags(prod.flags() & ~Qt.ItemIsEditable)
+                        lot = QTableWidgetItem(query_result[row][1])
+                        lot.setFlags(lot.flags() & ~Qt.ItemIsEditable)
+                        self.table.setItem(row, 0, prod)
+                        self.table.setItem(row, 1, lot)
+                    self.table.itemSelectionChanged.connect(show_table)
+                    self.table.show()
+
+
+                    self.table2.clearSelection()
+                    self.table2.clear()
+                    self.table2.setHorizontalHeaderLabels(["Materials", "Quantity"])
+                    for keys in list(self.total_mats.keys()):
+                        key = QTableWidgetItem(str(keys))
+                        value = QTableWidgetItem(str(self.total_mats[keys]))
+                        self.table2.setItem(list(self.total_mats.keys()).index(keys), 0, key)
+                        key.setFlags(key.flags() & ~Qt.ItemIsEditable)
+                        self.table2.setItem(list(self.total_mats.keys()).index(keys), 1, value)
+                        value.setFlags(value.flags() & ~Qt.ItemIsEditable)
+                    self.table2.show()
 
                 def search():
                     try:
@@ -1016,13 +1077,13 @@ class Ui_LoginWindow(object):
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
                 save_prod.setGeometry(590, 570, 70, 30)
-                save_prod.setText("Add")
-                save_prod.clicked.connect(add_data)
+                save_prod.setText("Push Data")
+                save_prod.clicked.connect(push_data)
                 save_prod.show()
 
                 refresh = QtWidgets.QPushButton(self.selectProd_widget)
                 refresh.setGeometry(660, 570, 70, 30)
-                refresh.setText("Refresh")
+                refresh.setText("ADD")
                 refresh.show()
 
                 close = QtWidgets.QPushButton(self.selectProd_widget)
@@ -1184,7 +1245,6 @@ class Ui_LoginWindow(object):
             orderedQuantity_input = QtWidgets.QLineEdit()
             orderedQuantity_input.setAlignment(Qt.AlignCenter)
             orderedQuantity_input.setFixedHeight(25)
-            orderedQuantity_input.setEnabled(False)
             orderedQuantity_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             productCode_input = QtWidgets.QLineEdit()
@@ -1433,7 +1493,6 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     print(e)
-                print(total_time)
                 hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
                 minutes = str((int(total_time.total_seconds() % 3600) // 60))
                 seconds = str(int(total_time.total_seconds() % 60))
@@ -1473,7 +1532,6 @@ class Ui_LoginWindow(object):
                         purge_end = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
                             "%Y-%m-%d %H:%M")
-                        print(purge_start, purge_end)
                         purge_duration = (purge_end - purge_start).total_seconds()
 
                     purge_duration = purge_duration // 60
@@ -1903,7 +1961,6 @@ class Ui_LoginWindow(object):
 
             process_id = selected[0].text()
 
-            print(id)
 
             self.cursor.execute(f"""
             SELECT * FROM extruder 
@@ -1911,7 +1968,6 @@ class Ui_LoginWindow(object):
             
             """)
             items = self.cursor.fetchall()[0]
-            print(len(items))
             # Unpack the Items
             machine_number = items[1]
             quantity_order = items[2]
