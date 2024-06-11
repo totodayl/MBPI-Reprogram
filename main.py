@@ -633,6 +633,7 @@ class Ui_LoginWindow(object):
                 # get the data from the tables
 
                 try:
+
                     print(type(self.remarks_textBox.toPlainText()))
                     # Time Table
                     temp_row = time_table.rowCount()
@@ -710,9 +711,8 @@ class Ui_LoginWindow(object):
                         f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
 
                     self.total_mats = json.dumps(self.total_mats)
-                    print(type(self.total_mats))
-                    for key,value in self.total_mats.items():
-                        self.total_mats[key] = round(value, 4)
+                    self.total_mats = self.total_mats.replace('\\',"")
+                    print(type(self.total_mats), self.total_mats)
 
 
                     # Convert the list to string
@@ -734,7 +734,8 @@ class Ui_LoginWindow(object):
                                          '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', ARRAY[{self.lot_numberList}]::VARCHAR[])
+                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
+                                         ARRAY[{str(self.lot_numberList)}]::VARCHAR[])
 
                                                 """)
                         print("query successful")
@@ -847,11 +848,12 @@ class Ui_LoginWindow(object):
 
 
 
+
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(prod_id)
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
-                    lot_number_input.setText(str(lot_number))
+                    lot_number_input.setText('/'.join(self.lot_numberList))
                     product_output_input.setText(str(round(self.total_output,2)))
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
@@ -1380,6 +1382,7 @@ class Ui_LoginWindow(object):
             time_table.setColumnWidth(1, 150)
             time_table.setStyleSheet("background-color: white;")
             time_table.setFont(QtGui.QFont("Arial", 10))
+            time_table.setEnabled(False)
 
             time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             time_table.show()
