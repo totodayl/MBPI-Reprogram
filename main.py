@@ -114,7 +114,10 @@ class Ui_LoginWindow(object):
         self.production_icon.setCursor(Qt.PointingHandCursor)
         self.production_icon.show()
 
-    def production(self):
+    def production(self, table_query = None):
+
+
+
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
@@ -122,6 +125,7 @@ class Ui_LoginWindow(object):
             self.time_table.deleteLater()
             self.material_table.deleteLater()
             self.group_box.deleteLater()
+            self.export_btn.deleteLater()
 
 
         except Exception as e:
@@ -201,7 +205,7 @@ class Ui_LoginWindow(object):
                 purge_duration = time(hour=items[-6])
 
                 wb = load_workbook(
-                    r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
+                    r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist")
                 worksheet = wb.active
 
                 font = Font(size=8, bold=True, name='Arial')
@@ -942,15 +946,12 @@ class Ui_LoginWindow(object):
                         else:
                             self.total_mats[key] = materials[key]
 
-
-
-
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(prod_id)
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
                     lot_number_input.setText('/'.join(self.lot_numberList))
-                    product_output_input.setText(str(round(self.total_output,2)))
+                    # product_output_input.setText(str(round(self.total_output,2)))
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
                     order_number_input.setText(str(order_number))
@@ -978,7 +979,6 @@ class Ui_LoginWindow(object):
                         self.table.setItem(row, 1, lot)
                     self.table.itemSelectionChanged.connect(show_table)
                     self.table.show()
-
 
                     self.table2.clearSelection()
                     self.table2.clear()
@@ -1022,8 +1022,8 @@ class Ui_LoginWindow(object):
 
                     try:
                         self.cursor.execute("""
-                                                                                SELECT production_id, lot_number
-                                                                                FROM production_merge
+                                            SELECT production_id, lot_number
+                                            FROM production_merge
 
                                                                                 """)
                         result = self.cursor.fetchall()
@@ -2143,12 +2143,27 @@ class Ui_LoginWindow(object):
             worksheet["M28"] = operator
             worksheet["M29"] = supervisor
 
-
             wb.save("text.xlsx")
             print("load successful")
 
+        def filter_table():
+
+            for i in customers:
+                if self.company_combo.currentText() in i[0]:
+                    self.production(f"""
+                        SELECT 
+                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        FROM extruder
+                        WHERE customer = '{self.company_combo.currentText()}' AND machine = '{self.machine_combo.currentText()}'
+                        ORDER BY process_id DESC
+                                    """)
+                else:
+                    pass
+
+
+
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
-        self.extruder_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
+        self.extruder_table.setGeometry(QtCore.QRect(20, 50, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
 
         self.cursor.execute("""
@@ -2162,17 +2177,18 @@ class Ui_LoginWindow(object):
                         "total time(hr)"]
 
         try:
-            self.cursor.execute("""
-            SELECT 
-            process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-            FROM extruder
-            ORDER BY process_id DESC
-            ; 
-
-            """)
+            self.cursor.execute(table_query)
             result = self.cursor.fetchall()
         except Exception as e:
-            print(e)
+            self.cursor.execute("""
+                        SELECT 
+                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        FROM extruder
+                        ORDER BY process_id DESC
+                        ; 
+
+                        """)
+            result = self.cursor.fetchall()
 
         # Set Column Count
         self.extruder_table.setColumnCount(len(column_names))
@@ -2216,6 +2232,33 @@ class Ui_LoginWindow(object):
         self.extruder_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.extruder_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.extruder_table.show()
+
+        #Filters
+        self.machine_combo = QtWidgets.QComboBox(self.main_widget)
+        self.machine_combo.setGeometry(120, 10, 100, 30)
+        self.cursor.execute("""
+                    SELECT DISTINCT(machine) FROM extruder;
+                """)
+        machine = self.cursor.fetchall()
+        print(machine)
+        for i in machine:
+            self.machine_combo.addItem(i[0])
+        self.machine_combo.show()
+
+        self.company_combo = QtWidgets.QComboBox(self.main_widget)
+        self.company_combo.setGeometry(220, 10, 170, 30)
+        self.cursor.execute("""
+            SELECT DISTINCT(customer) FROM extruder;
+        """)
+        customers = self.cursor.fetchall()
+        print(customers)
+        for i in customers:
+            self.company_combo.addItem(i[0])
+
+        self.company_combo.setEditable(True)
+        self.company_combo.currentIndexChanged.connect(filter_table)
+        self.company_combo.show()
+
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
