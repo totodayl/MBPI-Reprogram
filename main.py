@@ -129,6 +129,7 @@ class Ui_LoginWindow(object):
 
         def show_form():
 
+
             try:
                 # Clear all the widget first
                 self.extruder_table.setVisible(False)
@@ -162,14 +163,104 @@ class Ui_LoginWindow(object):
             production_ID = selected[28]
             total_input = selected[29]
 
+            def exportToExcel():
+                from openpyxl.styles import Font
+                from openpyxl.styles import Alignment
+
+
+                process_id = selected[0]
+
+                self.cursor.execute(f"""
+                           SELECT * FROM extruder 
+                           WHERE process_id = '{process_id}';
+
+                           """)
+                items = self.cursor.fetchall()[0]
+                # Unpack the Items
+                machine_number = items[1]
+                quantity_order = items[2]
+                customer = items[4]
+                code = items[6]
+                total_input = items[-2]
+                total_time = items[8]
+                time_start = items[9]
+                time_end = items[10]
+                outputPerHour = items[27]
+                total_output = items[3]
+                outputPercent = items[11]
+                loss = items[12]
+                lossPercent = items[13]
+                purging = items[14]
+                resin = items[15]
+                remarks = items[16]
+                operator = items[21]
+                supervisor = items[22]
+                outputs = items[-5]
+                materials = items[-8]
+                lot_number = items[-1][0]
+                purge_duration = time(hour=items[-6])
+
+                wb = load_workbook(
+                    r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
+                worksheet = wb.active
+
+                font = Font(size=8, bold=True, name='Arial')
+                center_Alignment = Alignment(horizontal='center', vertical='center')
+
+                worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
+                worksheet["A8"] = machine_number[-1]
+                worksheet["B8"] = quantity_order  # quantity order
+                worksheet["C8"].font = font
+                worksheet["C8"].alignment = center_Alignment
+                worksheet["C8"] = customer  # customer
+
+                worksheet["F8"] = code  # product code
+                worksheet["G9"] = total_input  # total input
+                worksheet["H9"] = total_time  # total time used
+                worksheet["I9"] = outputPerHour  # output Per Hour
+                worksheet["K9"] = total_output  # total Output
+                worksheet["L9"] = outputPercent  # Total Output Percentage
+                worksheet["M9"] = loss
+                worksheet["N9"] = lossPercent
+
+                total_sec = timedelta()
+                for row in range(len(time_start)):
+                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
+                    worksheet["G" + str(12 + row)] = outputs[row]
+                    total_sec = total_sec + (time_end[row] - time_start[row])
+
+                try:
+                    hour = str(int(total_sec.total_seconds() // 3600))
+                    minute = str((int(total_sec.total_seconds() % 3600) // 60))
+                    print(hour, minute)
+                    total_time_used = time(int(hour), int(minute))
+
+                    worksheet["F25"] = total_time_used
+                except ValueError:
+                    worksheet["F25"] = hour + ":" + minute
+
+                for key in list(materials.keys()):
+                    worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
+                    worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
+
+                for ln in range(len(lot_number)):
+                    worksheet["M" + str(12 + ln)] = lot_number[ln]
+
+                worksheet["B27"] = purging
+                worksheet["E28"] = purge_duration
+                worksheet["B29"] = resin
+                worksheet["G26"] = remarks
+                worksheet["M28"] = operator
+                worksheet["M29"] = supervisor
+
+                wb.save("text.xlsx")
+                print("load successful")
 
             # Convert string of json to JSON
-
             materials = str(materials).replace("'", '"')
             materials = json.loads(materials)
-
-            # Regular expression pattern to match time values
-            time_pattern = r'datetime\.time\((\d+), (\d+)\)'
 
             # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
@@ -521,7 +612,6 @@ class Ui_LoginWindow(object):
             info_widget5.show()
             info_widget6.show()
 
-
             # Create 3 tables for Time, Materials and Temperature
             try:
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
@@ -617,6 +707,12 @@ class Ui_LoginWindow(object):
             self.show_remarks.show()
 
             self.group_box.show()
+
+            self.export_btn = QtWidgets.QPushButton(self.main_widget)
+            self.export_btn.setGeometry(730, 610, 100, 30)
+            self.export_btn.setText("Export")
+            self.export_btn.clicked.connect(exportToExcel)
+            self.export_btn.show()
 
         def add_entry():
 
@@ -1763,7 +1859,7 @@ class Ui_LoginWindow(object):
             lot_number_input.setFixedHeight(25)
             lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
-            lot_number_input.setText(result[-1])
+            lot_number_input.setText('/'.join(result[-1][0]))
 
             feedRate_input = QtWidgets.QLineEdit()
             feedRate_input.setFixedHeight(25)
@@ -1983,8 +2079,16 @@ class Ui_LoginWindow(object):
             outputPercent = items[11]
             loss = items[12]
             lossPercent = items[13]
+            purging = items[14]
+            resin = items[15]
+            remarks = items[16]
+            operator = items[21]
+            supervisor = items[22]
             outputs = items[-5]
             materials = items[-8]
+            lot_number = items[-1][0]
+
+
 
             wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
             worksheet = wb.active
@@ -1992,45 +2096,56 @@ class Ui_LoginWindow(object):
             font = Font(size=8, bold=True, name='Arial')
             center_Alignment = Alignment(horizontal='center', vertical='center')
 
-            worksheet["F6"] = "Extruder Machine No. " + machine_number[-1]
-            worksheet["A9"] = machine_number[-1]
-            worksheet["B9"] = quantity_order  # quantity order
-            worksheet["C9"].font = font
-            worksheet["C9"].alignment = center_Alignment
-            worksheet["C9"] = customer  # customer
+            worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
+            worksheet["A8"] = machine_number[-1]
+            worksheet["B8"] = quantity_order  # quantity order
+            worksheet["C8"].font = font
+            worksheet["C8"].alignment = center_Alignment
+            worksheet["C8"] = customer  # customer
 
-            worksheet["F9"] = code  # product code
-            worksheet["G10"] = total_input  # total input
-            worksheet["H10"] = total_time  # total time used
-            worksheet["I10"] = outputPerHour  # output Per Hour
-            worksheet["K10"] = total_output  # total Output
-            worksheet["L10"] = outputPercent  # Total Output Percentage
-            worksheet["M10"] = loss
-            worksheet["N10"] = lossPercent
+            worksheet["F8"] = code  # product code
+            worksheet["G9"] = total_input  # total input
+            worksheet["H9"] = total_time  # total time used
+            worksheet["I9"] = outputPerHour  # output Per Hour
+            worksheet["K9"] = total_output  # total Output
+            worksheet["L9"] = outputPercent  # Total Output Percentage
+            worksheet["M9"] = loss
+            worksheet["N9"] = lossPercent
 
             total_sec = timedelta()
             for row in range(len(time_start)):
-                worksheet["A" + str(13 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
-                worksheet["D" + str(13 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
-                worksheet["F" + str(13 + row)] = time_end[row] - time_start[row]
-                worksheet["G" + str(13 + row)] = outputs[row]
+                worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
+                worksheet["G" + str(12 + row)] = outputs[row]
                 total_sec = total_sec + (time_end[row] - time_start[row])
 
-            hour = str(int(total_sec.total_seconds() // 3600))
-            minute = str((int(total_sec.total_seconds() % 3600) // 60))
-            total_time_used = time(int(hour),int(minute))
+            try:
+                hour = str(int(total_sec.total_seconds() // 3600))
+                minute = str((int(total_sec.total_seconds() % 3600) // 60))
+                print(hour, minute)
+                total_time_used = time(int(hour), int(minute))
 
-            worksheet["F24"] = total_time_used
+                worksheet["F25"] = total_time_used
+            except ValueError:
+                worksheet["F25"] = hour + ":" + minute
 
             for key in list(materials.keys()):
-                worksheet["I" + str(13 + list(materials.keys()).index(key))] = key
-                worksheet["J" + str(13 + list(materials.keys()).index(key))] = materials[key]
+                worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
+                worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
 
+            for ln in range(len(lot_number)):
+                worksheet["M" + str(12 + ln)] = lot_number[ln]
+
+            worksheet["B27"] = purging
+            worksheet["B29"] = resin
+            worksheet["G26"] = remarks
+            worksheet["M28"] = operator
+            worksheet["M29"] = supervisor
 
 
             wb.save("text.xlsx")
             print("load successful")
-
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
