@@ -2157,17 +2157,35 @@ class Ui_LoginWindow(object):
 
             queryConList = []
 
+            if self.machine_combo.currentText() != "-":
+                queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
+            if self.company_combo.currentText() != "-":
+                queryConList.append(f"customer = '{self.company_combo.currentText().replace("'","''")}'")
+
 
             query = f"""
                     SELECT 
                     process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-                    FROM extruder
-                    WHERE customer = '{self.company_combo.currentText().replace("'","''")}' AND machine = '{self.machine_combo.currentText()}'
-                    ORDER BY process_id DESC
+                    FROM extruder WHERE
                                     """
+
+            if len(queryConList) == 0:
+                query = query.replace("WHERE", "")
+
+            for condition in queryConList:
+                if condition != queryConList[-1]:
+                    query += condition + " AND "
+                else:
+                    query += condition
+
+            query += "ORDER BY process_id"
 
             self.cursor.execute(query)
             result = self.cursor.fetchall()
+            if self.extruder_table.rowCount() < len(result):
+                self.extruder_table.setRowCount(len(result))
+
+
             self.extruder_table.clearContents()
             for i in range(len(result)):
                 for j in range(len(column_names)):
@@ -2270,6 +2288,7 @@ class Ui_LoginWindow(object):
         self.machine_combo.addItem("-")
         for i in machine:
             self.machine_combo.addItem(i[0])
+        self.machine_combo.currentIndexChanged.connect(filter_table)
         self.machine_combo.show()
 
         self.company_combo = QtWidgets.QComboBox(self.main_widget)
