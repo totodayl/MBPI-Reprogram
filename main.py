@@ -114,9 +114,7 @@ class Ui_LoginWindow(object):
         self.production_icon.setCursor(Qt.PointingHandCursor)
         self.production_icon.show()
 
-    def production(self, table_query = None):
-
-
+    def production(self):
 
         # Delete If there are existing Widgets
         try:
@@ -1194,6 +1192,8 @@ class Ui_LoginWindow(object):
 
             def add_time():
 
+                product_output_input.setText(str(float(product_output_input.text()) + float(output_lineEdit.text())))
+
                 item1 = QTableWidgetItem(time_start_input.text())
                 item2 = QTableWidgetItem(time_end_input.text())
                 item3 = QTableWidgetItem(output_lineEdit.text())
@@ -1207,6 +1207,10 @@ class Ui_LoginWindow(object):
                 self.time_entry += 1
 
                 output_lineEdit.clear()
+
+            def reset_table():
+                time_table.clearContents()
+                product_output_input.setText("0.0")
 
             def loss_auto():
                 if product_output_input.text() != "":
@@ -1352,6 +1356,7 @@ class Ui_LoginWindow(object):
             product_output_input = QtWidgets.QLineEdit()
             product_output_input.setFixedHeight(25)
             product_output_input.setEnabled(False)
+            product_output_input.setText("0.0")
             product_output_input.setAlignment(Qt.AlignCenter)
             product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -1524,17 +1529,24 @@ class Ui_LoginWindow(object):
             time_end_input.show()
 
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
-            output_lineEdit.setGeometry(340, 475, 80, 25)
+            output_lineEdit.setGeometry(310, 475, 80, 25)
             output_lineEdit.setAlignment(Qt.AlignCenter)
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
             self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(420, 475, 25, 25)
+            self.plus_icon.setGeometry(390, 475, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.clicked.connect(add_time)
             self.plus_icon.show()
+
+            self.reset_icon = ClickableLabel(self.entry_widget)
+            self.reset_icon.setGeometry(425, 475, 25, 25)
+            self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(20, 20))
+            self.reset_icon.setCursor(Qt.PointingHandCursor)
+            self.reset_icon.clicked.connect(reset_table)
+            self.reset_icon.show()
 
         def update_entry():
             try:
@@ -1622,7 +1634,6 @@ class Ui_LoginWindow(object):
                         purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
                         purge_duration = abs(purge_end - purge_start)
 
-
                     except:
                         purge_start = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
@@ -1662,6 +1673,7 @@ class Ui_LoginWindow(object):
                                 WHERE process_id = {selected[0]};
                                 ;      
                                 """)
+                    QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL", f"Successfully Updated \n Form No. {selected[0]}")
                     print("query successful")
                     self.conn.commit()
                     self.entry_widget.close()
@@ -1669,7 +1681,6 @@ class Ui_LoginWindow(object):
                     print("Insert Failed")
                     print(e)
                     self.conn.rollback()
-
 
             self.time_entry = 0
 
@@ -1841,11 +1852,9 @@ class Ui_LoginWindow(object):
 
             product_output_input = QtWidgets.QLineEdit()
             product_output_input.setFixedHeight(25)
-            product_output_input.setEnabled(False)
             product_output_input.setAlignment(Qt.AlignCenter)
             product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_output_input.setText(str(result[3]))
-
 
             self.formulaID_input = QtWidgets.QLineEdit()
             self.formulaID_input.setAlignment(Qt.AlignCenter)
@@ -1859,7 +1868,10 @@ class Ui_LoginWindow(object):
             lot_number_input.setFixedHeight(25)
             lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
-            lot_number_input.setText('/'.join(result[-1][0]))
+            try:
+                lot_number_input.setText('/'.join(result[-1][0]))
+            except:
+                lot_number_input.setText(None)
 
             feedRate_input = QtWidgets.QLineEdit()
             feedRate_input.setFixedHeight(25)
@@ -2040,7 +2052,6 @@ class Ui_LoginWindow(object):
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
-
             self.plus_icon = ClickableLabel(self.entry_widget)
             self.plus_icon.setGeometry(420, 475, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
@@ -2050,14 +2061,12 @@ class Ui_LoginWindow(object):
 
         def print_file():
 
-
             from openpyxl.styles import Font
             from openpyxl.styles import Alignment
 
             selected = self.extruder_table.selectedItems()
 
             process_id = selected[0].text()
-
 
             self.cursor.execute(f"""
             SELECT * FROM extruder 
@@ -2087,8 +2096,6 @@ class Ui_LoginWindow(object):
             outputs = items[-5]
             materials = items[-8]
             lot_number = items[-1][0]
-
-
 
             wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
             worksheet = wb.active
@@ -2148,23 +2155,38 @@ class Ui_LoginWindow(object):
 
         def filter_table():
 
-            for i in customers:
-                if self.company_combo.currentText() in i[0]:
-                    self.production(f"""
-                        SELECT 
-                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-                        FROM extruder
-                        WHERE customer = '{self.company_combo.currentText()}' AND machine = '{self.machine_combo.currentText()}'
-                        ORDER BY process_id DESC
-                                    """)
-                else:
-                    pass
+            queryConList = []
 
 
+            query = f"""
+                    SELECT 
+                    process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                    FROM extruder
+                    WHERE customer = '{self.company_combo.currentText().replace("'","''")}' AND machine = '{self.machine_combo.currentText()}'
+                    ORDER BY process_id DESC
+                                    """
+
+            self.cursor.execute(query)
+            result = self.cursor.fetchall()
+            self.extruder_table.clearContents()
+            for i in range(len(result)):
+                for j in range(len(column_names)):
+                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                    # Set Alignment for specific columns
+                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7:
+                        item.setTextAlignment(Qt.AlignCenter)
+                    else:
+                        pass
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.extruder_table.setItem(i, j, item)
+
+            self.extruder_table.show()
+            pass
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 50, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
+        self.extruder_table.setSortingEnabled(True)
 
         self.cursor.execute("""
         SELECT column_name FROM information_schema.columns
@@ -2177,7 +2199,11 @@ class Ui_LoginWindow(object):
                         "total time(hr)"]
 
         try:
-            self.cursor.execute(table_query)
+            self.cursor.execute("""SELECT 
+                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        FROM extruder
+                        ORDER BY process_id DESC;
+                        """)
             result = self.cursor.fetchall()
         except Exception as e:
             self.cursor.execute("""
@@ -2194,6 +2220,7 @@ class Ui_LoginWindow(object):
         self.extruder_table.setColumnCount(len(column_names))
         # Set Row Count
         self.extruder_table.setRowCount(len(result))
+
 
         self.extruder_table.setStyleSheet("""
         gridline-color: rgb(0, 0, 127); 
@@ -2240,7 +2267,7 @@ class Ui_LoginWindow(object):
                     SELECT DISTINCT(machine) FROM extruder;
                 """)
         machine = self.cursor.fetchall()
-        print(machine)
+        self.machine_combo.addItem("-")
         for i in machine:
             self.machine_combo.addItem(i[0])
         self.machine_combo.show()
@@ -2251,14 +2278,12 @@ class Ui_LoginWindow(object):
             SELECT DISTINCT(customer) FROM extruder;
         """)
         customers = self.cursor.fetchall()
-        print(customers)
+        self.company_combo.addItem("-")
         for i in customers:
             self.company_combo.addItem(i[0])
-
         self.company_combo.setEditable(True)
         self.company_combo.currentIndexChanged.connect(filter_table)
         self.company_combo.show()
-
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
