@@ -5,7 +5,7 @@ import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
@@ -115,6 +115,7 @@ class Ui_LoginWindow(object):
         self.production_icon.show()
 
     def production(self):
+
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
@@ -122,12 +123,14 @@ class Ui_LoginWindow(object):
             self.time_table.deleteLater()
             self.material_table.deleteLater()
             self.group_box.deleteLater()
+            self.export_btn.deleteLater()
 
 
         except Exception as e:
             print(e)
 
         def show_form():
+
 
             try:
                 # Clear all the widget first
@@ -162,14 +165,104 @@ class Ui_LoginWindow(object):
             production_ID = selected[28]
             total_input = selected[29]
 
-            print(output_per_hour)
-            # Convert string of json to JSON
+            def exportToExcel():
+                from openpyxl.styles import Font
+                from openpyxl.styles import Alignment
 
+
+                process_id = selected[0]
+
+                self.cursor.execute(f"""
+                           SELECT * FROM extruder 
+                           WHERE process_id = '{process_id}';
+
+                           """)
+                items = self.cursor.fetchall()[0]
+                # Unpack the Items
+                machine_number = items[1]
+                quantity_order = items[2]
+                customer = items[4]
+                code = items[6]
+                total_input = items[-2]
+                total_time = items[8]
+                time_start = items[9]
+                time_end = items[10]
+                outputPerHour = items[27]
+                total_output = items[3]
+                outputPercent = items[11]
+                loss = items[12]
+                lossPercent = items[13]
+                purging = items[14]
+                resin = items[15]
+                remarks = items[16]
+                operator = items[21]
+                supervisor = items[22]
+                outputs = items[-5]
+                materials = items[-8]
+                lot_number = items[-1][0]
+                purge_duration = time(hour=items[-6])
+
+                wb = load_workbook(
+                    r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist")
+                worksheet = wb.active
+
+                font = Font(size=8, bold=True, name='Arial')
+                center_Alignment = Alignment(horizontal='center', vertical='center')
+
+                worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
+                worksheet["A8"] = machine_number[-1]
+                worksheet["B8"] = quantity_order  # quantity order
+                worksheet["C8"].font = font
+                worksheet["C8"].alignment = center_Alignment
+                worksheet["C8"] = customer  # customer
+
+                worksheet["F8"] = code  # product code
+                worksheet["G9"] = total_input  # total input
+                worksheet["H9"] = total_time  # total time used
+                worksheet["I9"] = outputPerHour  # output Per Hour
+                worksheet["K9"] = total_output  # total Output
+                worksheet["L9"] = outputPercent  # Total Output Percentage
+                worksheet["M9"] = loss
+                worksheet["N9"] = lossPercent
+
+                total_sec = timedelta()
+                for row in range(len(time_start)):
+                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
+                    worksheet["G" + str(12 + row)] = outputs[row]
+                    total_sec = total_sec + (time_end[row] - time_start[row])
+
+                try:
+                    hour = str(int(total_sec.total_seconds() // 3600))
+                    minute = str((int(total_sec.total_seconds() % 3600) // 60))
+                    print(hour, minute)
+                    total_time_used = time(int(hour), int(minute))
+
+                    worksheet["F25"] = total_time_used
+                except ValueError:
+                    worksheet["F25"] = hour + ":" + minute
+
+                for key in list(materials.keys()):
+                    worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
+                    worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
+
+                for ln in range(len(lot_number)):
+                    worksheet["M" + str(12 + ln)] = lot_number[ln]
+
+                worksheet["B27"] = purging
+                worksheet["E28"] = purge_duration
+                worksheet["B29"] = resin
+                worksheet["G26"] = remarks
+                worksheet["M28"] = operator
+                worksheet["M29"] = supervisor
+
+                wb.save("text.xlsx")
+                print("load successful")
+
+            # Convert string of json to JSON
             materials = str(materials).replace("'", '"')
             materials = json.loads(materials)
-
-            # Regular expression pattern to match time values
-            time_pattern = r'datetime\.time\((\d+), (\d+)\)'
 
             # Main Widget
             self.info_widget = QtWidgets.QWidget(self.main_widget)
@@ -372,7 +465,6 @@ class Ui_LoginWindow(object):
             self.purgeDuration_val.setText(str(purge_duration))
             self.purgeDuration_val.setFont(font)
 
-
             # Production ID
             self.productionID_value = QtWidgets.QLabel(self.info_widget)
             self.productionID_value.setText(str(production_ID))
@@ -522,7 +614,6 @@ class Ui_LoginWindow(object):
             info_widget5.show()
             info_widget6.show()
 
-
             # Create 3 tables for Time, Materials and Temperature
             try:
                 self.time_table = QtWidgets.QTableWidget(self.main_widget)
@@ -538,15 +629,14 @@ class Ui_LoginWindow(object):
                 for i in range(self.time_rows):
                     for j in range(self.time_cols):
                         if j == 0:
-                            item = QtWidgets.QTableWidgetItem(time_start[i].strftime('%H:%M:%S'))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(time_start[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         elif j == 1:
-                            item = QtWidgets.QTableWidgetItem(time_end[i].strftime('%H:%M:%S'))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(time_end[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         else:
-                            print(time_start[i], type(time_start[i]))
                             datetime1 = time_start[i]
                             datetime2 = time_end[i]
                             t_diff = datetime2 - datetime1
@@ -594,7 +684,6 @@ class Ui_LoginWindow(object):
                 self.temp_table.setVerticalHeaderLabels(["Z" + str(i + 1) for i in range(12)])
                 self.temp_table.setHorizontalHeaderLabels(["Temperature"])
 
-                print(temperature)
 
                 # Populate the Table
                 for i in range(len(temperature)):
@@ -621,6 +710,12 @@ class Ui_LoginWindow(object):
 
             self.group_box.show()
 
+            self.export_btn = QtWidgets.QPushButton(self.main_widget)
+            self.export_btn.setGeometry(730, 610, 100, 30)
+            self.export_btn.setText("Export")
+            self.export_btn.clicked.connect(exportToExcel)
+            self.export_btn.show()
+
         def add_entry():
 
             self.entry_widget = QtWidgets.QWidget()
@@ -631,10 +726,12 @@ class Ui_LoginWindow(object):
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
 
+
             def get_entries():
                 # get the data from the tables
 
                 try:
+
                     print(type(self.remarks_textBox.toPlainText()))
                     # Time Table
                     temp_row = time_table.rowCount()
@@ -665,7 +762,7 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
-                    hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
+                    hours = str(int(total_time.total_seconds() // 3600))
                     minutes = str((int(total_time.total_seconds() % 3600) // 60))
                     seconds = str(int(total_time.total_seconds() % 60))
 
@@ -698,22 +795,23 @@ class Ui_LoginWindow(object):
 
 
                     except:
-                        print("test")
+
                         purge_start = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
                             "%Y-%m-%d %H:%M")
-                        print(purge_start, purge_end)
                         purge_duration = (purge_end - purge_start).total_seconds()
 
                     purge_duration = purge_duration // 60
                     # SQL command here to insert Items
                     self.cursor.execute(
                         f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
-                    material = self.cursor.fetchall()
-                    material = material[0][0]
-                    material = json.dumps(material)
+
+                    self.total_mats = json.dumps(self.total_mats)
+                    self.total_mats = self.total_mats.replace('\\',"")
+                    print(type(self.total_mats), self.total_mats)
+
 
                     # Convert the list to string
                     temperature = str(temperature).replace("[", "").replace("]", "")
@@ -730,13 +828,14 @@ class Ui_LoginWindow(object):
                                         VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
-                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{material}', '{purging_input.text()}',
+                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
                                          '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', '{lot_number_input.text()}')
+                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
+                                         ARRAY[{str(self.lot_numberList)}]::VARCHAR[])
 
-                                                        """)
+                                                """)
                         print("query successful")
                         self.conn.commit()
                         self.entry_widget.close()
@@ -745,7 +844,8 @@ class Ui_LoginWindow(object):
                         QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
                         print(e)
                         self.conn.rollback()
-                except:
+                except Exception as e:
+                    print(e)
                     QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
                     return
 
@@ -758,17 +858,20 @@ class Ui_LoginWindow(object):
                 except:
                     pass
 
+                def add_data():
+                    pass
+
                 def show_table():
                     self.table2.clearContents()
 
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
-
                     self.cursor.execute(f"""
                     SELECT production_id, lot_number, t_qtyreq, materials
                     FROM production_merge
                     WHERE production_id = '{item[0]}'
                     """)
+
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -798,15 +901,21 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
-                def add_data():
+                self.added_entry = 0  # for counting the lot numbers added
+                self.total_mats = {}
+                self.total_quantity_order = 0
+                self.total_output = 0
+                self.lot_numberList = []
+                self.total_outputPercent = 0
+                def push_data():
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
 
                     self.cursor.execute(f"""
-                    SELECT * FROM production_merge
-                    WHERE production_id = '{item[0]}' 
+                                                                SELECT * FROM production_merge
+                                                                WHERE production_id = '{item[0]}' 
 
-                    """)
+                                                                """)
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -822,18 +931,64 @@ class Ui_LoginWindow(object):
                     quantity_order = result[15]
                     output_quantity = result[17]
                     remarks = result[18]
+                    materials = result[-1]
+
+                    self.added_entry += 1
+                    self.lot_numberList.append(lot_number)
+                    self.total_output += output_quantity
+                    self.total_quantity_order += quantity_order
+
+                    for key in materials.keys():
+                        if key in list(self.total_mats.keys()):
+                            self.total_mats[key] = self.total_mats[key] + materials[key]
+                        else:
+                            self.total_mats[key] = materials[key]
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(prod_id)
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
-                    orderedQuantity_input.setText(str(quantity_order))
-                    lot_number_input.setText(str(lot_number))
-                    product_output_input.setText(str(output_quantity))
+                    lot_number_input.setText('/'.join(self.lot_numberList))
+                    # product_output_input.setText(str(round(self.total_output,2)))
                     machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
-                    order_number_input.setText(order_number)
-                    self.selectProd_widget.close()
+                    order_number_input.setText(str(order_number))
+
+                    self.cursor.execute(f"""
+                    SELECT production_id, lot_number
+                    FROM production_merge
+                    WHERE product_code = '{product_code}' AND 
+                    machine = '{machine_name}' AND t_fid = '{formula_id}';
+                    
+                    """)
+                    query_result = self.cursor.fetchall()
+                    self.table.itemSelectionChanged.disconnect(show_table)
+                    self.table.clearSelection()
+                    self.table.clear()
+                    self.table.setRowCount(len(query_result))
+                    self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
+
+                    for row in range(len(query_result)):
+                        prod = QTableWidgetItem(query_result[row][0])
+                        prod.setFlags(prod.flags() & ~Qt.ItemIsEditable)
+                        lot = QTableWidgetItem(query_result[row][1])
+                        lot.setFlags(lot.flags() & ~Qt.ItemIsEditable)
+                        self.table.setItem(row, 0, prod)
+                        self.table.setItem(row, 1, lot)
+                    self.table.itemSelectionChanged.connect(show_table)
+                    self.table.show()
+
+                    self.table2.clearSelection()
+                    self.table2.clear()
+                    self.table2.setHorizontalHeaderLabels(["Materials", "Quantity"])
+                    for keys in list(self.total_mats.keys()):
+                        key = QTableWidgetItem(str(keys))
+                        value = QTableWidgetItem(str(self.total_mats[keys]))
+                        self.table2.setItem(list(self.total_mats.keys()).index(keys), 0, key)
+                        key.setFlags(key.flags() & ~Qt.ItemIsEditable)
+                        self.table2.setItem(list(self.total_mats.keys()).index(keys), 1, value)
+                        value.setFlags(value.flags() & ~Qt.ItemIsEditable)
+                    self.table2.show()
 
                 def search():
                     try:
@@ -842,18 +997,21 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                                             SELECT production_id, lot_number
                                             FROM production_merge
-                                            WHERE production_id = '{search_bar.text()}'
+                                            WHERE lot_number ILIKE '%{search_bar.text()}%'
                                             """)
                         search_result = self.cursor.fetchall()
-                        print(search_result)
-                        search_result = search_result[0]
-                        print(search_result)
-                        item = QTableWidgetItem(search_result[0])
-                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                        item2 = QTableWidgetItem(search_result[1])
-                        item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
-                        self.table.setItem(0, 0, item)
-                        self.table.setItem(0, 1, item2)
+
+                        for i in range(len(search_result)):
+
+                            item_pair = search_result[i]
+
+                            item = QTableWidgetItem(item_pair[0])
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            item2 = QTableWidgetItem(item_pair[1])
+                            item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
+                            self.table.setItem(i, 0, item)
+                            self.table.setItem(i, 1, item2)
+
                         self.table.itemSelectionChanged.connect(show_table)
                     except Exception as e:
                         print(e)
@@ -862,8 +1020,8 @@ class Ui_LoginWindow(object):
 
                     try:
                         self.cursor.execute("""
-                                                                                SELECT production_id, lot_number
-                                                                                FROM production_merge
+                                            SELECT production_id, lot_number
+                                            FROM production_merge
 
                                                                                 """)
                         result = self.cursor.fetchall()
@@ -912,7 +1070,7 @@ class Ui_LoginWindow(object):
                 search_bar = QtWidgets.QLineEdit(self.selectProd_widget)
                 search_bar.setGeometry(40, 25, 170, 25)
                 search_bar.setFont(QtGui.QFont("Arial", 10))
-                search_bar.setPlaceholderText("Search Production ID")
+                search_bar.setPlaceholderText("Search Lot Number")
                 search_bar.show()
 
                 search_btn = QtWidgets.QPushButton(self.selectProd_widget)
@@ -1013,13 +1171,13 @@ class Ui_LoginWindow(object):
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
                 save_prod.setGeometry(590, 570, 70, 30)
-                save_prod.setText("Add")
-                save_prod.clicked.connect(add_data)
+                save_prod.setText("Push Data")
+                save_prod.clicked.connect(push_data)
                 save_prod.show()
 
                 refresh = QtWidgets.QPushButton(self.selectProd_widget)
                 refresh.setGeometry(660, 570, 70, 30)
-                refresh.setText("Refresh")
+                refresh.setText("ADD")
                 refresh.show()
 
                 close = QtWidgets.QPushButton(self.selectProd_widget)
@@ -1034,6 +1192,8 @@ class Ui_LoginWindow(object):
 
             def add_time():
 
+                product_output_input.setText(str(float(product_output_input.text()) + float(output_lineEdit.text())))
+
                 item1 = QTableWidgetItem(time_start_input.text())
                 item2 = QTableWidgetItem(time_end_input.text())
                 item3 = QTableWidgetItem(output_lineEdit.text())
@@ -1047,6 +1207,10 @@ class Ui_LoginWindow(object):
                 self.time_entry += 1
 
                 output_lineEdit.clear()
+
+            def reset_table():
+                time_table.clearContents()
+                product_output_input.setText("0.0")
 
             def loss_auto():
                 if product_output_input.text() != "":
@@ -1181,7 +1345,6 @@ class Ui_LoginWindow(object):
             orderedQuantity_input = QtWidgets.QLineEdit()
             orderedQuantity_input.setAlignment(Qt.AlignCenter)
             orderedQuantity_input.setFixedHeight(25)
-            orderedQuantity_input.setEnabled(False)
             orderedQuantity_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             productCode_input = QtWidgets.QLineEdit()
@@ -1193,6 +1356,7 @@ class Ui_LoginWindow(object):
             product_output_input = QtWidgets.QLineEdit()
             product_output_input.setFixedHeight(25)
             product_output_input.setEnabled(False)
+            product_output_input.setText("0.0")
             product_output_input.setAlignment(Qt.AlignCenter)
             product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -1319,6 +1483,7 @@ class Ui_LoginWindow(object):
             time_table.setColumnWidth(1, 150)
             time_table.setStyleSheet("background-color: white;")
             time_table.setFont(QtGui.QFont("Arial", 10))
+            time_table.setEnabled(False)
 
             time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             time_table.show()
@@ -1364,26 +1529,33 @@ class Ui_LoginWindow(object):
             time_end_input.show()
 
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
-            output_lineEdit.setGeometry(340, 475, 80, 25)
+            output_lineEdit.setGeometry(310, 475, 80, 25)
             output_lineEdit.setAlignment(Qt.AlignCenter)
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
             self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(420, 475, 25, 25)
+            self.plus_icon.setGeometry(390, 475, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.clicked.connect(add_time)
             self.plus_icon.show()
 
+            self.reset_icon = ClickableLabel(self.entry_widget)
+            self.reset_icon.setGeometry(425, 475, 25, 25)
+            self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(20, 20))
+            self.reset_icon.setCursor(Qt.PointingHandCursor)
+            self.reset_icon.clicked.connect(reset_table)
+            self.reset_icon.show()
+
         def update_entry():
             try:
                 selected = self.extruder_table.selectedItems()
                 selected = [i.text() for i in selected]
-
                 self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
                 result = self.cursor.fetchall()
                 result = result[0]
+
             except:
                 QMessageBox.critical(self.main_widget,"ERROR", "No Data Selected")
                 return
@@ -1430,7 +1602,6 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     print(e)
-                print(total_time)
                 hours = str(int(total_time.total_seconds() // 3600)).replace('-', '')
                 minutes = str((int(total_time.total_seconds() % 3600) // 60))
                 seconds = str(int(total_time.total_seconds() % 60))
@@ -1463,14 +1634,12 @@ class Ui_LoginWindow(object):
                         purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
                         purge_duration = abs(purge_end - purge_start)
 
-
                     except:
                         purge_start = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(
                             datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
                             "%Y-%m-%d %H:%M")
-                        print(purge_start, purge_end)
                         purge_duration = (purge_end - purge_start).total_seconds()
 
                     purge_duration = purge_duration // 60
@@ -1502,9 +1671,9 @@ class Ui_LoginWindow(object):
                                 output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                                 output_per_hour = '{outputPerHour}' 
                                 WHERE process_id = {selected[0]};
-                                ;
-                                
+                                ;      
                                 """)
+                    QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL", f"Successfully Updated \n Form No. {selected[0]}")
                     print("query successful")
                     self.conn.commit()
                     self.entry_widget.close()
@@ -1512,7 +1681,6 @@ class Ui_LoginWindow(object):
                     print("Insert Failed")
                     print(e)
                     self.conn.rollback()
-
 
             self.time_entry = 0
 
@@ -1539,12 +1707,6 @@ class Ui_LoginWindow(object):
                             str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
                     except:
                         loss_input.setText("INVALID")
-
-
-
-
-
-
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
@@ -1649,7 +1811,6 @@ class Ui_LoginWindow(object):
             product_input_label.setText("Input")
             product_input_label.setFont(font)
 
-
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
             productionID_input.setFixedHeight(25)
@@ -1691,11 +1852,9 @@ class Ui_LoginWindow(object):
 
             product_output_input = QtWidgets.QLineEdit()
             product_output_input.setFixedHeight(25)
-            product_output_input.setEnabled(False)
             product_output_input.setAlignment(Qt.AlignCenter)
             product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_output_input.setText(str(result[3]))
-
 
             self.formulaID_input = QtWidgets.QLineEdit()
             self.formulaID_input.setAlignment(Qt.AlignCenter)
@@ -1709,7 +1868,10 @@ class Ui_LoginWindow(object):
             lot_number_input.setFixedHeight(25)
             lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
-            lot_number_input.setText(result[-1])
+            try:
+                lot_number_input.setText('/'.join(result[-1][0]))
+            except:
+                lot_number_input.setText(None)
 
             feedRate_input = QtWidgets.QLineEdit()
             feedRate_input.setFixedHeight(25)
@@ -1890,7 +2052,6 @@ class Ui_LoginWindow(object):
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
-
             self.plus_icon = ClickableLabel(self.entry_widget)
             self.plus_icon.setGeometry(420, 475, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
@@ -1899,11 +2060,13 @@ class Ui_LoginWindow(object):
             self.plus_icon.show()
 
         def print_file():
+
+            from openpyxl.styles import Font
+            from openpyxl.styles import Alignment
+
             selected = self.extruder_table.selectedItems()
 
             process_id = selected[0].text()
-
-            print(id)
 
             self.cursor.execute(f"""
             SELECT * FROM extruder 
@@ -1911,28 +2074,137 @@ class Ui_LoginWindow(object):
             
             """)
             items = self.cursor.fetchall()[0]
-
             # Unpack the Items
             machine_number = items[1]
             quantity_order = items[2]
             customer = items[4]
-            code = items = items[6]
+            code = items[6]
             total_input = items[-2]
             total_time = items[8]
+            time_start = items[9]
+            time_end = items[10]
+            outputPerHour = items[27]
+            total_output = items[3]
+            outputPercent = items[11]
+            loss = items[12]
+            lossPercent = items[13]
+            purging = items[14]
+            resin = items[15]
+            remarks = items[16]
+            operator = items[21]
+            supervisor = items[22]
+            outputs = items[-5]
+            materials = items[-8]
+            lot_number = items[-1][0]
 
-
-
-            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Form Template.xlsx")
+            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
             worksheet = wb.active
 
+            font = Font(size=8, bold=True, name='Arial')
+            center_Alignment = Alignment(horizontal='center', vertical='center')
 
+            worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
+            worksheet["A8"] = machine_number[-1]
+            worksheet["B8"] = quantity_order  # quantity order
+            worksheet["C8"].font = font
+            worksheet["C8"].alignment = center_Alignment
+            worksheet["C8"] = customer  # customer
+
+            worksheet["F8"] = code  # product code
+            worksheet["G9"] = total_input  # total input
+            worksheet["H9"] = total_time  # total time used
+            worksheet["I9"] = outputPerHour  # output Per Hour
+            worksheet["K9"] = total_output  # total Output
+            worksheet["L9"] = outputPercent  # Total Output Percentage
+            worksheet["M9"] = loss
+            worksheet["N9"] = lossPercent
+
+            total_sec = timedelta()
+            for row in range(len(time_start)):
+                worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
+                worksheet["G" + str(12 + row)] = outputs[row]
+                total_sec = total_sec + (time_end[row] - time_start[row])
+
+            try:
+                hour = str(int(total_sec.total_seconds() // 3600))
+                minute = str((int(total_sec.total_seconds() % 3600) // 60))
+                print(hour, minute)
+                total_time_used = time(int(hour), int(minute))
+
+                worksheet["F25"] = total_time_used
+            except ValueError:
+                worksheet["F25"] = hour + ":" + minute
+
+            for key in list(materials.keys()):
+                worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
+                worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
+
+            for ln in range(len(lot_number)):
+                worksheet["M" + str(12 + ln)] = lot_number[ln]
+
+            worksheet["B27"] = purging
+            worksheet["B29"] = resin
+            worksheet["G26"] = remarks
+            worksheet["M28"] = operator
+            worksheet["M29"] = supervisor
+
+            wb.save("text.xlsx")
             print("load successful")
 
+        def filter_table():
 
+            queryConList = []
+
+            if self.machine_combo.currentText() != "-":
+                queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
+            if self.company_combo.currentText() != "-":
+                queryConList.append(f"customer = '{self.company_combo.currentText().replace("'","''")}'")
+
+
+            query = f"""
+                    SELECT 
+                    process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                    FROM extruder WHERE
+                                    """
+
+            if len(queryConList) == 0:
+                query = query.replace("WHERE", "")
+
+            for condition in queryConList:
+                if condition != queryConList[-1]:
+                    query += condition + " AND "
+                else:
+                    query += condition
+
+            query += "ORDER BY process_id"
+
+            self.cursor.execute(query)
+            result = self.cursor.fetchall()
+            if self.extruder_table.rowCount() < len(result):
+                self.extruder_table.setRowCount(len(result))
+
+
+            self.extruder_table.clearContents()
+            for i in range(len(result)):
+                for j in range(len(column_names)):
+                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                    # Set Alignment for specific columns
+                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7:
+                        item.setTextAlignment(Qt.AlignCenter)
+                    else:
+                        pass
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.extruder_table.setItem(i, j, item)
+
+            self.extruder_table.show()
+            pass
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
-        self.extruder_table.setGeometry(QtCore.QRect(20, 30, 900, 375))
+        self.extruder_table.setGeometry(QtCore.QRect(20, 50, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
+        self.extruder_table.setSortingEnabled(True)
 
         self.cursor.execute("""
         SELECT column_name FROM information_schema.columns
@@ -1945,22 +2217,28 @@ class Ui_LoginWindow(object):
                         "total time(hr)"]
 
         try:
-            self.cursor.execute("""
-            SELECT 
-            process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-            FROM extruder
-            ORDER BY process_id DESC
-            ; 
-
-            """)
+            self.cursor.execute("""SELECT 
+                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        FROM extruder
+                        ORDER BY process_id DESC;
+                        """)
             result = self.cursor.fetchall()
         except Exception as e:
-            print(e)
+            self.cursor.execute("""
+                        SELECT 
+                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        FROM extruder
+                        ORDER BY process_id DESC
+                        ; 
+
+                        """)
+            result = self.cursor.fetchall()
 
         # Set Column Count
         self.extruder_table.setColumnCount(len(column_names))
         # Set Row Count
         self.extruder_table.setRowCount(len(result))
+
 
         self.extruder_table.setStyleSheet("""
         gridline-color: rgb(0, 0, 127); 
@@ -1999,6 +2277,32 @@ class Ui_LoginWindow(object):
         self.extruder_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.extruder_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.extruder_table.show()
+
+        #Filters
+        self.machine_combo = QtWidgets.QComboBox(self.main_widget)
+        self.machine_combo.setGeometry(120, 10, 100, 30)
+        self.cursor.execute("""
+                    SELECT DISTINCT(machine) FROM extruder;
+                """)
+        machine = self.cursor.fetchall()
+        self.machine_combo.addItem("-")
+        for i in machine:
+            self.machine_combo.addItem(i[0])
+        self.machine_combo.currentIndexChanged.connect(filter_table)
+        self.machine_combo.show()
+
+        self.company_combo = QtWidgets.QComboBox(self.main_widget)
+        self.company_combo.setGeometry(220, 10, 170, 30)
+        self.cursor.execute("""
+            SELECT DISTINCT(customer) FROM extruder;
+        """)
+        customers = self.cursor.fetchall()
+        self.company_combo.addItem("-")
+        for i in customers:
+            self.company_combo.addItem(i[0])
+        self.company_combo.setEditable(True)
+        self.company_combo.currentIndexChanged.connect(filter_table)
+        self.company_combo.show()
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
