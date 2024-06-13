@@ -2204,9 +2204,6 @@ class Ui_LoginWindow(object):
 
             self.cursor.execute(query)
             result = self.cursor.fetchall()
-            if self.extruder_table.rowCount() < len(result):
-                self.extruder_table.setRowCount(len(result))
-
 
             self.extruder_table.clearContents()
             for i in range(len(result)):
@@ -2341,33 +2338,36 @@ class Ui_LoginWindow(object):
         self.productCode_combo.show()
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
-        self.view_btn.setGeometry(100, 500, 100, 30)
+        self.view_btn.setGeometry(600, 700, 80, 30)
         self.view_btn.setText("View")
         self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.view_btn.clicked.connect(show_form)
+        self.view_btn.setCursor(Qt.PointingHandCursor)
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.main_widget)
-        self.add_btn.setGeometry(250, 500, 100, 30)
+        self.add_btn.setGeometry(681, 700, 80, 30)
         self.add_btn.setText("Add Entry")
         self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.add_btn.clicked.connect(add_entry)
+        self.add_btn.setCursor(Qt.PointingHandCursor)
         self.add_btn.show()
 
         self.update_btn = QtWidgets.QPushButton(self.main_widget)
-        self.update_btn.setGeometry(400, 500, 100, 30)
+        self.update_btn.setGeometry(762, 700, 80, 30)
         self.update_btn.setText("Update")
         self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.update_btn.clicked.connect(update_entry)
+        self.update_btn.setCursor(Qt.PointingHandCursor)
         self.update_btn.show()
 
         self.print_btn = QtWidgets.QPushButton(self.main_widget)
-        self.print_btn.setGeometry(550, 500, 100, 30)
+        self.print_btn.setGeometry(843, 700, 80, 30)
         self.print_btn.setText("Print")
         self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
         self.print_btn.clicked.connect(print_file)
+        self.print_btn.setCursor(Qt.PointingHandCursor)
         self.print_btn.show()
-
 
 
 if __name__ == "__main__":
