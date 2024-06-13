@@ -228,8 +228,8 @@ class Ui_LoginWindow(object):
 
                 total_sec = timedelta()
                 for row in range(len(time_start)):
-                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
-                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%d-%b-%Y %H:%M")
+                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%d-%b-%Y %H:%M")
                     worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
                     worksheet["G" + str(12 + row)] = outputs[row]
                     total_sec = total_sec + (time_end[row] - time_start[row])
@@ -1670,7 +1670,7 @@ class Ui_LoginWindow(object):
                                 purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                                 time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                                 output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
-                                output_per_hour = '{outputPerHour}' 
+                                output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}
                                 WHERE process_id = {selected[0]};
                                 ;      
                                 """)
@@ -2136,8 +2136,8 @@ class Ui_LoginWindow(object):
 
                 total_sec = timedelta()
                 for row in range(len(time_start)):
-                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
-                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%d-%b-%Y %H:%M")
+                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%d-%b-%Y %H:%M")
                     worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
                     worksheet["G" + str(12 + row)] = outputs[row]
                     total_sec = total_sec + (time_end[row] - time_start[row])
@@ -2181,6 +2181,8 @@ class Ui_LoginWindow(object):
                 queryConList.append(f"customer = '{self.company_combo.currentText().replace("'","''")}'")
             if self.formula_combo.currentText() != "":
                 queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
+            if self.productCode_combo.currentText() != "":
+                queryConList.append(f"product_code = '{self.productCode_combo.currentText()}'")
 
 
             query = f"""
@@ -2332,6 +2334,11 @@ class Ui_LoginWindow(object):
         self.formula_combo.currentTextChanged.connect(filter_table)
         self.formula_combo.show()
 
+        self.productCode_combo = QtWidgets.QComboBox(self.main_widget)
+        self.productCode_combo.setGeometry(720, 40, 100, 30)
+        self.productCode_combo.currentTextChanged.connect(filter_table)
+        self.productCode_combo.setEditable(True)
+        self.productCode_combo.show()
 
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
