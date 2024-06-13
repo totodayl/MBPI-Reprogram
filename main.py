@@ -1,11 +1,12 @@
 import datetime
-from openpyxl import Workbook, load_workbook
+from openpyxl import load_workbook
 import json
 import psycopg2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time
+
 
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
@@ -257,7 +258,7 @@ class Ui_LoginWindow(object):
                 worksheet["M28"] = operator
                 worksheet["M29"] = supervisor
 
-                wb.save("text.xlsx")
+                wb.save(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\text.xlsx")
                 print("load successful")
 
             # Convert string of json to JSON
@@ -1211,6 +1212,7 @@ class Ui_LoginWindow(object):
             def reset_table():
                 time_table.clearContents()
                 product_output_input.setText("0.0")
+                self.time_entry = 0
 
             def loss_auto():
                 if product_output_input.text() != "":
@@ -1646,7 +1648,6 @@ class Ui_LoginWindow(object):
                 except:
                     purge_duration = result[25]
 
-
                 # SQL command here to insert Items
                 self.cursor.execute(
                     f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
@@ -1682,7 +1683,7 @@ class Ui_LoginWindow(object):
                     print(e)
                     self.conn.rollback()
 
-            self.time_entry = 0
+            self.time_entry = len(result[9])
 
             def add_time():
 
@@ -1699,6 +1700,11 @@ class Ui_LoginWindow(object):
                 self.time_entry += 1
 
                 output_lineEdit.clear()
+
+            def reset_table():
+                time_table.clearContents()
+                product_output_input.setText("0.0")
+                self.time_entry = 0
 
             def loss_auto():
                 if product_output_input.text() != "":
@@ -1839,7 +1845,6 @@ class Ui_LoginWindow(object):
             orderedQuantity_input = QtWidgets.QLineEdit()
             orderedQuantity_input.setAlignment(Qt.AlignCenter)
             orderedQuantity_input.setFixedHeight(25)
-            orderedQuantity_input.setEnabled(False)
             orderedQuantity_input.setStyleSheet("background-color: white; border: 1px solid black")
             orderedQuantity_input.setText(str(result[2]))
 
@@ -2047,111 +2052,124 @@ class Ui_LoginWindow(object):
             time_end_input.show()
 
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
-            output_lineEdit.setGeometry(340, 475, 80, 25)
+            output_lineEdit.setGeometry(310, 475, 80, 25)
             output_lineEdit.setAlignment(Qt.AlignCenter)
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
             self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(420, 475, 25, 25)
+            self.plus_icon.setGeometry(390, 475, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.clicked.connect(add_time)
             self.plus_icon.show()
 
+            self.reset_icon = ClickableLabel(self.entry_widget)
+            self.reset_icon.setGeometry(425, 475, 25, 25)
+            self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(20, 20))
+            self.reset_icon.setCursor(Qt.PointingHandCursor)
+            self.reset_icon.clicked.connect(reset_table)
+            self.reset_icon.show()
+
+
+
+
         def print_file():
-
-            from openpyxl.styles import Font
-            from openpyxl.styles import Alignment
-
-            selected = self.extruder_table.selectedItems()
-
-            process_id = selected[0].text()
-
-            self.cursor.execute(f"""
-            SELECT * FROM extruder 
-            WHERE process_id = '{process_id}';
-            
-            """)
-            items = self.cursor.fetchall()[0]
-            # Unpack the Items
-            machine_number = items[1]
-            quantity_order = items[2]
-            customer = items[4]
-            code = items[6]
-            total_input = items[-2]
-            total_time = items[8]
-            time_start = items[9]
-            time_end = items[10]
-            outputPerHour = items[27]
-            total_output = items[3]
-            outputPercent = items[11]
-            loss = items[12]
-            lossPercent = items[13]
-            purging = items[14]
-            resin = items[15]
-            remarks = items[16]
-            operator = items[21]
-            supervisor = items[22]
-            outputs = items[-5]
-            materials = items[-8]
-            lot_number = items[-1][0]
-
-            wb = load_workbook(r"C:\Users\Administrator\PycharmProjects\3.12\MBPI system Reprogram\Extruder Template.xlsx")
-            worksheet = wb.active
-
-            font = Font(size=8, bold=True, name='Arial')
-            center_Alignment = Alignment(horizontal='center', vertical='center')
-
-            worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
-            worksheet["A8"] = machine_number[-1]
-            worksheet["B8"] = quantity_order  # quantity order
-            worksheet["C8"].font = font
-            worksheet["C8"].alignment = center_Alignment
-            worksheet["C8"] = customer  # customer
-
-            worksheet["F8"] = code  # product code
-            worksheet["G9"] = total_input  # total input
-            worksheet["H9"] = total_time  # total time used
-            worksheet["I9"] = outputPerHour  # output Per Hour
-            worksheet["K9"] = total_output  # total Output
-            worksheet["L9"] = outputPercent  # Total Output Percentage
-            worksheet["M9"] = loss
-            worksheet["N9"] = lossPercent
-
-            total_sec = timedelta()
-            for row in range(len(time_start)):
-                worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
-                worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
-                worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
-                worksheet["G" + str(12 + row)] = outputs[row]
-                total_sec = total_sec + (time_end[row] - time_start[row])
-
             try:
-                hour = str(int(total_sec.total_seconds() // 3600))
-                minute = str((int(total_sec.total_seconds() % 3600) // 60))
-                print(hour, minute)
-                total_time_used = time(int(hour), int(minute))
+                from openpyxl.styles import Font
+                from openpyxl.styles import Alignment
 
-                worksheet["F25"] = total_time_used
-            except ValueError:
-                worksheet["F25"] = hour + ":" + minute
+                selected = self.extruder_table.selectedItems()
 
-            for key in list(materials.keys()):
-                worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
-                worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
+                process_id = selected[0].text()
 
-            for ln in range(len(lot_number)):
-                worksheet["M" + str(12 + ln)] = lot_number[ln]
+                self.cursor.execute(f"""
+                            SELECT * FROM extruder 
+                            WHERE process_id = '{process_id}';
 
-            worksheet["B27"] = purging
-            worksheet["B29"] = resin
-            worksheet["G26"] = remarks
-            worksheet["M28"] = operator
-            worksheet["M29"] = supervisor
+                            """)
+                items = self.cursor.fetchall()[0]
+                # Unpack the Items
+                machine_number = items[1]
+                quantity_order = items[2]
+                customer = items[4]
+                code = items[6]
+                total_input = items[-2]
+                total_time = items[8]
+                time_start = items[9]
+                time_end = items[10]
+                outputPerHour = items[27]
+                total_output = items[3]
+                outputPercent = items[11]
+                loss = items[12]
+                lossPercent = items[13]
+                purging = items[14]
+                resin = items[15]
+                remarks = items[16]
+                operator = items[21]
+                supervisor = items[22]
+                outputs = items[-5]
+                materials = items[-8]
+                lot_number = items[-1][0]
 
-            wb.save("text.xlsx")
-            print("load successful")
+                wb = load_workbook(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\Extruder Template.xlsx")
+                worksheet = wb.active
+
+                font = Font(size=8, bold=True, name='Arial')
+                center_Alignment = Alignment(horizontal='center', vertical='center')
+
+                worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
+                worksheet["A8"] = machine_number[-1]
+                worksheet["B8"] = quantity_order  # quantity order
+                worksheet["C8"].font = font
+                worksheet["C8"].alignment = center_Alignment
+                worksheet["C8"] = customer  # customer
+
+                worksheet["F8"] = code  # product code
+                worksheet["G9"] = total_input  # total input
+                worksheet["H9"] = total_time  # total time used
+                worksheet["I9"] = outputPerHour  # output Per Hour
+                worksheet["K9"] = total_output  # total Output
+                worksheet["L9"] = outputPercent  # Total Output Percentage
+                worksheet["M9"] = loss
+                worksheet["N9"] = lossPercent
+
+                total_sec = timedelta()
+                for row in range(len(time_start)):
+                    worksheet["A" + str(12 + row)] = time_start[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["D" + str(12 + row)] = time_end[row].strftime("%b-%d-%Y %H:%M")
+                    worksheet["F" + str(12 + row)] = time_end[row] - time_start[row]
+                    worksheet["G" + str(12 + row)] = outputs[row]
+                    total_sec = total_sec + (time_end[row] - time_start[row])
+
+                try:
+                    hour = str(int(total_sec.total_seconds() // 3600))
+                    minute = str((int(total_sec.total_seconds() % 3600) // 60))
+                    print(hour, minute)
+                    total_time_used = time(int(hour), int(minute))
+
+                    worksheet["F25"] = total_time_used
+                except ValueError:
+                    worksheet["F25"] = hour + ":" + minute
+
+                for key in list(materials.keys()):
+                    worksheet["I" + str(12 + list(materials.keys()).index(key))] = key
+                    worksheet["K" + str(12 + list(materials.keys()).index(key))] = materials[key]
+
+                for ln in range(len(lot_number)):
+                    worksheet["M" + str(12 + ln)] = lot_number[ln]
+
+                worksheet["B27"] = purging
+                worksheet["B29"] = resin
+                worksheet["G26"] = remarks
+                worksheet["M28"] = operator
+                worksheet["M29"] = supervisor
+
+                wb.save(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\text.xlsx")
+                print("load successful")
+            except:
+                QMessageBox.information(self.main_widget, "ERROR", "No Selected Items")
+
 
         def filter_table():
 
@@ -2161,6 +2179,8 @@ class Ui_LoginWindow(object):
                 queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
             if self.company_combo.currentText() != "-":
                 queryConList.append(f"customer = '{self.company_combo.currentText().replace("'","''")}'")
+            if self.formula_combo.currentText() != "":
+                queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
 
 
             query = f"""
@@ -2201,8 +2221,9 @@ class Ui_LoginWindow(object):
             self.extruder_table.show()
             pass
 
+
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
-        self.extruder_table.setGeometry(QtCore.QRect(20, 50, 900, 375))
+        self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
         self.extruder_table.setSortingEnabled(True)
 
@@ -2250,7 +2271,7 @@ class Ui_LoginWindow(object):
             for j in range(len(column_names)):
                 item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
                 # Set Alignment for specific columns
-                if j == 2 or j == 6 or j == 3 or j == 4 or j == 7:
+                if j == 2 or j == 6 or j == 3 or j == 4 or j == 7 or j == 5:
                     item.setTextAlignment(Qt.AlignCenter)
                 else:
                     pass
@@ -2270,7 +2291,8 @@ class Ui_LoginWindow(object):
         """)
 
         # Set Column Width
-        self.extruder_table.setColumnWidth(2, 175)
+        self.extruder_table.setColumnWidth(2, 198)
+
 
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
         # Set selection mode to select entire rows and disable single item selection
@@ -2280,7 +2302,7 @@ class Ui_LoginWindow(object):
 
         #Filters
         self.machine_combo = QtWidgets.QComboBox(self.main_widget)
-        self.machine_combo.setGeometry(120, 10, 100, 30)
+        self.machine_combo.setGeometry(120, 40, 100, 30)
         self.cursor.execute("""
                     SELECT DISTINCT(machine) FROM extruder;
                 """)
@@ -2292,7 +2314,7 @@ class Ui_LoginWindow(object):
         self.machine_combo.show()
 
         self.company_combo = QtWidgets.QComboBox(self.main_widget)
-        self.company_combo.setGeometry(220, 10, 170, 30)
+        self.company_combo.setGeometry(220, 40, 200, 30)
         self.cursor.execute("""
             SELECT DISTINCT(customer) FROM extruder;
         """)
@@ -2304,33 +2326,42 @@ class Ui_LoginWindow(object):
         self.company_combo.currentIndexChanged.connect(filter_table)
         self.company_combo.show()
 
+        self.formula_combo = QtWidgets.QComboBox(self.main_widget)
+        self.formula_combo.setGeometry(620, 40, 100, 30)
+        self.formula_combo.setEditable(True)
+        self.formula_combo.currentTextChanged.connect(filter_table)
+        self.formula_combo.show()
+
+
         self.view_btn = QtWidgets.QPushButton(self.main_widget)
         self.view_btn.setGeometry(100, 500, 100, 30)
         self.view_btn.setText("View")
-        self.view_btn.setStyleSheet("background-color : red;")
+        self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.view_btn.clicked.connect(show_form)
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.main_widget)
         self.add_btn.setGeometry(250, 500, 100, 30)
         self.add_btn.setText("Add Entry")
-        self.add_btn.setStyleSheet("background-color : red;")
+        self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.add_btn.clicked.connect(add_entry)
         self.add_btn.show()
 
         self.update_btn = QtWidgets.QPushButton(self.main_widget)
         self.update_btn.setGeometry(400, 500, 100, 30)
         self.update_btn.setText("Update")
-        self.update_btn.setStyleSheet("background-color : red;")
+        self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.update_btn.clicked.connect(update_entry)
         self.update_btn.show()
 
         self.print_btn = QtWidgets.QPushButton(self.main_widget)
         self.print_btn.setGeometry(550, 500, 100, 30)
         self.print_btn.setText("Print")
-        self.print_btn.setStyleSheet("background-color: red;")
+        self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
         self.print_btn.clicked.connect(print_file)
         self.print_btn.show()
+
+
 
 if __name__ == "__main__":
     import sys
