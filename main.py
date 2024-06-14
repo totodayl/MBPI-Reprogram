@@ -1560,6 +1560,7 @@ class Ui_LoginWindow(object):
 
             except:
                 QMessageBox.critical(self.main_widget,"ERROR", "No Data Selected")
+                self.extruder_table.setSelectionMode()
                 return
 
             self.entry_widget = QtWidgets.QWidget()
@@ -2071,9 +2072,6 @@ class Ui_LoginWindow(object):
             self.reset_icon.clicked.connect(reset_table)
             self.reset_icon.show()
 
-
-
-
         def print_file():
             try:
                 from openpyxl.styles import Font
@@ -2220,6 +2218,64 @@ class Ui_LoginWindow(object):
             self.extruder_table.show()
             pass
 
+        def show_tables():
+            selected = self.extruder_table.selectedItems()
+            if selected:
+                items = [item.text() for item in selected]
+                process_id = items[0]
+
+            try:
+                self.cursor.execute(f"""
+                            SELECT time_start, time_end, outputs, materials, lot_number
+                            FROM extruder
+                            WHERE process_id = {process_id};
+
+                            """)
+                result = self.cursor.fetchall()
+            except:
+                QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
+                return
+
+            t_start = result[0][0]
+            t_end = result[0][1]
+            outputs = result[0][2]
+            materials = result[0][3]
+            lotNumber = result[0][4]
+            lotNumber = lotNumber[0]
+
+
+
+            # Populating Time Table
+            for i in range(len(t_start)):
+                item1 = QTableWidgetItem(str(t_start[i].strftime("%d-%b-%Y %H:%M")))
+                item1.setTextAlignment(Qt.AlignCenter)
+                item1.setFlags(item1.flags() & ~Qt.ItemIsEditable)
+                item2 = QTableWidgetItem(str(t_end[i].strftime("%d-%b-%Y %H:%M")))
+                item2.setTextAlignment(Qt.AlignCenter)
+                item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
+                item3 = QTableWidgetItem(str(outputs[i]))
+                item3.setTextAlignment(Qt.AlignCenter)
+                item3.setFlags(item3.flags() & ~Qt.ItemIsEditable)
+                main_time_table.setItem(i, 0, item1)
+                main_time_table.setItem(i, 1, item2)
+                main_time_table.setItem(i, 2, item3)
+
+            if len(materials) > material_table.rowCount():
+                material_table.setRowCount(len(materials))
+
+            for i in list(materials.keys()):
+                key = QTableWidgetItem(str(i))
+                key.setFlags(key.flags() & ~Qt.ItemIsEditable)
+                value = QTableWidgetItem(str(round((materials[i]), 4)))
+                value.setFlags(value.flags() & ~Qt.ItemIsEditable)
+                material_table.setItem(list(materials.keys()).index(i), 0, key)
+                material_table.setItem(list(materials.keys()).index(i), 1, value)
+
+            for i in range(len(lotNumber)):
+                item = QTableWidgetItem(str(lotNumber[i]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                lotNumber_table.setItem(i, 0, item)
+
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
@@ -2292,11 +2348,11 @@ class Ui_LoginWindow(object):
         # Set Column Width
         self.extruder_table.setColumnWidth(2, 198)
 
-
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
         # Set selection mode to select entire rows and disable single item selection
         self.extruder_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.extruder_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.extruder_table.itemSelectionChanged.connect(show_tables)
         self.extruder_table.show()
 
         #Filters
@@ -2368,6 +2424,35 @@ class Ui_LoginWindow(object):
         self.print_btn.clicked.connect(print_file)
         self.print_btn.setCursor(Qt.PointingHandCursor)
         self.print_btn.show()
+
+        main_time_table = QtWidgets.QTableWidget(self.main_widget)
+        main_time_table.setGeometry(20, 455, 475, 225)
+        main_time_table.setColumnCount(3)
+        main_time_table.setRowCount(6)
+        main_time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
+        main_time_table.setColumnWidth(0, 180)
+        main_time_table.setColumnWidth(1, 180)
+        main_time_table.setColumnWidth(2, 98)
+        main_time_table.show()
+
+        material_table = QtWidgets.QTableWidget(self.main_widget)
+        material_table.setGeometry(495, 455, 263, 225)
+        material_table.setColumnCount(2)
+        material_table.setRowCount(13)
+        material_table.setHorizontalHeaderLabels(["Material", "Value(Kg)"])
+        material_table.setColumnWidth(0, 130)
+        material_table.setColumnWidth(1, 90)
+        material_table.show()
+
+        lotNumber_table = QtWidgets.QTableWidget(self.main_widget)
+        lotNumber_table.setGeometry(758, 455, 162, 225)
+        lotNumber_table.setColumnCount(1)
+        lotNumber_table.setRowCount(6)
+        lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
+        lotNumber_table.setColumnWidth(0, 162)
+        lotNumber_table.show()
+
+
 
 
 if __name__ == "__main__":
