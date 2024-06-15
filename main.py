@@ -1696,7 +1696,7 @@ class Ui_LoginWindow(object):
 
                     self.cursor.execute(f"""
                                 UPDATE extruder
-                                SET  total_time = {total_hours}, total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
+                                SET  total_time = {total_hours}, machine = '{machine_input.text()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                                 temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                                 feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                                 screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.text()}',
@@ -1862,11 +1862,10 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QLineEdit()
             machine_input.setFixedHeight(25)
-            machine_input.setEnabled(False)
             machine_input.setAlignment(Qt.AlignCenter)
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setText(result[1])
-            machine_input.setEnabled(False)
+
 
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
