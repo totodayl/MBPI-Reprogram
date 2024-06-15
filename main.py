@@ -15,6 +15,7 @@ class ClickableLabel(QtWidgets.QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
 
+
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
         LoginWindow.setObjectName("LoginWindow")
@@ -125,22 +126,12 @@ class Ui_LoginWindow(object):
             self.material_table.deleteLater()
             self.group_box.deleteLater()
             self.export_btn.deleteLater()
-
+            print("Widgets Cleared")
 
         except Exception as e:
             print(e)
 
         def show_form():
-
-
-            try:
-                # Clear all the widget first
-                self.extruder_table.setVisible(False)
-                self.view_btn.setVisible(False)
-                self.add_btn.setVisible(False)
-                self.update_btn.setVisible(False)
-            except:
-                pass
 
             try:
                 selected = self.extruder_table.selectedItems()
@@ -149,8 +140,19 @@ class Ui_LoginWindow(object):
                 # Query the whole columns
                 self.cursor.execute(f"SELECT * FROM extruder WHERE process_id = {selected[0]}")
                 selected = self.cursor.fetchall()
-            except Exception as e:
-                print(e)
+
+                # Clear all the widget first
+                self.extruder_table.deleteLater()
+                self.view_btn.deleteLater()
+                self.add_btn.deleteLater()
+                self.update_btn.deleteLater()
+                self.print_btn.deleteLater()
+                main_time_table.deleteLater()
+                material_table.deleteLater()
+                lotNumber_table.deleteLater()
+                print("Clear")
+
+            except:
                 QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
                 return
 
@@ -169,7 +171,6 @@ class Ui_LoginWindow(object):
             def exportToExcel():
                 from openpyxl.styles import Font
                 from openpyxl.styles import Alignment
-
 
                 process_id = selected[0]
 
@@ -630,11 +631,13 @@ class Ui_LoginWindow(object):
                 for i in range(self.time_rows):
                     for j in range(self.time_cols):
                         if j == 0:
-                            item = QtWidgets.QTableWidgetItem(time_start[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(
+                                time_start[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         elif j == 1:
-                            item = QtWidgets.QTableWidgetItem(time_end[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
+                            item = QtWidgets.QTableWidgetItem(
+                                time_end[i].strftime("%b-%d-%Y %H:%M"))  # Convert to string
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                             self.time_table.setItem(i, j, item)
                         else:
@@ -685,7 +688,6 @@ class Ui_LoginWindow(object):
                 self.temp_table.setVerticalHeaderLabels(["Z" + str(i + 1) for i in range(12)])
                 self.temp_table.setHorizontalHeaderLabels(["Temperature"])
 
-
                 # Populate the Table
                 for i in range(len(temperature)):
                     item = QtWidgets.QTableWidgetItem(str(temperature[i]))
@@ -726,7 +728,6 @@ class Ui_LoginWindow(object):
             self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
             self.entry_widget.setWindowModality(Qt.ApplicationModal)
             self.entry_widget.show()
-
 
             def get_entries():
                 # get the data from the tables
@@ -788,7 +789,6 @@ class Ui_LoginWindow(object):
                     purge_duration = timedelta()
                     outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
-
                     try:
                         purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
@@ -810,9 +810,8 @@ class Ui_LoginWindow(object):
                         f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
 
                     self.total_mats = json.dumps(self.total_mats)
-                    self.total_mats = self.total_mats.replace('\\',"")
+                    self.total_mats = self.total_mats.replace('\\', "")
                     print(type(self.total_mats), self.total_mats)
-
 
                     # Convert the list to string
                     temperature = str(temperature).replace("[", "").replace("]", "")
@@ -820,8 +819,7 @@ class Ui_LoginWindow(object):
 
                     try:
 
-                        self.cursor.execute(f"""
-                                        INSERT INTO extruder( machine, qty_order, total_output, customer,
+                        self.cursor.execute(f"""INSERT INTO extruder( machine, qty_order, total_output, customer,
                                         formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                                         loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                                         rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
@@ -856,10 +854,9 @@ class Ui_LoginWindow(object):
                     self.table.deleteLater()
                     self.table2.deleteLater()
                     self.table3.deleteLater()
-                except:
-                    pass
 
-                def add_data():
+                except:
+
                     pass
 
                 def show_table():
@@ -904,10 +901,12 @@ class Ui_LoginWindow(object):
 
                 self.added_entry = 0  # for counting the lot numbers added
                 self.total_mats = {}
+                self.total_materialQty = 0
                 self.total_quantity_order = 0
                 self.total_output = 0
                 self.lot_numberList = []
                 self.total_outputPercent = 0
+
                 def push_data():
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
@@ -942,18 +941,19 @@ class Ui_LoginWindow(object):
                     for key in materials.keys():
                         if key in list(self.total_mats.keys()):
                             self.total_mats[key] = self.total_mats[key] + materials[key]
+                            self.total_materialQty += materials[key]
                         else:
                             self.total_mats[key] = materials[key]
+                            self.total_materialQty += materials[key]
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(prod_id)
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
                     lot_number_input.setText('/'.join(self.lot_numberList))
-                    # product_output_input.setText(str(round(self.total_output,2)))
-                    machine_input.setText(machine_name)
                     self.formulaID_input.setText(str(formula_id))
                     order_number_input.setText(str(order_number))
+                    label2.setText(str(self.total_materialQty))
 
                     self.cursor.execute(f"""
                     SELECT production_id, lot_number
@@ -1003,7 +1003,6 @@ class Ui_LoginWindow(object):
                         search_result = self.cursor.fetchall()
 
                         for i in range(len(search_result)):
-
                             item_pair = search_result[i]
 
                             item = QTableWidgetItem(item_pair[0])
@@ -1056,6 +1055,9 @@ class Ui_LoginWindow(object):
 
                     except Exception as e:
                         print(e)
+
+                def close_selection():
+                    self.selectProd_widget.close()
 
                 self.cursor.execute("""
                 SELECT production_id, lot_number
@@ -1166,24 +1168,19 @@ class Ui_LoginWindow(object):
                 label2.setFont(QtGui.QFont("Arial", 15))
                 label2.setAlignment(Qt.AlignCenter)
                 label2.setStyleSheet("background-color: white; color: blue;")
-                label2.setText("Test")
                 label2.show()
 
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
-                save_prod.setGeometry(590, 570, 70, 30)
+                save_prod.setGeometry(660, 570, 70, 30)
                 save_prod.setText("Push Data")
                 save_prod.clicked.connect(push_data)
                 save_prod.show()
 
-                refresh = QtWidgets.QPushButton(self.selectProd_widget)
-                refresh.setGeometry(660, 570, 70, 30)
-                refresh.setText("ADD")
-                refresh.show()
-
                 close = QtWidgets.QPushButton(self.selectProd_widget)
                 close.setGeometry(730, 570, 70, 30)
                 close.setText("Close")
+                close.clicked.connect(close_selection)
                 close.show()
 
                 self.selectProd_widget.setWindowModality(Qt.ApplicationModal)
@@ -1221,6 +1218,38 @@ class Ui_LoginWindow(object):
                             str(round(float(product_input.text()) - float(product_output_input.text()), 4)))
                     except:
                         loss_input.setText("INVALID")
+
+            def clear_inputs():
+                try:
+
+                    productionID_input.clear()
+                    machine_input.clear()
+                    customer_input.clear()
+                    orderedQuantity_input.clear()
+                    productCode_input.clear()
+                    product_output_input.setText("0.0")
+                    self.formulaID_input.clear()
+                    lot_number_input.clear()
+                    feedRate_input.clear()
+                    rpm_input.clear()
+                    screenSize_input.clear()
+                    screwConf_input.clear()
+                    loss_input.clear()
+                    purgeStart_input.setText("00:00")
+                    purgeEnd_input.setText("00:00")
+                    operator_input.clear()
+                    supervisor_input.clear()
+                    order_number_input.clear()
+                    resin_input.clear()
+                    purging_input.clear()
+                    product_input.clear()
+                    self.remarks_textBox.clear()
+                    self.total_mats = {}
+                except:
+                    pass
+
+
+
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
@@ -1334,7 +1363,6 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QLineEdit()
             machine_input.setFixedHeight(25)
-            machine_input.setEnabled(False)
             machine_input.setAlignment(Qt.AlignCenter)
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -1408,7 +1436,6 @@ class Ui_LoginWindow(object):
             purgeEnd_input.setStyleSheet("background-color: white; border: 1px solid black")
             purgeEnd_input.setText("00:00")
 
-            remarks = QtWidgets.QTextEdit()
 
             operator_input = QtWidgets.QLineEdit()
             operator_input.setFixedHeight(25)
@@ -1516,6 +1543,12 @@ class Ui_LoginWindow(object):
             save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.show()
 
+            clear_btn = QtWidgets.QPushButton(self.entry_widget)
+            clear_btn.setGeometry(660, 705, 60, 25)
+            clear_btn.clicked.connect(clear_inputs)
+            clear_btn.setText("Clear")
+            clear_btn.show()
+
             default_date = QtCore.QDateTime(2024, 1, 1, 0, 0)
 
             time_start_input = QtWidgets.QDateTimeEdit(self.entry_widget)
@@ -1559,8 +1592,7 @@ class Ui_LoginWindow(object):
                 result = result[0]
 
             except:
-                QMessageBox.critical(self.main_widget,"ERROR", "No Data Selected")
-                self.extruder_table.setSelectionMode()
+                QMessageBox.critical(self.main_widget, "ERROR", "No Data Selected")
                 return
 
             self.entry_widget = QtWidgets.QWidget()
@@ -1580,7 +1612,7 @@ class Ui_LoginWindow(object):
 
                 # Getting the data from the Time Table
                 for i in range(8):
-                    if time_table.item(i,0) == None:
+                    if time_table.item(i, 0) == None:
                         break
                     else:
                         time_start.append(time_table.item(i, 0))  # time start
@@ -1675,7 +1707,8 @@ class Ui_LoginWindow(object):
                                 WHERE process_id = {selected[0]};
                                 ;      
                                 """)
-                    QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL", f"Successfully Updated \n Form No. {selected[0]}")
+                    QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL",
+                                            f"Successfully Updated \n Form No. {selected[0]}")
                     print("query successful")
                     self.conn.commit()
                     self.entry_widget.close()
@@ -2007,7 +2040,7 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str(result[9][i]))
                 item2 = QTableWidgetItem(str(result[10][i]))
                 item3 = QTableWidgetItem(str(result[-5][i]))
-                time_table.setItem(i, 0 , item)
+                time_table.setItem(i, 0, item)
                 time_table.setItem(i, 1, item2)
                 time_table.setItem(i, 2, item3)
 
@@ -2029,7 +2062,6 @@ class Ui_LoginWindow(object):
                 temperature_table.setItem(i, 0, item)
 
             temperature_table.show()
-
 
             save_btn = QtWidgets.QPushButton(self.entry_widget)
             save_btn.setGeometry(540, 705, 60, 25)
@@ -2143,7 +2175,6 @@ class Ui_LoginWindow(object):
                 try:
                     hour = str(int(total_sec.total_seconds() // 3600))
                     minute = str((int(total_sec.total_seconds() % 3600) // 60))
-                    print(hour, minute)
                     total_time_used = time(int(hour), int(minute))
 
                     worksheet["F25"] = total_time_used
@@ -2168,7 +2199,6 @@ class Ui_LoginWindow(object):
             except:
                 QMessageBox.information(self.main_widget, "ERROR", "No Selected Items")
 
-
         def filter_table():
 
             queryConList = []
@@ -2176,12 +2206,11 @@ class Ui_LoginWindow(object):
             if self.machine_combo.currentText() != "-":
                 queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
             if self.company_combo.currentText() != "-":
-                queryConList.append(f"customer = '{self.company_combo.currentText().replace("'","''")}'")
+                queryConList.append(f"customer = '{self.company_combo.currentText().replace("'", "''")}'")
             if self.formula_combo.currentText() != "":
                 queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
             if self.productCode_combo.currentText() != "":
                 queryConList.append(f"product_code = '{self.productCode_combo.currentText()}'")
-
 
             query = f"""
                     SELECT 
@@ -2219,6 +2248,13 @@ class Ui_LoginWindow(object):
             pass
 
         def show_tables():
+
+            try:
+                main_time_table.clear()
+                material_table.clear()
+                lotNumber_table.clear()
+            except Exception as e:
+                print(e)
             selected = self.extruder_table.selectedItems()
             if selected:
                 items = [item.text() for item in selected]
@@ -2234,6 +2270,7 @@ class Ui_LoginWindow(object):
                 result = self.cursor.fetchall()
             except:
                 QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
+                self.extruder_table.itemSelectionChanged.connect(show_tables)
                 return
 
             t_start = result[0][0]
@@ -2243,7 +2280,10 @@ class Ui_LoginWindow(object):
             lotNumber = result[0][4]
             lotNumber = lotNumber[0]
 
-
+            # Set the Header Labels again
+            main_time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
+            material_table.setHorizontalHeaderLabels(["Materials", "Quantity(kg)"])
+            lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
 
             # Populating Time Table
             for i in range(len(t_start)):
@@ -2260,6 +2300,8 @@ class Ui_LoginWindow(object):
                 main_time_table.setItem(i, 1, item2)
                 main_time_table.setItem(i, 2, item3)
 
+
+
             if len(materials) > material_table.rowCount():
                 material_table.setRowCount(len(materials))
 
@@ -2275,7 +2317,6 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str(lotNumber[i]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 lotNumber_table.setItem(i, 0, item)
-
 
         self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
@@ -2315,10 +2356,9 @@ class Ui_LoginWindow(object):
         # Set Row Count
         self.extruder_table.setRowCount(len(result))
 
-
         self.extruder_table.setStyleSheet("""
-        gridline-color: rgb(0, 0, 127); 
-        color : rgb(0, 121, 0);
+        gridline-color: black; 
+        color : black;
         """)
 
         # Populate table with data
@@ -2451,8 +2491,6 @@ class Ui_LoginWindow(object):
         lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
         lotNumber_table.setColumnWidth(0, 162)
         lotNumber_table.show()
-
-
 
 
 if __name__ == "__main__":
