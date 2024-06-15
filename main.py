@@ -837,7 +837,7 @@ class Ui_LoginWindow(object):
                                                 """)
                         print("query successful")
                         self.conn.commit()
-                        self.entry_widget.close()
+                        clear_inputs()
                     except Exception as e:
                         print("Insert Failed")
                         QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
@@ -1243,6 +1243,8 @@ class Ui_LoginWindow(object):
                     resin_input.clear()
                     purging_input.clear()
                     product_input.clear()
+                    time_table.clearContents()
+                    temperature_table.clearContents()
                     self.remarks_textBox.clear()
                     self.total_mats = {}
                 except:
