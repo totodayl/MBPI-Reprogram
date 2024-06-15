@@ -700,7 +700,7 @@ class Ui_LoginWindow(object):
                 print(e)
 
             self.group_box = QtWidgets.QGroupBox(self.main_widget)
-            self.group_box.setGeometry(730, 460, 230, 150)
+            self.group_box.setGeometry(715, 450, 276, 301)
             self.group_box.setTitle("Remarks")
             self.group_box.setFont(QtGui.QFont("Arial", 10))
 
@@ -1857,7 +1857,7 @@ class Ui_LoginWindow(object):
             productionID_input.setEnabled(False)
             productionID_input.setAlignment(Qt.AlignCenter)
             productionID_input.setStyleSheet("background-color: white; border: 1px solid black")
-            productionID_input.setText(str(result[-3]))
+            productionID_input.setText(str(result[28]))
             productionID_input.setEnabled(False)
 
             machine_input = QtWidgets.QLineEdit()
@@ -1907,8 +1907,9 @@ class Ui_LoginWindow(object):
             lot_number_input.setFixedHeight(25)
             lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
+
             try:
-                lot_number_input.setText('/'.join(result[-1][0]))
+                lot_number_input.setText('/'.join(result[30][0]))
             except:
                 lot_number_input.setText(None)
 
@@ -1987,7 +1988,7 @@ class Ui_LoginWindow(object):
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.textChanged.connect(loss_auto)
-            product_input.setText(str(result[-2]))
+            product_input.setText(str(result[29]))
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
             self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
@@ -2039,7 +2040,7 @@ class Ui_LoginWindow(object):
             for i in range(len(result[9])):
                 item = QTableWidgetItem(str(result[9][i]))
                 item2 = QTableWidgetItem(str(result[10][i]))
-                item3 = QTableWidgetItem(str(result[-5][i]))
+                item3 = QTableWidgetItem(str(result[26][i]))
                 time_table.setItem(i, 0, item)
                 time_table.setItem(i, 1, item2)
                 time_table.setItem(i, 2, item3)
@@ -2057,8 +2058,8 @@ class Ui_LoginWindow(object):
             temperature_table.setVerticalHeaderLabels(temperature_index)
 
             # Populate the table
-            for i in range(len(result[-7])):
-                item = QTableWidgetItem(str(result[-7][i]))
+            for i in range(len(result[24])):
+                item = QTableWidgetItem(str(result[24][i]))
                 temperature_table.setItem(i, 0, item)
 
             temperature_table.show()
@@ -2124,7 +2125,7 @@ class Ui_LoginWindow(object):
                 quantity_order = items[2]
                 customer = items[4]
                 code = items[6]
-                total_input = items[-2]
+                total_input = items[29]
                 total_time = items[8]
                 time_start = items[9]
                 time_end = items[10]
@@ -2138,9 +2139,9 @@ class Ui_LoginWindow(object):
                 remarks = items[16]
                 operator = items[21]
                 supervisor = items[22]
-                outputs = items[-5]
-                materials = items[-8]
-                lot_number = items[-1][0]
+                outputs = items[26]
+                materials = items[23]
+                lot_number = items[30][0]
 
                 wb = load_workbook(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\Extruder Template.xlsx")
                 worksheet = wb.active
@@ -2491,6 +2492,8 @@ class Ui_LoginWindow(object):
         lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
         lotNumber_table.setColumnWidth(0, 162)
         lotNumber_table.show()
+
+
 
 
 if __name__ == "__main__":
