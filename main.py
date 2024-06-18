@@ -2535,6 +2535,9 @@ class Ui_LoginWindow(object):
         except Exception as e:
             print(e)
 
+        def exportBtn_clicked():
+            print("test")
+
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
         self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
@@ -2569,6 +2572,15 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
         self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189);")
+        # Change the Row height of the table
+        for i in range(self.qc_table.rowCount()):
+            self.qc_table.setRowHeight(i, 22)
+
+        table_header = self.qc_table.horizontalHeader()
+        table_header.setFixedHeight(25)
+
+
+
         self.qc_TableBtn.show()
 
         self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -2614,10 +2626,188 @@ class Ui_LoginWindow(object):
         edited_label.setFont(QtGui.QFont("Arial", 8))
         edited_label.show()
 
+        search_bar = QtWidgets.QLineEdit(self.qc_topBorder)
+        search_bar.setGeometry(770, 5, 150, 25)
+        search_bar.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);")
+        search_bar.setFont(QtGui.QFont("Segoe UI", 10))
+        search_bar.show()
+
+        search_btn = QtWidgets.QPushButton(self.qc_topBorder)
+        search_btn.setGeometry(925, 5, 60, 25)
+        search_btn.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
+        search_btn.setText("Search")
+        search_btn.show()
+
+        # Bottom Widgets
         bottom_widget = QtWidgets.QWidget(self.qc_widget)
         bottom_widget.setGeometry(0, 440, 991, 311)
         bottom_widget.setStyleSheet("background-color : rgb(239, 243, 254)")
         bottom_widget.show()
+
+        leftSide1_widget = QtWidgets.QWidget(bottom_widget)
+        leftSide1_widget.setGeometry(0, 0, 140, 265)
+        leftSide1_widget.show()
+
+        leftSide2_widget = QtWidgets.QWidget(bottom_widget)
+        leftSide2_widget.setGeometry(140, 0, 455, 265)
+        leftSide2_widget.show()
+
+        rightSide_widget = QtWidgets.QWidget(bottom_widget)
+        rightSide_widget.setGeometry(595, 0, 130, 265)
+        rightSide_widget.show()
+
+        label_font = QtGui.QFont("Segoe UI", 11)
+
+        # Create Vertical Box layout
+
+        leftVBox1_layout = QVBoxLayout(leftSide1_widget)
+        leftVBox2_layout = QVBoxLayout(leftSide2_widget)
+        rightVBo1_layout = QVBoxLayout(rightSide_widget)
+
+        # Left Side Labels
+        customer_label = QLabel()
+        customer_label.setText("Customer            :")
+        customer_label.setFont(label_font)
+
+        productCode_label = QLabel()
+        productCode_label.setText("Product Code     :")
+        productCode_label.setFont(label_font)
+
+        result_label = QLabel()
+        result_label.setText("Result                 :")
+        result_label.setFont(label_font)
+
+        evaluatedBy_label = QLabel()
+        evaluatedBy_label.setText("Evaluated By      :")
+        evaluatedBy_label.setFont(label_font)
+
+        evaluatedDate_label = QLabel()
+        evaluatedDate_label.setText("Evaluated On     :")
+        evaluatedDate_label.setFont(label_font)
+
+        encodedDate_label = QLabel()
+        encodedDate_label.setText("Encoded On       :")
+        encodedDate_label.setFont(label_font)
+
+        # Left Side Outputs
+        customer_selected = QLabel()
+        productCode_selected = QLabel()
+        result_selected = QLabel()
+        evaluatedBy_selected = QLabel()
+        evaluatedDate_selected = QLabel()
+        encodedDate_selected = QLabel()
+
+        # Right Side Labels
+        updatedBy_label = QLabel()
+        updatedBy_label.setText("Updated By :")
+        updatedBy_label.setAlignment(Qt.AlignRight)
+        updatedBy_label.setFont(label_font)
+
+        remarks_label = QLabel()
+        remarks_label.setText("Remarks :")
+        remarks_label.setAlignment(Qt.AlignRight)
+        remarks_label.setFont(label_font)
+
+        actionTaken_label = QLabel()
+        actionTaken_label.setText("Action Taken :")
+        actionTaken_label.setAlignment(Qt.AlignRight)
+        actionTaken_label.setFont(label_font)
+
+        time_endorsed = QLabel()
+        time_endorsed.setText("Time Endorsed :")
+        time_endorsed.setAlignment(Qt.AlignRight)
+        time_endorsed.setFont(label_font)
+
+        qc_type_label = QLabel()
+        qc_type_label.setText("QC Type : ")
+        qc_type_label.setAlignment(Qt.AlignRight)
+        qc_type_label.setFont(label_font)
+
+        # Adding the widgets to the Layout
+        leftVBox1_layout.addWidget(customer_label)
+        leftVBox1_layout.addWidget(productCode_label)
+        leftVBox1_layout.addWidget(result_label)
+        leftVBox1_layout.addWidget(evaluatedBy_label)
+        leftVBox1_layout.addWidget(evaluatedDate_label)
+        leftVBox1_layout.addWidget(encodedDate_label)
+
+        leftVBox2_layout.addWidget(customer_selected)
+        leftVBox2_layout.addWidget(productCode_selected)
+        leftVBox2_layout.addWidget(result_selected)
+        leftVBox2_layout.addWidget(evaluatedBy_selected)
+        leftVBox2_layout.addWidget(evaluatedDate_selected)
+        leftVBox2_layout.addWidget(encodedDate_selected)
+
+        rightVBo1_layout.addWidget(updatedBy_label)
+        rightVBo1_layout.addWidget(remarks_label)
+        rightVBo1_layout.addWidget(actionTaken_label)
+        rightVBo1_layout.addWidget(time_endorsed)
+        rightVBo1_layout.addWidget(qc_type_label)
+
+        updatedBy_val1 = QtWidgets.QLineEdit(self.qc_widget)
+        updatedBy_val1.setGeometry(721, 445, 130, 25)
+        updatedBy_val1.setEnabled(False)
+        updatedBy_val1.show()
+
+        updatedBy_val2 = QtWidgets.QLineEdit(self.qc_widget)
+        updatedBy_val2.setGeometry(851, 445, 130, 25)
+        updatedBy_val2.setEnabled(False)
+        updatedBy_val2.show()
+
+        export_label = QLabel(self.qc_widget)
+        export_label.setGeometry(10, 700, 100, 20)
+        export_label.setText("Export Database")
+        export_label.setStyleSheet("background-color: rgb(239, 243, 254);")
+        export_label.show()
+
+        label1 = QLabel(self.qc_widget)
+        label1.setText("FROM")
+        label1.setGeometry(30, 720, 70, 25)
+        label1.setStyleSheet("background-color: rgb(239, 243, 254)")
+        label1.setFont(label_font)
+        label1.show()
+
+        date1 = QDateEdit(self.qc_widget)
+        date1.setGeometry(75, 720, 100, 25)
+        date1.setStyleSheet("background-color: rgb(239, 243, 254)")
+        date1.show()
+
+        label2 = QLabel(self.qc_widget)
+        label2.setGeometry(185, 720, 30, 25)
+        label2.setText("TO")
+        label2.setFont(label_font)
+        label2.setStyleSheet("background-color: rgb(239, 243, 254)")
+        label2.show()
+
+        date2 = QDateEdit(self.qc_widget)
+        date2.setGeometry(215, 720, 100, 25)
+        date2.setStyleSheet("background-color: rgb(239, 243, 254)")
+        date2.show()
+
+        export_btn = ClickableLabel(self.qc_widget)
+        export_btn.setGeometry(320, 723, 20, 20)
+        export_btn.setPixmap(QtGui.QIcon('export.png').pixmap(20, 20))
+        export_btn.setCursor(Qt.PointingHandCursor)
+        export_btn.clicked.connect(exportBtn_clicked)
+        export_btn.setToolTip("Export")
+        export_btn.show()
+
+        update_btn = QtWidgets.QPushButton(self.qc_widget)
+        update_btn.setGeometry(650, 723, 60, 25)
+        update_btn.setText("UPDATE")
+        update_btn.show()
+
+        delete_btn = QtWidgets.QPushButton(self.qc_widget)
+        delete_btn.setGeometry(710, 723, 60, 25)
+        delete_btn.setText("UPDATE")
+        delete_btn.show()
+
+        close_btn = QtWidgets.QPushButton(self.qc_widget)
+        update_btn.setGeometry(770, 723, 60, 25)
+        update_btn.setText("UPDATE")
+        update_btn.show()
+
+
 
 
         self.qc_table.show()
