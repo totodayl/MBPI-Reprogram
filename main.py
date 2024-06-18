@@ -104,7 +104,7 @@ class Ui_LoginWindow(object):
         self.production_lbl = QtWidgets.QLabel(self.production_btn)
         self.production_lbl.setText("Extruder")
         self.production_lbl.setGeometry(50, 5, 100, 30)
-        self.production_lbl.setFont(QtGui.QFont("Arial", 13))
+        self.production_lbl.setFont(QtGui.QFont("Arial", 12))
         self.production_lbl.setStyleSheet("color: blue;")
         self.production_lbl.setCursor(Qt.PointingHandCursor)
         self.production_lbl.show()
@@ -115,6 +115,37 @@ class Ui_LoginWindow(object):
         self.production_icon.setScaledContents(True)  # Scale icon to fit the label
         self.production_icon.setCursor(Qt.PointingHandCursor)
         self.production_icon.show()
+
+        self.qualityControl_btn = QtWidgets.QPushButton(self.login_window)
+        self.qualityControl_btn.setGeometry(30, 260, 180, 40)
+        self.qualityControl_btn.setCursor(Qt.PointingHandCursor)
+        self.qualityControl_btn.setStyleSheet("""
+                border-top-left-radius: 10px; 
+                border-bottom-left-radius: 10px; 
+                background-color: rgb(125,125,125);
+                """)
+        self.qualityControl_btn.clicked.connect(self.quality_control)
+        self.qualityControl_btn.show()
+
+        self.qc_icon = ClickableLabel(self.qualityControl_btn)
+        self.qc_icon.setGeometry(10, 3, 30, 30)
+        self.qc_icon.setPixmap(QtGui.QIcon('qc.png').pixmap(30, 30))  # Set icon
+        self.qc_icon.setScaledContents(True)  # Scale icon to fit the label
+        self.qc_icon.setCursor(Qt.PointingHandCursor)
+        self.qc_icon.show()
+
+        self.qualityControl_lbl = QtWidgets.QLabel(self.qualityControl_btn)
+        self.qualityControl_lbl.setText("Quality Control")
+        self.qualityControl_lbl.setGeometry(50, 5, 120, 30)
+        self.qualityControl_lbl.setFont(QtGui.QFont("Arial", 12))
+        self.qualityControl_lbl.setStyleSheet("color: blue;")
+        self.qualityControl_lbl.setCursor(Qt.PointingHandCursor)
+        self.qualityControl_lbl.show()
+
+
+
+
+        self.quality_control_label =QtWidgets.QLabel()
 
     def production(self):
 
@@ -153,7 +184,7 @@ class Ui_LoginWindow(object):
                 print("Clear")
 
             except:
-                QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
+                QMessageBox.information(self.production_widget, "ERROR", "No Selected Item")
                 return
 
             selected = selected[0]
@@ -267,7 +298,7 @@ class Ui_LoginWindow(object):
             materials = json.loads(materials)
 
             # Main Widget
-            self.info_widget = QtWidgets.QWidget(self.main_widget)
+            self.info_widget = QtWidgets.QWidget(self.production_widget)
             self.info_widget.setGeometry(20, 0, 951, 450)
             self.info_widget.setStyleSheet("background-color: rgb(0,109,189);")
             self.info_widget.show()
@@ -618,7 +649,7 @@ class Ui_LoginWindow(object):
 
             # Create 3 tables for Time, Materials and Temperature
             try:
-                self.time_table = QtWidgets.QTableWidget(self.main_widget)
+                self.time_table = QtWidgets.QTableWidget(self.production_widget)
                 self.time_table.setGeometry(20, 450, 330, 300)
                 self.time_table.setColumnCount(3)
                 self.time_table.setRowCount(len(time_start) + 2)
@@ -662,7 +693,7 @@ class Ui_LoginWindow(object):
                 self.time_table.show()
 
                 # Material Table
-                self.material_table = QtWidgets.QTableWidget(self.main_widget)
+                self.material_table = QtWidgets.QTableWidget(self.production_widget)
                 self.material_table.setRowCount(len(materials))
                 self.material_table.setColumnCount(2)
                 self.material_table.setRowCount(9)
@@ -681,7 +712,7 @@ class Ui_LoginWindow(object):
                 self.material_table.show()
 
                 # Temperature Table
-                self.temp_table = QtWidgets.QTableWidget(self.main_widget)
+                self.temp_table = QtWidgets.QTableWidget(self.production_widget)
                 self.temp_table.setGeometry(575, 450, 140, 300)
                 self.temp_table.setRowCount(12)
                 self.temp_table.setColumnCount(1)
@@ -699,7 +730,7 @@ class Ui_LoginWindow(object):
             except Exception as e:
                 print(e)
 
-            self.group_box = QtWidgets.QGroupBox(self.main_widget)
+            self.group_box = QtWidgets.QGroupBox(self.production_widget)
             self.group_box.setGeometry(715, 450, 276, 301)
             self.group_box.setTitle("Remarks")
             self.group_box.setFont(QtGui.QFont("Arial", 10))
@@ -713,7 +744,7 @@ class Ui_LoginWindow(object):
 
             self.group_box.show()
 
-            self.export_btn = QtWidgets.QPushButton(self.main_widget)
+            self.export_btn = QtWidgets.QPushButton(self.production_widget)
             self.export_btn.setGeometry(730, 610, 100, 30)
             self.export_btn.setText("Export")
             self.export_btn.clicked.connect(exportToExcel)
@@ -1247,11 +1278,9 @@ class Ui_LoginWindow(object):
                     temperature_table.clearContents()
                     self.remarks_textBox.clear()
                     self.total_mats = {}
+
                 except:
                     pass
-
-
-
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
@@ -1594,7 +1623,7 @@ class Ui_LoginWindow(object):
                 result = result[0]
 
             except:
-                QMessageBox.critical(self.main_widget, "ERROR", "No Data Selected")
+                QMessageBox.critical(self.production_widget, "ERROR", "No Data Selected")
                 return
 
             self.entry_widget = QtWidgets.QWidget()
@@ -2199,7 +2228,7 @@ class Ui_LoginWindow(object):
                 wb.save(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\text.xlsx")
                 print("load successful")
             except:
-                QMessageBox.information(self.main_widget, "ERROR", "No Selected Items")
+                QMessageBox.information(self.production_widget, "ERROR", "No Selected Items")
 
         def filter_table():
 
@@ -2271,7 +2300,7 @@ class Ui_LoginWindow(object):
                             """)
                 result = self.cursor.fetchall()
             except:
-                QMessageBox.information(self.main_widget, "ERROR", "No Selected Item")
+                QMessageBox.information(self.production_widget, "ERROR", "No Selected Item")
                 self.extruder_table.itemSelectionChanged.connect(show_tables)
                 return
 
@@ -2319,8 +2348,13 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str(lotNumber[i]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 lotNumber_table.setItem(i, 0, item)
-
-        self.extruder_table = QtWidgets.QTableWidget(self.main_widget)
+        
+        self.production_widget = QtWidgets.QWidget(self.main_widget)
+        self.production_widget.setGeometry(0, 0, 991, 751)
+        self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
+        self.production_widget.show()
+        
+        self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
         self.extruder_table.setSortingEnabled(True)
@@ -2398,7 +2432,7 @@ class Ui_LoginWindow(object):
         self.extruder_table.show()
 
         #Filters
-        self.machine_combo = QtWidgets.QComboBox(self.main_widget)
+        self.machine_combo = QtWidgets.QComboBox(self.production_widget)
         self.machine_combo.setGeometry(120, 40, 100, 30)
         self.cursor.execute("""
                     SELECT DISTINCT(machine) FROM extruder;
@@ -2410,7 +2444,7 @@ class Ui_LoginWindow(object):
         self.machine_combo.currentIndexChanged.connect(filter_table)
         self.machine_combo.show()
 
-        self.company_combo = QtWidgets.QComboBox(self.main_widget)
+        self.company_combo = QtWidgets.QComboBox(self.production_widget)
         self.company_combo.setGeometry(220, 40, 200, 30)
         self.cursor.execute("""
             SELECT DISTINCT(customer) FROM extruder;
@@ -2423,19 +2457,19 @@ class Ui_LoginWindow(object):
         self.company_combo.currentIndexChanged.connect(filter_table)
         self.company_combo.show()
 
-        self.formula_combo = QtWidgets.QComboBox(self.main_widget)
+        self.formula_combo = QtWidgets.QComboBox(self.production_widget)
         self.formula_combo.setGeometry(620, 40, 100, 30)
         self.formula_combo.setEditable(True)
         self.formula_combo.currentTextChanged.connect(filter_table)
         self.formula_combo.show()
 
-        self.productCode_combo = QtWidgets.QComboBox(self.main_widget)
+        self.productCode_combo = QtWidgets.QComboBox(self.production_widget)
         self.productCode_combo.setGeometry(720, 40, 100, 30)
         self.productCode_combo.currentTextChanged.connect(filter_table)
         self.productCode_combo.setEditable(True)
         self.productCode_combo.show()
 
-        self.view_btn = QtWidgets.QPushButton(self.main_widget)
+        self.view_btn = QtWidgets.QPushButton(self.production_widget)
         self.view_btn.setGeometry(600, 700, 80, 30)
         self.view_btn.setText("View")
         self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
@@ -2443,7 +2477,7 @@ class Ui_LoginWindow(object):
         self.view_btn.setCursor(Qt.PointingHandCursor)
         self.view_btn.show()
 
-        self.add_btn = QtWidgets.QPushButton(self.main_widget)
+        self.add_btn = QtWidgets.QPushButton(self.production_widget)
         self.add_btn.setGeometry(681, 700, 80, 30)
         self.add_btn.setText("Add Entry")
         self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
@@ -2451,7 +2485,7 @@ class Ui_LoginWindow(object):
         self.add_btn.setCursor(Qt.PointingHandCursor)
         self.add_btn.show()
 
-        self.update_btn = QtWidgets.QPushButton(self.main_widget)
+        self.update_btn = QtWidgets.QPushButton(self.production_widget)
         self.update_btn.setGeometry(762, 700, 80, 30)
         self.update_btn.setText("Update")
         self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
@@ -2459,7 +2493,7 @@ class Ui_LoginWindow(object):
         self.update_btn.setCursor(Qt.PointingHandCursor)
         self.update_btn.show()
 
-        self.print_btn = QtWidgets.QPushButton(self.main_widget)
+        self.print_btn = QtWidgets.QPushButton(self.production_widget)
         self.print_btn.setGeometry(843, 700, 80, 30)
         self.print_btn.setText("Print")
         self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
@@ -2467,7 +2501,7 @@ class Ui_LoginWindow(object):
         self.print_btn.setCursor(Qt.PointingHandCursor)
         self.print_btn.show()
 
-        main_time_table = QtWidgets.QTableWidget(self.main_widget)
+        main_time_table = QtWidgets.QTableWidget(self.production_widget)
         main_time_table.setGeometry(20, 455, 475, 225)
         main_time_table.setColumnCount(3)
         main_time_table.setRowCount(6)
@@ -2477,7 +2511,7 @@ class Ui_LoginWindow(object):
         main_time_table.setColumnWidth(2, 98)
         main_time_table.show()
 
-        material_table = QtWidgets.QTableWidget(self.main_widget)
+        material_table = QtWidgets.QTableWidget(self.production_widget)
         material_table.setGeometry(495, 455, 263, 225)
         material_table.setColumnCount(2)
         material_table.setRowCount(13)
@@ -2486,7 +2520,7 @@ class Ui_LoginWindow(object):
         material_table.setColumnWidth(1, 90)
         material_table.show()
 
-        lotNumber_table = QtWidgets.QTableWidget(self.main_widget)
+        lotNumber_table = QtWidgets.QTableWidget(self.production_widget)
         lotNumber_table.setGeometry(758, 455, 162, 225)
         lotNumber_table.setColumnCount(1)
         lotNumber_table.setRowCount(6)
@@ -2494,7 +2528,99 @@ class Ui_LoginWindow(object):
         lotNumber_table.setColumnWidth(0, 162)
         lotNumber_table.show()
 
+    def quality_control(self):
+        try:
+            self.production_widget.deleteLater()
 
+        except Exception as e:
+            print(e)
+
+        self.qc_widget = QtWidgets.QWidget(self.main_widget)
+        self.qc_widget.setGeometry(0, 0, 991, 751)
+        self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
+        self.qc_widget.show()
+
+        self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
+        self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+        self.qcBtn_topBorder.show()
+
+        self.qc_topBorder = QtWidgets.QWidget(self.qc_widget)
+        self.qc_topBorder.setGeometry(0, 30, 991, 60)
+        self.qc_topBorder.setStyleSheet("border-top: 1px solid black; background-color: rgb(239, 243, 254)")
+        self.qc_topBorder.show()
+
+        self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
+        self.qc_table.setGeometry(0, 90, 991, 350)
+        self.qc_table.setColumnCount(6)
+        self.qc_table.setRowCount(16)
+
+        # Set Column Width
+        self.qc_table.setColumnWidth(0, 150)
+        self.qc_table.setColumnWidth(1, 300)
+        self.qc_table.setColumnWidth(2, 150)
+        self.qc_table.setColumnWidth(4, 170)
+
+        self.qc_table.verticalHeader().setVisible(False)
+        self.qc_table.setHorizontalHeaderLabels(["Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
+
+        self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.qc_TableBtn.setGeometry(0, 0, 150, 30)
+        self.qc_TableBtn.setText("Evaluated Products")
+        self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
+        self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189);")
+        self.qc_TableBtn.show()
+
+        self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
+        self.qc_addEntryBtn.setText("Evaluation Entry")
+        self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
+        self.qc_addEntryBtn.show()
+
+        # Top Border Widgets
+        evaluation_lbl = QLabel(self.qc_topBorder)
+        evaluation_lbl.setGeometry(10, 30, 100, 30)
+        evaluation_lbl.setFont(QtGui.QFont("Arial", 9))
+        evaluation_lbl.setText("Evaluation For:")
+        evaluation_lbl.setStyleSheet("border: none;")
+        evaluation_lbl.show()
+
+        evaluation_text = QLabel(self.qc_topBorder)
+        evaluation_text.setGeometry(120, 30, 500, 30)
+        evaluation_text.setStyleSheet("border: none;")
+        evaluation_text.show()
+
+        loadAll_checkbox = QCheckBox(self.qc_topBorder)
+        loadAll_checkbox.move(5, 5)
+        loadAll_checkbox.setStyleSheet("border: none")
+        loadAll_checkbox.show()
+
+        loadAll_label = QLabel(self.qc_topBorder)
+        loadAll_label.setGeometry(20, 4, 80, 15)
+        loadAll_label.setStyleSheet("border: none;")
+        loadAll_label.setText("LOAD ALL DATA")
+        loadAll_label.setFont(QtGui.QFont("Arial", 8))
+        loadAll_label.show()
+
+        edited_checkbox = QCheckBox(self.qc_topBorder)
+        edited_checkbox.move(105, 5)
+        edited_checkbox.setStyleSheet("border: none;")
+        edited_checkbox.show()
+
+        edited_label = QLabel(self.qc_topBorder)
+        edited_label.setGeometry(120, 4, 90, 15)
+        edited_label.setStyleSheet("border: none;")
+        edited_label.setText("EDITED RECORDS")
+        edited_label.setFont(QtGui.QFont("Arial", 8))
+        edited_label.show()
+
+        bottom_widget = QtWidgets.QWidget(self.qc_widget)
+        bottom_widget.setGeometry(0, 440, 991, 311)
+        bottom_widget.setStyleSheet("background-color : rgb(239, 243, 254)")
+        bottom_widget.show()
+
+
+        self.qc_table.show()
 
 
 if __name__ == "__main__":
