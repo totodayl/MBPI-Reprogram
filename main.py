@@ -2433,7 +2433,7 @@ class Ui_LoginWindow(object):
 
         #Filters
         self.machine_combo = QtWidgets.QComboBox(self.production_widget)
-        self.machine_combo.setGeometry(120, 40, 100, 30)
+        self.machine_combo.setGeometry(120, 45, 100, 25)
         self.cursor.execute("""
                     SELECT DISTINCT(machine) FROM extruder;
                 """)
@@ -2445,7 +2445,7 @@ class Ui_LoginWindow(object):
         self.machine_combo.show()
 
         self.company_combo = QtWidgets.QComboBox(self.production_widget)
-        self.company_combo.setGeometry(220, 40, 200, 30)
+        self.company_combo.setGeometry(220, 45, 200, 25)
         self.cursor.execute("""
             SELECT DISTINCT(customer) FROM extruder;
         """)
@@ -2458,13 +2458,13 @@ class Ui_LoginWindow(object):
         self.company_combo.show()
 
         self.formula_combo = QtWidgets.QComboBox(self.production_widget)
-        self.formula_combo.setGeometry(620, 40, 100, 30)
+        self.formula_combo.setGeometry(620, 45, 100, 25)
         self.formula_combo.setEditable(True)
         self.formula_combo.currentTextChanged.connect(filter_table)
         self.formula_combo.show()
 
         self.productCode_combo = QtWidgets.QComboBox(self.production_widget)
-        self.productCode_combo.setGeometry(720, 40, 100, 30)
+        self.productCode_combo.setGeometry(720, 45, 100, 25)
         self.productCode_combo.currentTextChanged.connect(filter_table)
         self.productCode_combo.setEditable(True)
         self.productCode_combo.show()
@@ -2531,12 +2531,265 @@ class Ui_LoginWindow(object):
     def quality_control(self):
         try:
             self.production_widget.deleteLater()
+            body_widget.deleteLater()
 
         except Exception as e:
             print(e)
 
         def exportBtn_clicked():
             print("test")
+
+        def evaluation_entry():
+            try:
+                self.qc_topBorder.deleteLater()
+                self.qc_table.deleteLater()
+                bottom_widget.deleteLater()
+                updatedBy_val1.deleteLater()
+                updatedBy_val2.deleteLater()
+                export_label.deleteLater()
+                date1.deleteLater()
+                date2.deleteLater()
+                export_btn.deleteLater()
+                update_btn.deleteLater()
+                delete_btn.deleteLater()
+
+            except Exception as e:
+                print(e)
+
+            self.qc_TableBtn.setStyleSheet("color: none; border: 1px solid rgb(160, 160, 160);")
+            self.qc_addEntryBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+
+            self.body_widget = QtWidgets.QWidget(self.qc_widget)
+            self.body_widget.setGeometry(0, 30, 991, 721)
+            self.body_widget.setStyleSheet("background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
+            self.body_widget.show()
+
+            label1 = QtWidgets.QLabel(self.body_widget)
+            label1.setGeometry(0, 0, 300, 15)
+            label1.setText("QC EVALUATION AND RESULT")
+            label1.setStyleSheet("border-top: none")
+            label1.setFont(QtGui.QFont("Arial", 9))
+            label1.show()
+
+            label2 = QtWidgets.QLabel(self.body_widget)
+            label2.setGeometry(0, 15, 250, 13)
+            label2.setText("USER CAN VIEW, ADD AND UPDATE QC RECORDS")
+            label2.setFont(QtGui.QFont("Arial", 8))
+            label2.setStyleSheet("border-top: none")
+            label2.show()
+
+            widget1 = QtWidgets.QWidget(self.body_widget)
+            widget1.setGeometry(0, 33, 440, 330)
+            widget1.setStyleSheet("background-color: rgb(239, 243, 254); border: none;")
+
+            font = QtGui.QFont("Arial", 10)
+
+            # Create widgets to put in widget1
+            qcType_label = QLabel()
+            qcType_label.setText("QC TYPE")
+            qcType_label.setFixedWidth(110)
+            qcType_label.setFixedHeight(20)
+            qcType_label.setFont(font)
+            qcType_label.setStyleSheet("border: none;")
+
+            qcControl_label = QLabel()
+            qcControl_label.setText("QC Control")
+            qcControl_label.setFont(font)
+            qcControl_label.setStyleSheet("border: none;")
+
+            customer_label = QLabel()
+            customer_label.setText("CUSTOMER")
+            customer_label.setFixedWidth(110)
+            customer_label.setFixedHeight(20)
+            customer_label.setFont(font)
+            customer_label.setStyleSheet("border: none;")
+
+            productCode_label = QLabel()
+            productCode_label.setText("PRODUCT CODE")
+            productCode_label.setFixedWidth(110)
+            productCode_label.setFixedHeight(20)
+            productCode_label.setFont(font)
+            productCode_label.setStyleSheet("border: none;")
+
+            evaluatedBy_label = QLabel()
+            evaluatedBy_label.setText("EVALUATED BY")
+            evaluatedBy_label.setFixedWidth(110)
+            evaluatedBy_label.setFixedHeight(20)
+            evaluatedBy_label.setFont(font)
+            evaluatedBy_label.setStyleSheet("border: none;")
+
+            date_started_label = QLabel()
+            date_started_label.setText("DATE STARTED")
+            date_started_label.setFixedWidth(110)
+            date_started_label.setFixedHeight(20)
+            date_started_label.setFont(font)
+            date_started_label.setStyleSheet("border: none;")
+
+            lotNumber_label = QLabel()
+            lotNumber_label.setText("LOT NUMBER")
+            lotNumber_label.setFixedWidth(110)
+            lotNumber_label.setFixedHeight(20)
+            lotNumber_label.setFont(font)
+            lotNumber_label.setStyleSheet("border: none;")
+
+            time_started_label = QLabel()
+            time_started_label.setText("TIME STARTED")
+            time_started_label.setFixedWidth(110)
+            time_started_label.setFixedHeight(20)
+            time_started_label.setFont(font)
+            time_started_label.setStyleSheet("border: none;")
+
+            time_endorsed_label = QLabel()
+            time_endorsed_label.setText("TIME ENDORSED PROD")
+            time_endorsed_label.setFixedWidth(110)
+            time_endorsed_label.setFixedHeight(20)
+            time_endorsed_label.setFont(font)
+            time_endorsed_label.setStyleSheet("border: none;")
+
+            result_label = QLabel()
+            result_label.setText("TEST RESULT")
+            result_label.setFixedWidth(110)
+            result_label.setFixedHeight(20)
+            result_label.setFont(font)
+            result_label.setStyleSheet("border: none;")
+
+            # Right Side Widgets
+            qcType_dropdown = QtWidgets.QComboBox()
+            qcType_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            qcType_dropdown.addItem("Test")
+            qcType_dropdown.setFixedHeight(25)
+            qcType_dropdown.setFixedWidth(296)
+
+            qcControl_input = QtWidgets.QLineEdit()
+            qcControl_input.setStyleSheet("background-color: rgb(238, 238, 238); border: 1px solid rgb(171, 173, 179);")
+            qcControl_input.setFixedHeight(35)
+            qcControl_input.setEnabled(False)
+            qcControl_input.setFixedWidth(296)
+
+            customer_dropdown = QtWidgets.QComboBox()
+            customer_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            customer_dropdown.setFixedHeight(25)
+            customer_dropdown.setFixedWidth(296)
+
+            productCode_dropdown = QtWidgets.QComboBox()
+            productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
+            productCode_dropdown.setFixedHeight(25)
+            productCode_dropdown.setFixedWidth(296)
+
+            evaluatedBy_dropdown = QtWidgets.QComboBox()
+            evaluatedBy_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            evaluatedBy_dropdown.setFixedHeight(25)
+            evaluatedBy_dropdown.setFixedWidth(296)
+
+            date_started_input = QtWidgets.QDateEdit()
+            date_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            date_started_input.setFixedHeight(25)
+            date_started_input.setFont(font)
+            date_started_input.setFixedWidth(296)
+
+            lotNumber_input = QtWidgets.QLineEdit()
+            lotNumber_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            lotNumber_input.setFixedHeight(25)
+            lotNumber_input.setFixedWidth(296)
+
+            time_started_input = QTimeEdit()
+            time_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
+            time_started_input.setFixedHeight(25)
+            time_started_input.setFixedWidth(120)
+            time_started_input.setDisplayFormat("HH:mm")
+            time_started_input.setFixedWidth(296)
+
+            time_endorsed_input = QTimeEdit()
+            time_endorsed_input.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
+            time_endorsed_input.setFixedHeight(25)
+            time_endorsed_input.setFixedWidth(120)
+            time_endorsed_input.setDisplayFormat("HH:mm")
+            time_endorsed_input.setFixedWidth(296)
+
+            remarks_label = QLabel(self.body_widget)
+            remarks_label.setGeometry(0, 363, 100, 25)
+            remarks_label.setText("   REMARKS")
+            remarks_label.setFont(QtGui.QFont("Arial", 9))
+            remarks_label.setStyleSheet("border: none;")
+            remarks_label.show()
+
+            remarks_box = QtWidgets.QTextEdit(self.body_widget)
+            remarks_box.setEnabled(False)
+            remarks_box.setGeometry(125, 363, 595, 104)
+            remarks_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
+            remarks_box.show()
+
+            result_dropdown = QComboBox()
+            result_dropdown.setFixedWidth(296)
+            result_dropdown.setFixedHeight(25)
+            result_dropdown.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
+
+            actionTaken_label = QLabel(self.body_widget)
+            actionTaken_label.setGeometry(0, 470, 100, 25)
+            actionTaken_label.setText("   ACTION TAKEN")
+            actionTaken_label.setFont(QtGui.QFont("Arial", 9))
+            actionTaken_label.setStyleSheet("border: none;")
+            actionTaken_label.show()
+
+            actionTake_box = QTextEdit(self.body_widget)
+            actionTake_box.setGeometry(125, 470, 595, 104)
+            actionTake_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
+            actionTake_box.setEnabled(False)
+            actionTake_box.show()
+
+            label3 = QLabel(self.body_widget)
+            label3.setText(" WORKSTATION AND USERNAME")
+            label3.setGeometry(0, 650, 194, 25)
+            label3.setFont(QtGui.QFont("Arial", 9))
+            label3.setStyleSheet("border: none;")
+            label3.show()
+
+            user_input = QLineEdit(self.body_widget)
+            user_input.setGeometry(194, 650, 221, 25)
+            user_input.setEnabled(False)
+            user_input.setStyleSheet("border: 1px solid rgb(177, 206, 237); background-color: rgb(192, 192, 192); ")
+            user_input.show()
+
+            save_btn = QPushButton(self.body_widget)
+            save_btn.setGeometry(804, 648, 60, 27)
+            save_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            save_btn.setText("SAVE")
+            save_btn.show()
+
+            clear_btn = QPushButton(self.body_widget)
+            clear_btn.setGeometry(866, 648, 60, 27)
+            clear_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            clear_btn.setText("CLEAR")
+            clear_btn.show()
+
+            close_btn = QPushButton(self.body_widget)
+            close_btn.setGeometry(928, 648, 60, 27)
+            close_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            close_btn.setText("CLOSE")
+            close_btn.show()
+
+
+
+            topFormLayout = QFormLayout(widget1)
+            topFormLayout.addRow(qcType_label, qcType_dropdown)
+            topFormLayout.addRow(qcControl_label, qcControl_input)
+            topFormLayout.addRow(customer_label, customer_dropdown)
+            topFormLayout.addRow(productCode_label, productCode_dropdown)
+            topFormLayout.addRow(evaluatedBy_label, evaluatedBy_dropdown)
+            topFormLayout.addRow(date_started_label, date_started_input)
+            topFormLayout.addRow(lotNumber_label, lotNumber_input)
+            topFormLayout.addRow(time_started_label, time_started_input)
+            topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
+            topFormLayout.addRow(result_label, result_dropdown)
+
+
+
+
+
+
+            widget1.show()
+
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -2571,7 +2824,10 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setText("Evaluated Products")
         self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
         self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-        self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189);")
+        self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
+        self.qc_TableBtn.clicked.connect(self.quality_control)
+
+
         # Change the Row height of the table
         for i in range(self.qc_table.rowCount()):
             self.qc_table.setRowHeight(i, 22)
@@ -2580,13 +2836,15 @@ class Ui_LoginWindow(object):
         table_header.setFixedHeight(25)
 
 
-
         self.qc_TableBtn.show()
 
         self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
         self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
         self.qc_addEntryBtn.setText("Evaluation Entry")
         self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
+        self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+        self.qc_addEntryBtn.clicked.connect(evaluation_entry)
+        self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_addEntryBtn.show()
 
         # Top Border Widgets
@@ -2645,7 +2903,7 @@ class Ui_LoginWindow(object):
         bottom_widget.show()
 
         leftSide1_widget = QtWidgets.QWidget(bottom_widget)
-        leftSide1_widget.setGeometry(0, 0, 140, 265)
+        leftSide1_widget.setGeometry(0, 0, 140, 225)
         leftSide1_widget.show()
 
         leftSide2_widget = QtWidgets.QWidget(bottom_widget)
@@ -2653,7 +2911,7 @@ class Ui_LoginWindow(object):
         leftSide2_widget.show()
 
         rightSide_widget = QtWidgets.QWidget(bottom_widget)
-        rightSide_widget.setGeometry(595, 0, 130, 265)
+        rightSide_widget.setGeometry(595, 0, 130, 114)
         rightSide_widget.show()
 
         label_font = QtGui.QFont("Segoe UI", 11)
@@ -2703,15 +2961,31 @@ class Ui_LoginWindow(object):
         updatedBy_label.setAlignment(Qt.AlignRight)
         updatedBy_label.setFont(label_font)
 
-        remarks_label = QLabel()
+        remarks_label = QLabel(bottom_widget)
         remarks_label.setText("Remarks :")
         remarks_label.setAlignment(Qt.AlignRight)
         remarks_label.setFont(label_font)
+        remarks_label.setGeometry(612, 110, 100, 30)
+        remarks_label.show()
 
-        actionTaken_label = QLabel()
+        remarks_box = QTextEdit(bottom_widget)
+        remarks_box.setGeometry(722, 110, 200, 80)
+        remarks_box.setStyleSheet("background-color: rgb(227, 227, 227)")
+        remarks_box.setEnabled(False)
+        remarks_box.show()
+
+        actionTaken_label = QLabel(bottom_widget)
         actionTaken_label.setText("Action Taken :")
         actionTaken_label.setAlignment(Qt.AlignRight)
         actionTaken_label.setFont(label_font)
+        actionTaken_label.setGeometry(612, 200, 100, 30)
+        actionTaken_label.show()
+
+        actionTake_box = QTextEdit(bottom_widget)
+        actionTake_box.setGeometry(722, 200, 200, 60)
+        actionTake_box.setStyleSheet("background-color: rgb(227, 227, 227)")
+        actionTake_box.setEnabled(False)
+        actionTake_box.show()
 
         time_endorsed = QLabel()
         time_endorsed.setText("Time Endorsed :")
@@ -2739,53 +3013,56 @@ class Ui_LoginWindow(object):
         leftVBox2_layout.addWidget(encodedDate_selected)
 
         rightVBo1_layout.addWidget(updatedBy_label)
-        rightVBo1_layout.addWidget(remarks_label)
-        rightVBo1_layout.addWidget(actionTaken_label)
         rightVBo1_layout.addWidget(time_endorsed)
         rightVBo1_layout.addWidget(qc_type_label)
 
         updatedBy_val1 = QtWidgets.QLineEdit(self.qc_widget)
         updatedBy_val1.setGeometry(721, 445, 130, 25)
+        updatedBy_val1.setStyleSheet("background-color: rgb(227, 227, 227)")
         updatedBy_val1.setEnabled(False)
         updatedBy_val1.show()
 
         updatedBy_val2 = QtWidgets.QLineEdit(self.qc_widget)
         updatedBy_val2.setGeometry(851, 445, 130, 25)
         updatedBy_val2.setEnabled(False)
+        updatedBy_val2.setStyleSheet("background-color: rgb(227, 227, 227)")
         updatedBy_val2.show()
 
         export_label = QLabel(self.qc_widget)
-        export_label.setGeometry(10, 700, 100, 20)
+        export_label.setGeometry(10, 680, 100, 20)
         export_label.setText("Export Database")
         export_label.setStyleSheet("background-color: rgb(239, 243, 254);")
         export_label.show()
 
         label1 = QLabel(self.qc_widget)
         label1.setText("FROM")
-        label1.setGeometry(30, 720, 70, 25)
+        label1.setGeometry(30, 700, 70, 25)
         label1.setStyleSheet("background-color: rgb(239, 243, 254)")
         label1.setFont(label_font)
         label1.show()
 
         date1 = QDateEdit(self.qc_widget)
-        date1.setGeometry(75, 720, 100, 25)
+        date1.setGeometry(75, 700, 100, 25)
         date1.setStyleSheet("background-color: rgb(239, 243, 254)")
         date1.show()
 
         label2 = QLabel(self.qc_widget)
-        label2.setGeometry(185, 720, 30, 25)
+        label2.setGeometry(185, 700, 30, 25)
         label2.setText("TO")
         label2.setFont(label_font)
         label2.setStyleSheet("background-color: rgb(239, 243, 254)")
         label2.show()
 
+        now = QtCore.QDate.currentDate() # get the current date
+
         date2 = QDateEdit(self.qc_widget)
-        date2.setGeometry(215, 720, 100, 25)
+        date2.setGeometry(215, 700, 100, 25)
         date2.setStyleSheet("background-color: rgb(239, 243, 254)")
+        date2.setDate(now)
         date2.show()
 
         export_btn = ClickableLabel(self.qc_widget)
-        export_btn.setGeometry(320, 723, 20, 20)
+        export_btn.setGeometry(320, 703, 20, 20)
         export_btn.setPixmap(QtGui.QIcon('export.png').pixmap(20, 20))
         export_btn.setCursor(Qt.PointingHandCursor)
         export_btn.clicked.connect(exportBtn_clicked)
@@ -2793,22 +3070,14 @@ class Ui_LoginWindow(object):
         export_btn.show()
 
         update_btn = QtWidgets.QPushButton(self.qc_widget)
-        update_btn.setGeometry(650, 723, 60, 25)
+        update_btn.setGeometry(650, 703, 60, 25)
         update_btn.setText("UPDATE")
         update_btn.show()
 
         delete_btn = QtWidgets.QPushButton(self.qc_widget)
-        delete_btn.setGeometry(710, 723, 60, 25)
-        delete_btn.setText("UPDATE")
+        delete_btn.setGeometry(710, 703, 60, 25)
+        delete_btn.setText("DELETE")
         delete_btn.show()
-
-        close_btn = QtWidgets.QPushButton(self.qc_widget)
-        update_btn.setGeometry(770, 723, 60, 25)
-        update_btn.setText("UPDATE")
-        update_btn.show()
-
-
-
 
         self.qc_table.show()
 
