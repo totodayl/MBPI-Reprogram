@@ -2827,7 +2827,6 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
         self.qc_TableBtn.clicked.connect(self.quality_control)
 
-
         # Change the Row height of the table
         for i in range(self.qc_table.rowCount()):
             self.qc_table.setRowHeight(i, 22)
@@ -2846,6 +2845,12 @@ class Ui_LoginWindow(object):
         self.qc_addEntryBtn.clicked.connect(evaluation_entry)
         self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_addEntryBtn.show()
+
+        self.multiple_entry = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.multiple_entry.setGeometry(300, 0, 150, 30)
+        self.multiple_entry.setText("Multiple Entry")
+        self.multiple_entry.setFont(QtGui.QFont("Arial", 11))
+        self.multiple_entry.show()
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
