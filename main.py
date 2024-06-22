@@ -2556,6 +2556,42 @@ class Ui_LoginWindow(object):
             except Exception as e:
                 print(e)
 
+            def multipleEntry_clicked():
+                self.multipleEntry_widget = QtWidgets.QWidget()
+                self.multipleEntry_widget.setGeometry(0, 0, 800, 800)
+                self.multipleEntry_widget.setStyleSheet("background-color: rgb(239, 243, 254)")
+
+                input_widgets = QtWidgets.QWidget(self.multipleEntry_widget)
+                input_widgets.setGeometry(50, 100, 350, 350)
+                input_widgets.setStyleSheet("border: 1px solid black")
+
+                formLayout = QFormLayout(input_widgets)
+
+                # Create Labels
+
+                lotnumber_label = QLabel()
+                lotnumber_label.setText("Lot Number")
+
+                batches_label = QLabel()
+                batches_label.setText("Batches")
+
+                productCode_label = QLabel()
+                productCode_label.setText("Product Code")
+
+                customer_label = QLabel()
+                customer_label.setText("Customer")
+
+                evaluatedBy_label = QLabel()
+                evaluatedBy_label.setText("Evaluated By")
+
+                date_started_label = QLabel()
+                date_started_label.setText("Date Started")
+
+                lotNumber_input = QtWidgets.QLineEdit(self.multipleEntry_widget)
+
+                self.multipleEntry_widget.setWindowModality(Qt.ApplicationModal)
+                self.multipleEntry_widget.show()
+
             self.qc_TableBtn.setStyleSheet("color: none; border: 1px solid rgb(160, 160, 160);")
             self.qc_addEntryBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
 
@@ -2579,7 +2615,7 @@ class Ui_LoginWindow(object):
             label2.show()
 
             widget1 = QtWidgets.QWidget(self.body_widget)
-            widget1.setGeometry(0, 33, 440, 330)
+            widget1.setGeometry(0, 33, 440, 360)
             widget1.setStyleSheet("background-color: rgb(239, 243, 254); border: none;")
 
             font = QtGui.QFont("Arial", 10)
@@ -2707,7 +2743,7 @@ class Ui_LoginWindow(object):
             time_endorsed_input.setFixedWidth(296)
 
             remarks_label = QLabel(self.body_widget)
-            remarks_label.setGeometry(0, 363, 100, 25)
+            remarks_label.setGeometry(0, 393, 100, 25)
             remarks_label.setText("   REMARKS")
             remarks_label.setFont(QtGui.QFont("Arial", 9))
             remarks_label.setStyleSheet("border: none;")
@@ -2715,7 +2751,7 @@ class Ui_LoginWindow(object):
 
             remarks_box = QtWidgets.QTextEdit(self.body_widget)
             remarks_box.setEnabled(False)
-            remarks_box.setGeometry(125, 363, 595, 104)
+            remarks_box.setGeometry(125, 393, 595, 104)
             remarks_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             remarks_box.show()
 
@@ -2725,17 +2761,37 @@ class Ui_LoginWindow(object):
             result_dropdown.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
 
             actionTaken_label = QLabel(self.body_widget)
-            actionTaken_label.setGeometry(0, 470, 100, 25)
+            actionTaken_label.setGeometry(0, 500, 100, 25)
             actionTaken_label.setText("   ACTION TAKEN")
             actionTaken_label.setFont(QtGui.QFont("Arial", 9))
             actionTaken_label.setStyleSheet("border: none;")
             actionTaken_label.show()
 
             actionTake_box = QTextEdit(self.body_widget)
-            actionTake_box.setGeometry(125, 470, 595, 104)
+            actionTake_box.setGeometry(125, 500, 595, 104)
             actionTake_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             actionTake_box.setEnabled(False)
             actionTake_box.show()
+
+            batches_label = QLabel()
+            batches_label.setText("BATCHES")
+            batches_label.setFixedWidth(110)
+            batches_label.setFixedHeight(20)
+            batches_label.setFont(font)
+            batches_label.setStyleSheet("border: none;")
+            batches_label.setFont(QtGui.QFont("Arial", 9))
+
+            batches_input = QLineEdit()
+            batches_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            batches_input.setFixedHeight(25)
+            batches_input.setFixedWidth(296)
+
+            lotNumbers_board = QtWidgets.QTextEdit(self.body_widget)
+            lotNumbers_board.setGeometry(470, 200, 250, 180)
+            lotNumbers_board.setStyleSheet("border:none; background-color: rgb(240, 240, 240)")
+            lotNumbers_board.show()
+
+
 
             label3 = QLabel(self.body_widget)
             label3.setText(" WORKSTATION AND USERNAME")
@@ -2749,6 +2805,15 @@ class Ui_LoginWindow(object):
             user_input.setEnabled(False)
             user_input.setStyleSheet("border: 1px solid rgb(177, 206, 237); background-color: rgb(192, 192, 192); ")
             user_input.show()
+
+            multipleEntry_btn = ClickableLabel(self.body_widget)
+            multipleEntry_btn.setGeometry(440, 38, 30, 30)
+            multipleEntry_btn.setPixmap(QtGui.QIcon('multiple.png').pixmap(30, 30))
+            multipleEntry_btn.setToolTip("Multiple Entry")
+            multipleEntry_btn.setCursor(Qt.PointingHandCursor)
+            multipleEntry_btn.clicked.connect(multipleEntry_clicked)
+            multipleEntry_btn.show()
+
 
             save_btn = QPushButton(self.body_widget)
             save_btn.setGeometry(804, 648, 60, 27)
@@ -2769,12 +2834,12 @@ class Ui_LoginWindow(object):
             close_btn.show()
 
 
-
             topFormLayout = QFormLayout(widget1)
             topFormLayout.addRow(qcType_label, qcType_dropdown)
             topFormLayout.addRow(qcControl_label, qcControl_input)
             topFormLayout.addRow(customer_label, customer_dropdown)
             topFormLayout.addRow(productCode_label, productCode_dropdown)
+            topFormLayout.addRow(batches_label, batches_input)
             topFormLayout.addRow(evaluatedBy_label, evaluatedBy_dropdown)
             topFormLayout.addRow(date_started_label, date_started_input)
             topFormLayout.addRow(lotNumber_label, lotNumber_input)
@@ -2839,7 +2904,6 @@ class Ui_LoginWindow(object):
         self.qc_addEntryBtn.clicked.connect(evaluation_entry)
         self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_addEntryBtn.show()
-
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
