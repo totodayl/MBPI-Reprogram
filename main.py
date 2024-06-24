@@ -2592,6 +2592,25 @@ class Ui_LoginWindow(object):
                 self.multipleEntry_widget.setWindowModality(Qt.ApplicationModal)
                 self.multipleEntry_widget.show()
 
+            def multiple_lotNumber():
+
+                try:
+                    if len(lotNumber_input.text().split("-")) == 2:
+                        start_lot = lotNumber_input.text().split("-")[0][:4]
+                        end_lot = lotNumber_input.text().split("-")[1][:4]
+                        string_code = lotNumber_input.text().split("-")[0][4:6]
+                        lot_list = []
+
+                        for i in range(int(start_lot), int(end_lot) + 1):
+                            lot_list.append(str(i) + string_code)
+
+                        lotNumbers_board.setText("\n".join(lot_list))
+                except:
+                    print("INVALID")
+
+
+
+
             self.qc_TableBtn.setStyleSheet("color: none; border: 1px solid rgb(160, 160, 160);")
             self.qc_addEntryBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
 
@@ -2727,6 +2746,7 @@ class Ui_LoginWindow(object):
             lotNumber_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             lotNumber_input.setFixedHeight(25)
             lotNumber_input.setFixedWidth(296)
+            lotNumber_input.editingFinished.connect(multiple_lotNumber)
 
             time_started_input = QTimeEdit()
             time_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
@@ -2773,25 +2793,12 @@ class Ui_LoginWindow(object):
             actionTake_box.setEnabled(False)
             actionTake_box.show()
 
-            batches_label = QLabel()
-            batches_label.setText("BATCHES")
-            batches_label.setFixedWidth(110)
-            batches_label.setFixedHeight(20)
-            batches_label.setFont(font)
-            batches_label.setStyleSheet("border: none;")
-            batches_label.setFont(QtGui.QFont("Arial", 9))
-
-            batches_input = QLineEdit()
-            batches_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
-            batches_input.setFixedHeight(25)
-            batches_input.setFixedWidth(296)
-
             lotNumbers_board = QtWidgets.QTextEdit(self.body_widget)
             lotNumbers_board.setGeometry(470, 200, 250, 180)
             lotNumbers_board.setStyleSheet("border:none; background-color: rgb(240, 240, 240)")
+            lotNumbers_board.setEnabled(False)
+            lotNumbers_board.setFont(font)
             lotNumbers_board.show()
-
-
 
             label3 = QLabel(self.body_widget)
             label3.setText(" WORKSTATION AND USERNAME")
@@ -2838,11 +2845,10 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(qcType_label, qcType_dropdown)
             topFormLayout.addRow(qcControl_label, qcControl_input)
             topFormLayout.addRow(customer_label, customer_dropdown)
+            topFormLayout.addRow(lotNumber_label, lotNumber_input)
             topFormLayout.addRow(productCode_label, productCode_dropdown)
-            topFormLayout.addRow(batches_label, batches_input)
             topFormLayout.addRow(evaluatedBy_label, evaluatedBy_dropdown)
             topFormLayout.addRow(date_started_label, date_started_input)
-            topFormLayout.addRow(lotNumber_label, lotNumber_input)
             topFormLayout.addRow(time_started_label, time_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
