@@ -2613,10 +2613,54 @@ class Ui_LoginWindow(object):
                 except:
                     print("INVALID")
 
+
             def saveBtn_clicked():
 
+                if qcType_dropdown.currentText() == "NEW":
+                    self.cursor.execute(f"""
+                        INSERT INTO quality_control
+                        (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
+                        evaluated_on, encoded_on, time_endorsed, qc_type)
+                        VALUES({lotNumber_input.text()}, {productCode_dropdown.currentText()}, {customer_dropdown.currentText()},
+                        {result_dropdown.currentText()}, {remarks_box.toPlainText()}, {actionTake_box.toPlainText()},
+                        {i}, {evaluatedBy_dropdown.currentText()}, {date_started_input.text()}, {datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+                        {time_endorsed_input.text()}, {qcType_dropdown.currentText()} )
+            
+                        """)
+                else:
+                    self.cursor.execute(f"""
+                    INSERT INTO quality_control
+                        (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
+                        evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on)
+                        VALUES({lotNumber_input.text()}, {productCode_dropdown.currentText()}, {customer_dropdown.currentText()},
+                        {result_dropdown.currentText()}, {remarks_box.toPlainText()}, {actionTake_box.toPlainText()},
+                        {i}, {evaluatedBy_dropdown.currentText()}, {date_started_input.text()}, {datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+                        {time_endorsed_input.text()}, {qcType_dropdown.currentText()}, {updatedBy_input.currentText()})
+                    
+                    
+                    
+                    """)
                 pass
 
+            def correction_enabled():
+                if qcType_dropdown.currentText() == "CORRECTION":
+                    updatedBy_input.setEnabled(True)
+                    correction_input.setEnabled(True)
+
+                    updatedBy_input.setStyleSheet(
+                        "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
+                    correction_input.setStyleSheet(
+                        "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
+                else:
+                    updatedBy_input.setEnabled(False)
+                    correction_input.setEnabled(False)
+
+                    correction_input.setStyleSheet(
+                        "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
+                    updatedBy_input.setStyleSheet(
+                        "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
+                    correction_input.clear()
+                    updatedBy_input.clear()
 
 
 
@@ -2717,6 +2761,13 @@ class Ui_LoginWindow(object):
             result_label.setFont(font)
             result_label.setStyleSheet("border: none;")
 
+            updatedBy_label = QLabel()
+            updatedBy_label.setText("UPDATED BY")
+            updatedBy_label.setFixedWidth(110)
+            updatedBy_label.setFixedHeight(20)
+            updatedBy_label.setFont(font)
+            updatedBy_label.setStyleSheet("border: none;")
+
             # Right Side Widgets
             qcType_dropdown = QtWidgets.QComboBox()
             qcType_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -2724,6 +2775,7 @@ class Ui_LoginWindow(object):
             qcType_dropdown.addItem("CORRECTION")
             qcType_dropdown.setFixedHeight(25)
             qcType_dropdown.setFixedWidth(296)
+            qcType_dropdown.currentTextChanged.connect(correction_enabled)
 
             qcControl_input = QtWidgets.QLineEdit()
             qcControl_input.setStyleSheet("background-color: rgb(238, 238, 238); border: 1px solid rgb(171, 173, 179);")
@@ -2816,18 +2868,29 @@ class Ui_LoginWindow(object):
             result_dropdown.addItem("Passed")
             result_dropdown.addItem("Failed")
 
-            original_lot_label = QLabel()
-            original_lot_label.setText("Original Lot")
-            original_lot_label.setFixedWidth(110)
-            original_lot_label.setFixedHeight(20)
-            original_lot_label.setFont(font)
-            original_lot_label.setStyleSheet("border: none;")
+            correction_label = QLabel()
+            correction_label.setText("CORRECTION")
+            correction_label.setFixedWidth(110)
+            correction_label.setFixedHeight(20)
+            correction_label.setFont(font)
+            correction_label.setStyleSheet("border: none;")
 
-            original_lot_input = QLineEdit()
-            original_lot_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
-            original_lot_input.setFixedHeight(25)
-            original_lot_input.setEnabled(False)
-            original_lot_input.setFixedWidth(296)
+            updatedBy_input = QComboBox()
+            updatedBy_input.setStyleSheet(
+                "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
+            updatedBy_input.setFixedHeight(25)
+            updatedBy_input.setEnabled(False)
+            updatedBy_input.setFixedWidth(296)
+            updatedBy_input.addItem("")
+            updatedBy_input.addItem("Linzy Jam")
+            updatedBy_input.addItem("Ana")
+            updatedBy_input.addItem("Jinky")
+
+            correction_input = QLineEdit()
+            correction_input.setStyleSheet("background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
+            correction_input.setFixedHeight(25)
+            correction_input.setEnabled(False)
+            correction_input.setFixedWidth(296)
 
             actionTaken_label = QLabel(self.body_widget)
             actionTaken_label.setGeometry(0, 500, 100, 25)
@@ -2889,7 +2952,6 @@ class Ui_LoginWindow(object):
             close_btn.setText("CLOSE")
             close_btn.show()
 
-
             topFormLayout = QFormLayout(widget1)
             topFormLayout.addRow(qcType_label, qcType_dropdown)
             topFormLayout.addRow(qcControl_label, qcControl_input)
@@ -2900,7 +2962,8 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(date_started_label, date_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
-            topFormLayout.addRow(original_lot_label, original_lot_input)
+            topFormLayout.addRow(correction_label, correction_input)
+            topFormLayout.addRow(updatedBy_label, updatedBy_input)
 
             widget1.show()
 
