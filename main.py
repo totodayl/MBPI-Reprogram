@@ -181,7 +181,8 @@ class Ui_LoginWindow(object):
                 main_time_table.deleteLater()
                 material_table.deleteLater()
                 lotNumber_table.deleteLater()
-                print("Clear")
+
+
 
             except:
                 QMessageBox.information(self.production_widget, "ERROR", "No Selected Item")
@@ -269,7 +270,7 @@ class Ui_LoginWindow(object):
                 try:
                     hour = str(int(total_sec.total_seconds() // 3600))
                     minute = str((int(total_sec.total_seconds() % 3600) // 60))
-                    print(hour, minute)
+
                     total_time_used = time(int(hour), int(minute))
 
                     worksheet["F25"] = total_time_used
@@ -842,7 +843,7 @@ class Ui_LoginWindow(object):
 
                     self.total_mats = json.dumps(self.total_mats)
                     self.total_mats = self.total_mats.replace('\\', "")
-                    print(type(self.total_mats), self.total_mats)
+
 
                     # Convert the list to string
                     temperature = str(temperature).replace("[", "").replace("]", "")
@@ -1738,6 +1739,7 @@ class Ui_LoginWindow(object):
                                 WHERE process_id = {selected[0]};
                                 ;      
                                 """)
+
                     QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL",
                                             f"Successfully Updated \n Form No. {selected[0]}")
                     print("query successful")
@@ -2556,41 +2558,6 @@ class Ui_LoginWindow(object):
             except Exception as e:
                 print(e)
 
-            def multipleEntry_clicked():
-                self.multipleEntry_widget = QtWidgets.QWidget()
-                self.multipleEntry_widget.setGeometry(0, 0, 800, 800)
-                self.multipleEntry_widget.setStyleSheet("background-color: rgb(239, 243, 254)")
-
-                input_widgets = QtWidgets.QWidget(self.multipleEntry_widget)
-                input_widgets.setGeometry(50, 100, 350, 350)
-                input_widgets.setStyleSheet("border: 1px solid black")
-
-                formLayout = QFormLayout(input_widgets)
-
-                # Create Labels
-
-                lotnumber_label = QLabel()
-                lotnumber_label.setText("Lot Number")
-
-                batches_label = QLabel()
-                batches_label.setText("Batches")
-
-                productCode_label = QLabel()
-                productCode_label.setText("Product Code")
-
-                customer_label = QLabel()
-                customer_label.setText("Customer")
-
-                evaluatedBy_label = QLabel()
-                evaluatedBy_label.setText("Evaluated By")
-
-                date_started_label = QLabel()
-                date_started_label.setText("Date Started")
-
-                lotNumber_input = QtWidgets.QLineEdit(self.multipleEntry_widget)
-
-                self.multipleEntry_widget.setWindowModality(Qt.ApplicationModal)
-                self.multipleEntry_widget.show()
 
             # Getting every single Lot Number in a Multiple Lot Number
             lot_list = []
@@ -2613,34 +2580,47 @@ class Ui_LoginWindow(object):
                 except:
                     print("INVALID")
 
-
             def saveBtn_clicked():
+                try:
+                    if qcType_dropdown.currentText() == "NEW":
+                        self.cursor.execute(f"""
+                                           INSERT INTO quality_control
+                                           (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
+                                           evaluated_on, encoded_on, time_endorsed, qc_type)
+                                           VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
+                                           '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
+                                           '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                           '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}' )
 
-                if qcType_dropdown.currentText() == "NEW":
-                    self.cursor.execute(f"""
-                        INSERT INTO quality_control
-                        (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
-                        evaluated_on, encoded_on, time_endorsed, qc_type)
-                        VALUES({lotNumber_input.text()}, {productCode_dropdown.currentText()}, {customer_dropdown.currentText()},
-                        {result_dropdown.currentText()}, {remarks_box.toPlainText()}, {actionTake_box.toPlainText()},
-                        {i}, {evaluatedBy_dropdown.currentText()}, {date_started_input.text()}, {datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
-                        {time_endorsed_input.text()}, {qcType_dropdown.currentText()} )
-            
-                        """)
-                else:
-                    self.cursor.execute(f"""
-                    INSERT INTO quality_control
-                        (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
-                        evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on)
-                        VALUES({lotNumber_input.text()}, {productCode_dropdown.currentText()}, {customer_dropdown.currentText()},
-                        {result_dropdown.currentText()}, {remarks_box.toPlainText()}, {actionTake_box.toPlainText()},
-                        {i}, {evaluatedBy_dropdown.currentText()}, {date_started_input.text()}, {datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
-                        {time_endorsed_input.text()}, {qcType_dropdown.currentText()}, {updatedBy_input.currentText()})
-                    
-                    
-                    
-                    """)
-                pass
+                                           """)
+                        self.conn.commit()
+                        print("INSERT SUCCESS")
+                    else:
+                        self.cursor.execute(f"""
+                                       SELECT original_lot FROM quality_control
+                                       WHERE lot_number = '{correction_input.text()}'
+                                       """)
+                        result = self.cursor.fetchall()
+                        orig_lot = result[0][0]
+
+                        print(orig_lot)
+                        self.cursor.execute(f"""
+                                       INSERT INTO quality_control
+                                           (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
+                                           evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on)
+                                           VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
+                                           '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
+                                           '{orig_lot}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                          ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
+                                          '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
+
+                                       """)
+                        print("query successful")
+                        self.conn.commit()
+
+                except Exception as e:
+                    print(e)
+                    QMessageBox.information(self.body_widget, "test", "RETRY")
 
             def correction_enabled():
                 if qcType_dropdown.currentText() == "CORRECTION":
@@ -2661,6 +2641,23 @@ class Ui_LoginWindow(object):
                         "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
                     correction_input.clear()
                     updatedBy_input.clear()
+
+            def correction_auto_input():
+
+                self.cursor.execute(f"""
+                SELECT product_code, customer, evaluated_by FROM quality_control
+                WHERE original_lot = '{correction_input.text()}'
+                
+                
+                """)
+                result = self.cursor.fetchone()
+                if result == None:
+                    print("no result")
+                else:
+                    customer_dropdown.setCurrentText(result[1])
+                    productCode_dropdown.setCurrentText(result[0])
+                    evaluatedBy_dropdown.setCurrentText(result[2])
+
 
 
 
@@ -2810,6 +2807,7 @@ class Ui_LoginWindow(object):
             productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
             productCode_dropdown.setFixedHeight(25)
             productCode_dropdown.setFixedWidth(296)
+            productCode_dropdown.setEditable(True)
 
             evaluatedBy_dropdown = QtWidgets.QComboBox()
             evaluatedBy_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -2891,6 +2889,7 @@ class Ui_LoginWindow(object):
             correction_input.setFixedHeight(25)
             correction_input.setEnabled(False)
             correction_input.setFixedWidth(296)
+            correction_input.editingFinished.connect(correction_auto_input)
 
             actionTaken_label = QLabel(self.body_widget)
             actionTaken_label.setGeometry(0, 500, 100, 25)
@@ -2930,7 +2929,6 @@ class Ui_LoginWindow(object):
             multipleEntry_btn.setPixmap(QtGui.QIcon('multiple.png').pixmap(30, 30))
             multipleEntry_btn.setToolTip("Multiple Entry")
             multipleEntry_btn.setCursor(Qt.PointingHandCursor)
-            multipleEntry_btn.clicked.connect(multipleEntry_clicked)
             multipleEntry_btn.show()
 
             save_btn = QPushButton(self.body_widget)
@@ -2955,6 +2953,7 @@ class Ui_LoginWindow(object):
             topFormLayout = QFormLayout(widget1)
             topFormLayout.addRow(qcType_label, qcType_dropdown)
             topFormLayout.addRow(qcControl_label, qcControl_input)
+            topFormLayout.addRow(correction_label, correction_input)
             topFormLayout.addRow(customer_label, customer_dropdown)
             topFormLayout.addRow(lotNumber_label, lotNumber_input)
             topFormLayout.addRow(productCode_label, productCode_dropdown)
@@ -2962,7 +2961,7 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(date_started_label, date_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
-            topFormLayout.addRow(correction_label, correction_input)
+
             topFormLayout.addRow(updatedBy_label, updatedBy_input)
 
             widget1.show()
