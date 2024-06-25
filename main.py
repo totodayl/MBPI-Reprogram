@@ -2592,6 +2592,8 @@ class Ui_LoginWindow(object):
                 self.multipleEntry_widget.setWindowModality(Qt.ApplicationModal)
                 self.multipleEntry_widget.show()
 
+            # Getting every single Lot Number in a Multiple Lot Number
+            lot_list = []
             def multiple_lotNumber():
 
                 try:
@@ -2599,14 +2601,21 @@ class Ui_LoginWindow(object):
                         start_lot = lotNumber_input.text().split("-")[0][:4]
                         end_lot = lotNumber_input.text().split("-")[1][:4]
                         string_code = lotNumber_input.text().split("-")[0][4:6]
-                        lot_list = []
+
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             lot_list.append(str(i) + string_code)
 
+                        print(lot_list)
                         lotNumbers_board.setText("\n".join(lot_list))
+                    else:
+                        lotNumbers_board.setText("")
                 except:
                     print("INVALID")
+
+            def saveBtn_clicked():
+
+                pass
 
 
 
@@ -2695,7 +2704,7 @@ class Ui_LoginWindow(object):
             time_started_label.setStyleSheet("border: none;")
 
             time_endorsed_label = QLabel()
-            time_endorsed_label.setText("TIME ENDORSED PROD")
+            time_endorsed_label.setText("TIME ENDORSED")
             time_endorsed_label.setFixedWidth(110)
             time_endorsed_label.setFixedHeight(20)
             time_endorsed_label.setFont(font)
@@ -2711,7 +2720,8 @@ class Ui_LoginWindow(object):
             # Right Side Widgets
             qcType_dropdown = QtWidgets.QComboBox()
             qcType_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
-            qcType_dropdown.addItem("Test")
+            qcType_dropdown.addItem("NEW")
+            qcType_dropdown.addItem("CORRECTION")
             qcType_dropdown.setFixedHeight(25)
             qcType_dropdown.setFixedWidth(296)
 
@@ -2725,6 +2735,24 @@ class Ui_LoginWindow(object):
             customer_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             customer_dropdown.setFixedHeight(25)
             customer_dropdown.setFixedWidth(296)
+            customer_dropdown.setEditable(False)
+
+            # ADD customer to dropdown Menu
+            self.cursor.execute("""
+            SELECT customer FROM customer;
+            
+            """)
+            result = self.cursor.fetchall()
+            result = sorted(result)
+            result = [i[0] for i in result]
+            for i in range(len(result)):
+                customer_dropdown.addItem(result[i])
+
+
+
+
+
+
 
             productCode_dropdown = QtWidgets.QComboBox()
             productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
@@ -2735,12 +2763,17 @@ class Ui_LoginWindow(object):
             evaluatedBy_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             evaluatedBy_dropdown.setFixedHeight(25)
             evaluatedBy_dropdown.setFixedWidth(296)
+            evaluatedBy_dropdown.addItem("Linzy Jam")
+            evaluatedBy_dropdown.addItem("Jinky")
+            evaluatedBy_dropdown.addItem("Ana")
 
-            date_started_input = QtWidgets.QDateEdit()
+
+            date_started_input = QDateTimeEdit()
             date_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             date_started_input.setFixedHeight(25)
             date_started_input.setFont(font)
             date_started_input.setFixedWidth(296)
+            date_started_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
             lotNumber_input = QtWidgets.QLineEdit()
             lotNumber_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -2755,12 +2788,13 @@ class Ui_LoginWindow(object):
             time_started_input.setDisplayFormat("HH:mm")
             time_started_input.setFixedWidth(296)
 
-            time_endorsed_input = QTimeEdit()
-            time_endorsed_input.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
+            time_endorsed_input = QDateTimeEdit()
+            time_endorsed_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 0)")
             time_endorsed_input.setFixedHeight(25)
             time_endorsed_input.setFixedWidth(120)
-            time_endorsed_input.setDisplayFormat("HH:mm")
             time_endorsed_input.setFixedWidth(296)
+            time_endorsed_input.setFont(font)
+            time_endorsed_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
             remarks_label = QLabel(self.body_widget)
             remarks_label.setGeometry(0, 393, 100, 25)
@@ -2778,7 +2812,22 @@ class Ui_LoginWindow(object):
             result_dropdown = QComboBox()
             result_dropdown.setFixedWidth(296)
             result_dropdown.setFixedHeight(25)
-            result_dropdown.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
+            result_dropdown.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179)")
+            result_dropdown.addItem("Passed")
+            result_dropdown.addItem("Failed")
+
+            original_lot_label = QLabel()
+            original_lot_label.setText("Original Lot")
+            original_lot_label.setFixedWidth(110)
+            original_lot_label.setFixedHeight(20)
+            original_lot_label.setFont(font)
+            original_lot_label.setStyleSheet("border: none;")
+
+            original_lot_input = QLineEdit()
+            original_lot_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
+            original_lot_input.setFixedHeight(25)
+            original_lot_input.setEnabled(False)
+            original_lot_input.setFixedWidth(296)
 
             actionTaken_label = QLabel(self.body_widget)
             actionTaken_label.setGeometry(0, 500, 100, 25)
@@ -2821,11 +2870,11 @@ class Ui_LoginWindow(object):
             multipleEntry_btn.clicked.connect(multipleEntry_clicked)
             multipleEntry_btn.show()
 
-
             save_btn = QPushButton(self.body_widget)
             save_btn.setGeometry(804, 648, 60, 27)
             save_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
             save_btn.setText("SAVE")
+            save_btn.clicked.connect(saveBtn_clicked)
             save_btn.show()
 
             clear_btn = QPushButton(self.body_widget)
@@ -2849,9 +2898,9 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(productCode_label, productCode_dropdown)
             topFormLayout.addRow(evaluatedBy_label, evaluatedBy_dropdown)
             topFormLayout.addRow(date_started_label, date_started_input)
-            topFormLayout.addRow(time_started_label, time_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
+            topFormLayout.addRow(original_lot_label, original_lot_input)
 
             widget1.show()
 
