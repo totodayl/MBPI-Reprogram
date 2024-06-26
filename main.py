@@ -2558,9 +2558,11 @@ class Ui_LoginWindow(object):
             except Exception as e:
                 print(e)
 
-
             # Getting every single Lot Number in a Multiple Lot Number
-            lot_list = []
+            new_lot_list = []
+            old_lot_list = []
+
+            # Getting the new Lot List
             def multiple_lotNumber():
 
                 try:
@@ -2569,16 +2571,34 @@ class Ui_LoginWindow(object):
                         end_lot = lotNumber_input.text().split("-")[1][:4]
                         string_code = lotNumber_input.text().split("-")[0][4:6]
 
-
                         for i in range(int(start_lot), int(end_lot) + 1):
-                            lot_list.append(str(i) + string_code)
+                            new_lot_list.append(str(i) + string_code)
 
-                        print(lot_list)
-                        lotNumbers_board.setText("\n".join(lot_list))
+                        print(new_lot_list)
+                        lotNumbers_board.setText("\n".join(new_lot_list))
                     else:
                         lotNumbers_board.setText("")
                 except:
                     print("INVALID")
+
+           # For getting multiple old Lot Numbers from correction input
+            def get_old_lotNumbers():
+
+                try:
+                    if len(correction_input.text().split("-")) == 2:
+                        start_lot = correction_input.text().split("-")[0][:4]
+                        end_lot = correction_input.text().split("-")[1][:4]
+                        string_code = correction_input.text().split("-")[0][4:6]
+
+                        for i in range(int(start_lot), int(end_lot) + 1):
+                            old_lot_list.append(str(i) + string_code)
+
+                        print(old_lot_list)
+                except Exception as e:
+                    print(e)
+
+
+
 
             def saveBtn_clicked():
                 try:
@@ -2595,6 +2615,18 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
                         print("INSERT SUCCESS")
+
+                        for lot in new_lot_list:
+                            self.cursor.execute(f"""
+                                    INSERT INTO quality_control_tbl2(lot_number, date, original_lot, status)
+                                    VALUES('{lot}', '{date_started_input.text()}', '{lot}',
+                                    '{result_dropdown.currentText()}' )
+
+                                                """)
+                            self.conn.commit()
+                        print("query successful")
+
+
                     else:
                         self.cursor.execute(f"""
                                        SELECT original_lot FROM quality_control
@@ -2615,8 +2647,20 @@ class Ui_LoginWindow(object):
                                           '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
 
                                        """)
-                        print("query successful")
+
                         self.conn.commit()
+
+                        # Save To quality_control_tbl2 DB
+                        for i in range(len(old_lot_list)):
+
+                            self.cursor.execute(f"""
+                                                    INSERT INTO quality_control_tbl2(lot_number, date, original_lot, status)
+                                                    VALUES({new_lot_list[i]}, {date_started_input.text()}, {old_lot_list[i]},
+                                                    {result_dropdown.currentText()} 
+
+                                                    """)
+                            self.conn.commit()
+                        print("query successful")
 
                 except Exception as e:
                     print(e)
@@ -2657,8 +2701,6 @@ class Ui_LoginWindow(object):
                     customer_dropdown.setCurrentText(result[1])
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
-
-
 
 
             self.qc_TableBtn.setStyleSheet("color: none; border: 1px solid rgb(160, 160, 160);")
@@ -2890,6 +2932,7 @@ class Ui_LoginWindow(object):
             correction_input.setEnabled(False)
             correction_input.setFixedWidth(296)
             correction_input.editingFinished.connect(correction_auto_input)
+            correction_input.editingFinished.connect(get_old_lotNumbers)
 
             actionTaken_label = QLabel(self.body_widget)
             actionTaken_label.setGeometry(0, 500, 100, 25)
