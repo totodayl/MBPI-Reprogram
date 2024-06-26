@@ -2593,7 +2593,6 @@ class Ui_LoginWindow(object):
                         for i in range(int(start_lot), int(end_lot) + 1):
                             old_lot_list.append(str(i) + string_code)
 
-                        print("OLD lot list", old_lot_list)
                 except Exception as e:
                     print(e)
 
@@ -2615,9 +2614,9 @@ class Ui_LoginWindow(object):
 
                         for lot in new_lot_list:
                             self.cursor.execute(f"""
-                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status)
+                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status, product_code)
                                     VALUES('{lot}', '{date_started_input.text()}', '{lot}',
-                                    '{result_dropdown.currentText()}' )
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
 
                                                 """)
                             self.conn.commit()
@@ -2631,7 +2630,6 @@ class Ui_LoginWindow(object):
                         result = self.cursor.fetchall()
                         orig_lot = result[0][0]
 
-                        print(orig_lot)
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
@@ -2657,16 +2655,15 @@ class Ui_LoginWindow(object):
                             
                             
                             """)
-                            print("test")
                             result = self.cursor.fetchall()
-                            print(result)
                             orig_lot = result[0][0]
 
 
                             self.cursor.execute(f"""
-                                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status)
+                                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
+                                                    product_code)
                                                     VALUES('{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
-                                                    '{result_dropdown.currentText()}' )
+                                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
 
                                                     """)
                             self.conn.commit()
