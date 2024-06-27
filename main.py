@@ -2564,8 +2564,9 @@ class Ui_LoginWindow(object):
 
             # Getting the new Lot List
             def multiple_lotNumber():
-
                 try:
+                    new_lot_list.clear()
+                    lotNumbers_board.clear()
                     if len(lotNumber_input.text().split("-")) == 2:
                         start_lot = lotNumber_input.text().split("-")[0][:4]
                         end_lot = lotNumber_input.text().split("-")[1][:4]
@@ -2577,7 +2578,7 @@ class Ui_LoginWindow(object):
                         print(new_lot_list)
                         lotNumbers_board.setText("\n".join(new_lot_list))
                     else:
-                        lotNumbers_board.setText("")
+                        lotNumbers_board.clear()
                 except:
                     print("INVALID")
 
@@ -2610,17 +2611,29 @@ class Ui_LoginWindow(object):
 
                                            """)
                         self.conn.commit()
-                        print("INSERT SUCCESS")
 
-                        for lot in new_lot_list:
+                        # For saving Multiple Lot Number
+                        if "-" in lotNumber_input.text():
+                            for lot in new_lot_list:
+                                self.cursor.execute(f"""
+                                        INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status, product_code)
+                                        VALUES('{lot}', '{date_started_input.text()}', '{lot}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+
+                                                    """)
+                                self.conn.commit()
+                            print("query successful")
+                        else:
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status, product_code)
-                                    VALUES('{lot}', '{date_started_input.text()}', '{lot}',
+                                    VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
 
-                                                """)
+                                                                                """)
                             self.conn.commit()
-                        print("query successful")
+
+                        QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
+                        new_lot_list.clear()
 
                     else: # CORRECTION
                         self.cursor.execute(f"""
@@ -2643,35 +2656,53 @@ class Ui_LoginWindow(object):
                                        """)
 
                         self.conn.commit()
-                        print("table1 success")
+
 
                         # Save To quality_control_tbl2 DB
-                        for i in range(len(old_lot_list)):
 
+                        if "-" in lotNumber_input.text():
+                            for i in range(len(old_lot_list)):
+                                self.cursor.execute(f"""
+                                SELECT original_lot FROM quality_control_tbl2
+                                WHERE lot_number = '{old_lot_list[i]}'
 
+                                """)
+                                result = self.cursor.fetchall()
+                                orig_lot = result[0][0]
+
+                                self.cursor.execute(f"""
+                                                        INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
+                                                        product_code)
+                                                        VALUES('{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
+                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+
+                                                        """)
+                                self.conn.commit()
+
+                        else:
                             self.cursor.execute(f"""
-                            SELECT original_lot FROM quality_control_tbl2
-                            WHERE lot_number = '{old_lot_list[i]}'
-                            
-                            
-                            """)
+                                                            SELECT original_lot FROM quality_control_tbl2
+                                                            WHERE lot_number = '{correction_input.text()}'
+
+                                                            """)
                             result = self.cursor.fetchall()
                             orig_lot = result[0][0]
 
-
                             self.cursor.execute(f"""
-                                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
-                                                    product_code)
-                                                    VALUES('{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
-                                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
+                                    product_code)
+                                    VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
 
-                                                    """)
+                                                """)
                             self.conn.commit()
-                        print("query successful")
+                        QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success",
+                                                "QC Entry Added")
+                        new_lot_list.clear()
 
                 except Exception as e:
                     print(e)
-                    QMessageBox.information(self.body_widget, "test", "RETRY")
+                    QMessageBox.critical(self.body_widget, "ERROR", e)
 
             def correction_enabled():
                 if qcType_dropdown.currentText() == "CORRECTION":
@@ -2708,7 +2739,6 @@ class Ui_LoginWindow(object):
                     customer_dropdown.setCurrentText(result[1])
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
-
 
             self.qc_TableBtn.setStyleSheet("color: none; border: 1px solid rgb(160, 160, 160);")
             self.qc_addEntryBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
@@ -2846,12 +2876,6 @@ class Ui_LoginWindow(object):
             for i in range(len(result)):
                 customer_dropdown.addItem(result[i])
 
-
-
-
-
-
-
             productCode_dropdown = QtWidgets.QComboBox()
             productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
             productCode_dropdown.setFixedHeight(25)
@@ -2903,7 +2927,6 @@ class Ui_LoginWindow(object):
             remarks_label.show()
 
             remarks_box = QtWidgets.QTextEdit(self.body_widget)
-            remarks_box.setEnabled(False)
             remarks_box.setGeometry(125, 393, 595, 104)
             remarks_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             remarks_box.show()
@@ -2951,7 +2974,6 @@ class Ui_LoginWindow(object):
             actionTake_box = QTextEdit(self.body_widget)
             actionTake_box.setGeometry(125, 500, 595, 104)
             actionTake_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
-            actionTake_box.setEnabled(False)
             actionTake_box.show()
 
             lotNumbers_board = QtWidgets.QTextEdit(self.body_widget)
@@ -2973,13 +2995,6 @@ class Ui_LoginWindow(object):
             user_input.setEnabled(False)
             user_input.setStyleSheet("border: 1px solid rgb(177, 206, 237); background-color: rgb(192, 192, 192); ")
             user_input.show()
-
-            multipleEntry_btn = ClickableLabel(self.body_widget)
-            multipleEntry_btn.setGeometry(440, 38, 30, 30)
-            multipleEntry_btn.setPixmap(QtGui.QIcon('multiple.png').pixmap(30, 30))
-            multipleEntry_btn.setToolTip("Multiple Entry")
-            multipleEntry_btn.setCursor(Qt.PointingHandCursor)
-            multipleEntry_btn.show()
 
             save_btn = QPushButton(self.body_widget)
             save_btn.setGeometry(804, 648, 60, 27)
