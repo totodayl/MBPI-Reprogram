@@ -2657,7 +2657,6 @@ class Ui_LoginWindow(object):
 
                         self.conn.commit()
 
-
                         # Save To quality_control_tbl2 DB
 
                         if "-" in lotNumber_input.text():
@@ -3031,6 +3030,68 @@ class Ui_LoginWindow(object):
 
             widget1.show()
 
+        def show_qc_data():
+            self.qc_widget.deleteLater()
+
+            self.qc_widget = QtWidgets.QWidget(self.main_widget)
+            self.qc_widget.setGeometry(0, 0, 991, 751)
+            self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
+            self.qc_widget.show()
+
+            self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
+            self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+            self.qcBtn_topBorder.show()
+
+            self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
+            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
+            self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.show()
+
+            self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
+            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.qc_addEntryBtn.clicked.connect(evaluation_entry)
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.show()
+
+            self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setText("QC Data")
+            self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.qc_dataBtn.clicked.connect(show_qc_data)
+            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.show()
+
+            self.body_widget = QtWidgets.QWidget(self.qc_widget)
+            self.body_widget.setGeometry(0, 30, 991, 721)
+            self.body_widget.setStyleSheet(
+                "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
+            self.body_widget.show()
+
+            qc_data_table = QTableWidget(self.body_widget)
+            qc_data_table.setGeometry(50, 50, 870, 340)
+            qc_data_table.setStyleSheet("border: 1px solid black; ")
+            qc_data_table.setRowCount(10)
+            qc_data_table.setColumnCount(7)
+            qc_data_table.setHorizontalHeaderLabels(["QC_ID", "LOT_NUMBER", "EVALUATION_DATE", "ORIGINAL_LOT", "STATUS", "PRODUCT_CODE", "QC_DAYS"])
+            qc_data_table.setColumnWidth(1, 150)
+            qc_data_table.setColumnWidth(2, 150)
+            qc_data_table.show()
+
+
+
+
+
+
+
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -3086,6 +3147,16 @@ class Ui_LoginWindow(object):
         self.qc_addEntryBtn.clicked.connect(evaluation_entry)
         self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_addEntryBtn.show()
+
+        self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+        self.qc_dataBtn.setText("QC Data")
+        self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
+        self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+        self.qc_dataBtn.clicked.connect(show_qc_data)
+        self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_dataBtn.show()
+
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
