@@ -2612,12 +2612,17 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
-                        # For saving Multiple Lot Number
+                        # For saving Multiple Lot Number in quality_control_tbl2
+
+                        self.cursor.execute("SELECT MAX(id) FROM quality_control")
+                        result = self.cursor.fetchone()[0]
+
+
                         if "-" in lotNumber_input.text():
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
-                                        INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status, product_code)
-                                        VALUES('{lot}', '{date_started_input.text()}', '{lot}',
+                                        INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, product_code)
+                                        VALUES('{result}','{lot}', '{date_started_input.text()}', '{lot}',
                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
 
                                                     """)
@@ -3083,15 +3088,26 @@ class Ui_LoginWindow(object):
             qc_data_table.setHorizontalHeaderLabels(["QC_ID", "LOT_NUMBER", "EVALUATION_DATE", "ORIGINAL_LOT", "STATUS", "PRODUCT_CODE", "QC_DAYS"])
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
+            qc_data_table.setColumnWidth(3, 150)
+            qc_data_table.setColumnWidth(6, 118)
+            qc_data_table.verticalHeader().setVisible(False)
             qc_data_table.show()
 
+            # get the data from the Database
+            self.cursor.execute("""
+            SELECT * FROM qc_num_days
+            
+            """)
+            result = self.cursor.fetchall()
 
-
-
-
-
-
-
+            for i in range(len(result)):
+                for j in range(len(result[i])):
+                    item = QTableWidgetItem(str(result[i][j]))
+                    if j == 2:
+                        item.setTextAlignment(0x0001 | 0x0080)
+                    else:
+                        item.setTextAlignment(Qt.AlignCenter)
+                    qc_data_table.setItem(i, j, item)
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
