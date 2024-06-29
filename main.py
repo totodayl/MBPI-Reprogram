@@ -2,10 +2,13 @@ import datetime
 from openpyxl import load_workbook
 import json
 import psycopg2
+from psycopg2 import sql
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time
+import holidays as hd
+import pandas as pd
 
 
 # For Clickable Icons
@@ -2575,7 +2578,6 @@ class Ui_LoginWindow(object):
                         for i in range(int(start_lot), int(end_lot) + 1):
                             new_lot_list.append(str(i) + string_code)
 
-                        print(new_lot_list)
                         lotNumbers_board.setText("\n".join(new_lot_list))
                     else:
                         lotNumbers_board.clear()
@@ -2599,6 +2601,12 @@ class Ui_LoginWindow(object):
 
             def saveBtn_clicked():
                 try:
+                    # For saving Multiple Lot Number in quality_control_tbl2
+
+                    self.cursor.execute("SELECT MAX(id) FROM quality_control")
+                    qc_ID = self.cursor.fetchone()[0]
+
+
                     if qcType_dropdown.currentText() == "NEW":
                         self.cursor.execute(f"""
                                            INSERT INTO quality_control
@@ -2612,39 +2620,39 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
-                        # For saving Multiple Lot Number in quality_control_tbl2
 
-                        self.cursor.execute("SELECT MAX(id) FROM quality_control")
-                        result = self.cursor.fetchone()[0]
 
 
                         if "-" in lotNumber_input.text():
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
-                                        INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, product_code)
-                                        VALUES('{result}','{lot}', '{date_started_input.text()}', '{lot}',
-                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+                                        INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
+                                         status, product_code, qc_type)
+                                        VALUES('{qc_ID}','{lot}', '{date_started_input.text()}', '{lot}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', 
+                                        '{qcType_dropdown.currentText()}' )
 
                                                     """)
                                 self.conn.commit()
                             print("query successful")
                         else:
                             self.cursor.execute(f"""
-                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status, product_code)
-                                    VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
-
-                                                                                """)
+                                    INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
+                                    product_code, qc_type)
+                                    VALUES('{qc_ID}', '{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}' )
+                                                 """)
                             self.conn.commit()
 
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
                         new_lot_list.clear()
 
                     else: # CORRECTION
-                        self.cursor.execute(f"""
-                                       SELECT original_lot FROM quality_control
-                                       WHERE lot_number = '{correction_input.text()}'
+
+                        self.cursor.execute(f""" SELECT original_lot FROM quality_control
+                                            WHERE original_lot = '{correction_input.text().strip()}';
                                        """)
+
                         result = self.cursor.fetchall()
                         orig_lot = result[0][0]
 
@@ -2675,15 +2683,17 @@ class Ui_LoginWindow(object):
                                 orig_lot = result[0][0]
 
                                 self.cursor.execute(f"""
-                                                        INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
-                                                        product_code)
-                                                        VALUES('{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
-                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+                                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                                        product_code, qc_type)
+                                                        VALUES({qc_ID}, '{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
+                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
+                                                         '{qcType_dropdown.currentText()}')
 
                                                         """)
                                 self.conn.commit()
 
                         else:
+                            # Getting the original Lot
                             self.cursor.execute(f"""
                                                             SELECT original_lot FROM quality_control_tbl2
                                                             WHERE lot_number = '{correction_input.text()}'
@@ -2692,11 +2702,13 @@ class Ui_LoginWindow(object):
                             result = self.cursor.fetchall()
                             orig_lot = result[0][0]
 
+
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
-                                    product_code)
+                                    product_code, qc_type)
                                     VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}' )
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
+                                     '{qcType_dropdown.currentText()}')
 
                                                 """)
                             self.conn.commit()
@@ -2706,7 +2718,7 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     print(e)
-                    QMessageBox.critical(self.body_widget, "ERROR", e)
+                    QMessageBox.critical(self.body_widget, "ERROR", "test")
 
             def correction_enabled():
                 if qcType_dropdown.currentText() == "CORRECTION":
@@ -3081,11 +3093,12 @@ class Ui_LoginWindow(object):
             self.body_widget.show()
 
             qc_data_table = QTableWidget(self.body_widget)
-            qc_data_table.setGeometry(50, 50, 870, 340)
+            qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
-            qc_data_table.setRowCount(10)
+            qc_data_table.setRowCount(41)
             qc_data_table.setColumnCount(7)
-            qc_data_table.setHorizontalHeaderLabels(["QC_ID", "LOT_NUMBER", "EVALUATION_DATE", "ORIGINAL_LOT", "STATUS", "PRODUCT_CODE", "QC_DAYS"])
+            qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
+                                                    "PRODUCT CODE", "QC DAYS"])
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
             qc_data_table.setColumnWidth(3, 150)
@@ -3093,20 +3106,74 @@ class Ui_LoginWindow(object):
             qc_data_table.verticalHeader().setVisible(False)
             qc_data_table.show()
 
-            # get the data from the Database
+            ph_holiday = hd.country_holidays('PH')
+            print(ph_holiday)
+
             self.cursor.execute("""
-            SELECT * FROM qc_num_days
-            
+            SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
+            FROM qc_num_days  
+            GROUP BY original_lot
+
             """)
             result = self.cursor.fetchall()
+            print(result)
 
+            dayoff = []
+            original_lot = []
+            for entry in result:
+                prod_code = entry[0]
+                min_date = entry[1]
+                max_date = entry[2]
+
+                date_range = pd.date_range(start=f'{min_date}', end=f'{max_date}').strftime('%m-%d-%Y')
+
+                holidays = []
+                sundays = []
+                for i in list(date_range):
+                    if i in ph_holiday:
+                        print(i)
+                        holidays.append(i)
+                    if datetime.strptime(i, '%m-%d-%Y').weekday() == 6:
+                        sundays.append(i)
+
+                no_operation = holidays + sundays
+                no_operation = len(set(no_operation))
+                print(prod_code, no_operation)
+                dayoff.append(no_operation)
+                original_lot.append(prod_code)
+
+            data = [(x, y) for x, y in zip(original_lot, dayoff)]
+            print(data)
+
+            # DELETE THE TABLE TO CLEAR THE CONTENT FOR UPDATE
+            self.cursor.execute("""
+            DELETE FROM qc_dayoff
+
+            """)
+            self.conn.commit()
+
+            insert_query = sql.SQL("""
+                        INSERT INTO qc_dayoff
+                        VALUES(%s, %s)
+            """)
+
+            self.cursor.executemany(insert_query, data)
+            self.conn.commit()
+            print("insert success")
+            # get the data from the Database
+            self.cursor.execute("""
+            SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
+            FROM qc_num_days AS t1
+            JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot;
+            """)
+
+            result = self.cursor.fetchall()
+            print(result)
             for i in range(len(result)):
                 for j in range(len(result[i])):
                     item = QTableWidgetItem(str(result[i][j]))
-                    if j == 2:
-                        item.setTextAlignment(0x0001 | 0x0080)
-                    else:
-                        item.setTextAlignment(Qt.AlignCenter)
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    item.setTextAlignment(Qt.AlignCenter)
                     qc_data_table.setItem(i, j, item)
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3125,17 +3192,17 @@ class Ui_LoginWindow(object):
 
         self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
         self.qc_table.setGeometry(0, 90, 991, 350)
-        self.qc_table.setColumnCount(6)
+        self.qc_table.setColumnCount(7)
         self.qc_table.setRowCount(16)
 
         # Set Column Width
-        self.qc_table.setColumnWidth(0, 150)
-        self.qc_table.setColumnWidth(1, 300)
-        self.qc_table.setColumnWidth(2, 150)
+        self.qc_table.setColumnWidth(1, 150)
+        self.qc_table.setColumnWidth(2, 300)
+        self.qc_table.setColumnWidth(3, 150)
         self.qc_table.setColumnWidth(4, 170)
 
         self.qc_table.verticalHeader().setVisible(False)
-        self.qc_table.setHorizontalHeaderLabels(["Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
+        self.qc_table.setHorizontalHeaderLabels(["ID", "Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
 
         self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
         self.qc_TableBtn.setGeometry(0, 0, 150, 30)
@@ -3152,6 +3219,22 @@ class Ui_LoginWindow(object):
         table_header = self.qc_table.horizontalHeader()
         table_header.setFixedHeight(25)
 
+        # Get the table Items from database
+        self.cursor.execute("""
+        SELECT id, lot_number, customer, product_code, status, remarks, action
+        FROM quality_control
+        
+        """)
+
+        result = self.cursor.fetchall()
+
+        # Populate the table
+        for i in range(len(result)):
+            for j in range(len(result[i])):
+                item = QTableWidgetItem(str(result[i][j]))
+                item.setTextAlignment(Qt.AlignCenter)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.qc_table.setItem(i, j, item)
 
         self.qc_TableBtn.show()
 
