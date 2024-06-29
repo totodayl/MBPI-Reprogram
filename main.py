@@ -3095,8 +3095,6 @@ class Ui_LoginWindow(object):
             qc_data_table = QTableWidget(self.body_widget)
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
-            qc_data_table.setRowCount(41)
-            qc_data_table.setColumnCount(7)
             qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
                                                     "PRODUCT CODE", "QC DAYS"])
             qc_data_table.setColumnWidth(1, 150)
@@ -3168,7 +3166,11 @@ class Ui_LoginWindow(object):
             """)
 
             result = self.cursor.fetchall()
-            print(result)
+
+            # Set Row Count
+            qc_data_table.setRowCount(len(result))
+            qc_data_table.setColumnCount(7)
+
             for i in range(len(result)):
                 for j in range(len(result[i])):
                     item = QTableWidgetItem(str(result[i][j]))
