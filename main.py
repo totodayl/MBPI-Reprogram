@@ -3095,14 +3095,7 @@ class Ui_LoginWindow(object):
             qc_data_table = QTableWidget(self.body_widget)
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
-            qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
-                                                    "PRODUCT CODE", "QC DAYS"])
-            qc_data_table.setColumnWidth(1, 150)
-            qc_data_table.setColumnWidth(2, 150)
-            qc_data_table.setColumnWidth(3, 150)
-            qc_data_table.setColumnWidth(6, 118)
-            qc_data_table.verticalHeader().setVisible(False)
-            qc_data_table.show()
+
 
             ph_holiday = hd.country_holidays('PH')
             print(ph_holiday)
@@ -3114,7 +3107,7 @@ class Ui_LoginWindow(object):
 
             """)
             result = self.cursor.fetchall()
-            print(result)
+
 
             dayoff = []
             original_lot = []
@@ -3129,19 +3122,16 @@ class Ui_LoginWindow(object):
                 sundays = []
                 for i in list(date_range):
                     if i in ph_holiday:
-                        print(i)
                         holidays.append(i)
                     if datetime.strptime(i, '%m-%d-%Y').weekday() == 6:
                         sundays.append(i)
 
                 no_operation = holidays + sundays
                 no_operation = len(set(no_operation))
-                print(prod_code, no_operation)
                 dayoff.append(no_operation)
                 original_lot.append(prod_code)
 
             data = [(x, y) for x, y in zip(original_lot, dayoff)]
-            print(data)
 
             # DELETE THE TABLE TO CLEAR THE CONTENT FOR UPDATE
             self.cursor.execute("""
@@ -3177,6 +3167,54 @@ class Ui_LoginWindow(object):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     item.setTextAlignment(Qt.AlignCenter)
                     qc_data_table.setItem(i, j, item)
+
+            qc_data_table.setColumnWidth(1, 150)
+            qc_data_table.setColumnWidth(2, 150)
+            qc_data_table.setColumnWidth(3, 150)
+            qc_data_table.setColumnWidth(6, 118)
+            qc_data_table.verticalHeader().setVisible(False)
+            qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
+                                                     "PRODUCT CODE", "QC DAYS"])
+            qc_data_table.show()
+
+
+            self.cursor.execute("""
+            WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
+FROM quality_control_tbl2)
+SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
+FROM numbered_row
+WHERE (numbered_row.status = 'Passed' and numbered_row.rn = 1) or (numbered_row.status = 'Failed' and numbered_row.rn = 2)
+            """)
+
+            result = self.cursor.fetchall()
+            df = pd.DataFrame(result)
+            df.columns = ["original_lot", "status", "product_code", "row_number"]
+            print(df)
+            passToFail_counter = {}
+
+            for index, row in df.iterrows():
+                original_lot = row['original_lot']
+                status = row['status']
+                product_code = row['product_code']
+                row_number = row['row_number']
+                if status == "Passed" and row_number == 1:
+                    if df.iat[index+1, 1] == 'Failed' and df.iat[index+1, 0] == original_lot:
+
+                        if product_code not in passToFail_counter.keys():
+                            passToFail_counter[product_code] = 1
+                        else:
+                            passToFail_counter[product_code] += 1
+
+            print(passToFail_counter)
+
+
+            # Get the DISTINCT OF PRODUCT CODE
+            self.cursor.execute("""
+            SELECT DISTINCT product_code
+            FROM quality_control_tbl2
+            
+            """)
+            result = self.cursor.fetchall()
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
