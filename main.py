@@ -9,6 +9,10 @@ from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time
 import holidays as hd
 import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 
 
 # For Clickable Icons
@@ -769,7 +773,6 @@ class Ui_LoginWindow(object):
 
                 try:
 
-                    print(type(self.remarks_textBox.toPlainText()))
                     # Time Table
                     temp_row = time_table.rowCount()
                     time_start = []
@@ -851,6 +854,7 @@ class Ui_LoginWindow(object):
                     # Convert the list to string
                     temperature = str(temperature).replace("[", "").replace("]", "")
                     outputs = str(outputs).replace("[", "").replace("]", "")
+                    self.lot_numberList = str(self.lot_numberList).replace("[", "").replace("]", "")
 
                     try:
 
@@ -867,7 +871,7 @@ class Ui_LoginWindow(object):
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
-                                         ARRAY[{str(self.lot_numberList)}]::VARCHAR[])
+                                         ARRAY[{self.lot_numberList}]::VARCHAR[])
 
                                                 """)
                         print("query successful")
@@ -3096,10 +3100,7 @@ class Ui_LoginWindow(object):
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
 
-
             ph_holiday = hd.country_holidays('PH')
-            print(ph_holiday)
-
             self.cursor.execute("""
             SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
             FROM qc_num_days  
@@ -3147,12 +3148,15 @@ class Ui_LoginWindow(object):
 
             self.cursor.executemany(insert_query, data)
             self.conn.commit()
-            print("insert success")
+
             # get the data from the Database
             self.cursor.execute("""
             SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
             FROM qc_num_days AS t1
-            JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot;
+            JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot
+            ORDER BY original_lot, evaluation_date
+            
+            ;
             """)
 
             result = self.cursor.fetchall()
@@ -3162,11 +3166,20 @@ class Ui_LoginWindow(object):
             qc_data_table.setColumnCount(7)
 
             for i in range(len(result)):
-                for j in range(len(result[i])):
-                    item = QTableWidgetItem(str(result[i][j]))
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                    item.setTextAlignment(Qt.AlignCenter)
-                    qc_data_table.setItem(i, j, item)
+                if result[i][4] == "Failed":
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setBackground(QtGui.QColor(252, 3, 28))
+                        item.setForeground(QtGui.QColor(0, 0, 0))
+                        qc_data_table.setItem(i, j, item)
+                else:
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        qc_data_table.setItem(i, j, item)
 
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
@@ -3180,33 +3193,66 @@ class Ui_LoginWindow(object):
 
             self.cursor.execute("""
             WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
-FROM quality_control_tbl2)
-SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
-FROM numbered_row
-WHERE (numbered_row.status = 'Passed' and numbered_row.rn = 1) or (numbered_row.status = 'Failed' and numbered_row.rn = 2)
+            FROM quality_control_tbl2)
+            SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
+            FROM numbered_row
+
             """)
 
             result = self.cursor.fetchall()
             df = pd.DataFrame(result)
             df.columns = ["original_lot", "status", "product_code", "row_number"]
-            print(df)
+            print(df.shape)
             passToFail_counter = {}
+            firstTry_failed = {}
 
+            # Getting the number of Lot Number with Passed Status and then become Failed Later
             for index, row in df.iterrows():
                 original_lot = row['original_lot']
                 status = row['status']
                 product_code = row['product_code']
                 row_number = row['row_number']
                 if status == "Passed" and row_number == 1:
-                    if df.iat[index+1, 1] == 'Failed' and df.iat[index+1, 0] == original_lot:
+                    try:
+                        if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
 
-                        if product_code not in passToFail_counter.keys():
-                            passToFail_counter[product_code] = 1
-                        else:
-                            passToFail_counter[product_code] += 1
+                            if product_code not in passToFail_counter.keys():
+                                passToFail_counter[product_code] = 1
+                            else:
+                                passToFail_counter[product_code] += 1
+                    except Exception as e:
+                        print(e)
+
+                # For getting the Failed Lot on the First Qc
+                elif status == "Failed" and row_number == 1:
+                    if product_code not in firstTry_failed.keys():
+                        firstTry_failed[product_code] = 1
+                    else:
+                        firstTry_failed[product_code] += 1
+
 
             print(passToFail_counter)
 
+            # Query For Getting the total Amount of original_lot per Product Code
+            self.cursor.execute("""
+            SELECT product_code, COUNT(*) AS total_quantity
+            FROM (SELECT DISTINCT ON (product_code, original_lot) *
+                  FROM quality_control_tbl2
+                  ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
+            GROUP BY product_code
+            ORDER BY product_code;
+            
+            """)
+            result = self.cursor.fetchall()
+            total_productcode = {}
+            for i in result:
+                total_productcode[i[0]] = i[1]
+
+
+            # Getting the percentage of Pass to Fail of Product Codes
+            passToFail_percentage = {}
+            for key in passToFail_counter.keys():
+                passToFail_percentage[key] = passToFail_counter[key] / total_productcode[key]
 
             # Get the DISTINCT OF PRODUCT CODE
             self.cursor.execute("""
@@ -3215,6 +3261,62 @@ WHERE (numbered_row.status = 'Passed' and numbered_row.rn = 1) or (numbered_row.
             
             """)
             result = self.cursor.fetchall()
+            prod_code_list = [i[0] for i in result] # Parse the data
+
+            # Add the other product code and Set the Other Value to 0
+            for i in prod_code_list:
+                if i not in passToFail_percentage.keys():
+                    passToFail_percentage[i] = 0
+
+            print(passToFail_percentage)
+
+            # Table For Showing Average QC days per Product Code
+            aggregated_products_table = QTableWidget(self.body_widget)
+            aggregated_products_table.setGeometry(50, 390, 300, 300)
+            aggregated_products_table.setColumnCount(3)
+            aggregated_products_table.setRowCount(10)
+            aggregated_products_table.verticalHeader().setVisible(False)
+            aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
+            aggregated_products_table.show()
+
+
+            # Bar Graph
+
+            plot_widget = QtWidgets.QWidget(self.body_widget)
+            plot_widget.setGeometry(370, 360, 340, 340)
+            plot_widget.setStyleSheet("border: none")
+
+            layout = QVBoxLayout(plot_widget)
+
+            self.figure = Figure(figsize=(3, 2), dpi=70)
+            self.canvas = FigureCanvas(self.figure)
+            layout.addWidget(self.canvas)
+
+            self.ax = self.figure.add_subplot(111)
+
+            fruits = ['apple', 'blueberry', 'cherry', 'orange']
+            counts = [40, 100, 30, 55]
+            bar_labels = ['red', 'blue', '_red', 'orange']
+            bar_colors = ['#54555A', 'tab:blue', 'tab:red', 'tab:orange']
+
+            self.ax.bar(fruits, counts, label=bar_labels, color=bar_colors)
+
+            self.ax.set_ylabel('fruit supply')
+            self.ax.set_title('Fruit supply by kind and color')
+            self.ax.legend(title='Fruit color')
+
+            # Refresh canvas
+            self.canvas.draw()
+
+
+
+            plot_widget.show()
+
+
+
+
+
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -3295,7 +3397,6 @@ WHERE (numbered_row.status = 'Passed' and numbered_row.rn = 1) or (numbered_row.
         self.qc_dataBtn.clicked.connect(show_qc_data)
         self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_dataBtn.show()
-
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
@@ -3529,6 +3630,8 @@ WHERE (numbered_row.status = 'Passed' and numbered_row.rn = 1) or (numbered_row.
         delete_btn.setText("DELETE")
         delete_btn.show()
 
+        self.qc_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.qc_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.qc_table.show()
 
 
