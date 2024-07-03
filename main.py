@@ -2,6 +2,7 @@ import datetime
 from openpyxl import load_workbook
 import json
 import psycopg2
+import calendar
 from psycopg2 import sql
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -3090,6 +3091,15 @@ class Ui_LoginWindow(object):
             self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
             self.qc_dataBtn.show()
 
+            self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.dashboardBtn.setGeometry(450, 0, 150, 30)
+            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setCursor(Qt.PointingHandCursor)
+            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.dashboardBtn.clicked.connect(show_dashboards)
+            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.show()
+
             self.body_widget = QtWidgets.QWidget(self.qc_widget)
             self.body_widget.setGeometry(0, 30, 991, 721)
             self.body_widget.setStyleSheet(
@@ -3099,6 +3109,14 @@ class Ui_LoginWindow(object):
             qc_data_table = QTableWidget(self.body_widget)
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
+            qc_data_table.horizontalHeader().setStyleSheet("""
+                    QHeaderView::section{
+                    font-weight: bold;
+                    background-color: rgb(0, 109, 189);
+                    color: white;
+                    }
+
+                    """)
 
             ph_holiday = hd.country_holidays('PH')
             self.cursor.execute("""
@@ -3231,7 +3249,12 @@ class Ui_LoginWindow(object):
                         firstTry_failed[product_code] += 1
 
 
-            print(passToFail_counter)
+            print(passToFail_counter, "Pass TO Fail")
+            print(firstTry_failed, "First Try Failed ")
+
+            passToFail_x = []
+            passToFail_y = []
+
 
             # Query For Getting the total Amount of original_lot per Product Code
             self.cursor.execute("""
@@ -3270,6 +3293,12 @@ class Ui_LoginWindow(object):
 
             print(passToFail_percentage)
 
+            # unpacking the dictionary to list
+            for key, value in passToFail_percentage.items():
+                passToFail_x.append(key)
+                passToFail_y.append(value)
+
+
             # Table For Showing Average QC days per Product Code
             aggregated_products_table = QTableWidget(self.body_widget)
             aggregated_products_table.setGeometry(50, 390, 300, 300)
@@ -3295,27 +3324,188 @@ class Ui_LoginWindow(object):
             self.ax = self.figure.add_subplot(111)
 
             fruits = ['apple', 'blueberry', 'cherry', 'orange']
-            counts = [40, 100, 30, 55]
+            counts = [40, 100, 3]
             bar_labels = ['red', 'blue', '_red', 'orange']
             bar_colors = ['#54555A', 'tab:blue', 'tab:red', 'tab:orange']
 
-            self.ax.bar(fruits, counts, label=bar_labels, color=bar_colors)
+            print(passToFail_x)
+            print(passToFail_y)
 
+            self.ax.bar(passToFail_x, passToFail_y)
+            self.ax.set_ylim(0,0.5)
             self.ax.set_ylabel('fruit supply')
-            self.ax.set_title('Fruit supply by kind and color')
             self.ax.legend(title='Fruit color')
 
             # Refresh canvas
             self.canvas.draw()
 
-
-
             plot_widget.show()
 
+        def show_dashboards():
+
+            def get_data():
+
+                date1 = dateFrom_widget.currentIndex()+1
+                date2 = dateTo_widget.currentIndex()+1
+                print("date1 index:", date1)
+                # Get the last day of Month
+
+                ph_holiday = hd.country_holidays('PH')
+                self.cursor.execute(f"""
+                            SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
+                            FROM qc_num_days  
+                            WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2014, date2)[1]}'
+                            GROUP BY original_lot
+
+                            """)
+                result = self.cursor.fetchall()
+                print(result)
+
+                dayoff = []
+                original_lot = []
+
+                for entry in result:
+                    prod_code = entry[0]
+                    min_date = entry[1]
+                    max_date = entry[2]
+
+                    date_range = pd.date_range(start=f'{min_date}', end=f'{max_date}').strftime('%m-%d-%Y')
+
+                    holidays = []
+                    sundays = []
+                    for i in list(date_range):
+                        if i in ph_holiday:
+                            holidays.append(i)
+                        if datetime.strptime(i, '%m-%d-%Y').weekday() == 6:
+                            sundays.append(i)
+
+                    no_operation = holidays + sundays
+                    no_operation = len(set(no_operation))
+                    dayoff.append(no_operation)
+                    original_lot.append(prod_code)
+
+                data = [(x, y) for x, y in zip(original_lot, dayoff)]
+
+                # DELETE THE TABLE TO CLEAR THE CONTENT FOR UPDATE
+                self.cursor.execute("""DELETE FROM qc_dayoff
+                     """)
+                self.conn.commit()
+                insert_query = sql.SQL("""
+                INSERT INTO qc_dayoff
+                VALUES(%s, %s)
+                """)
+
+                self.cursor.executemany(insert_query, data)
+                self.conn.commit()
+
+            def date_changed():
+                print(dateFrom_widget.currentIndex())
 
 
 
+            self.qc_widget.deleteLater()
 
+            self.qc_widget = QtWidgets.QWidget(self.main_widget)
+            self.qc_widget.setGeometry(0, 0, 991, 751)
+            self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
+            self.qc_widget.show()
+
+            self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
+            self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+            self.qcBtn_topBorder.setStyleSheet("border-bottom: 1px solid rgb(160, 160, 160)")
+            self.qcBtn_topBorder.show()
+
+            self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
+            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
+            self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.show()
+
+            self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
+            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.qc_addEntryBtn.clicked.connect(evaluation_entry)
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.show()
+
+            self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setText("QC Data")
+            self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
+            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.qc_dataBtn.clicked.connect(show_qc_data)
+            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.show()
+
+            self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+            self.dashboardBtn.setGeometry(450, 0, 150, 30)
+            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setCursor(Qt.PointingHandCursor)
+            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+            self.dashboardBtn.clicked.connect(show_dashboards)
+            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.show()
+
+            self.body_widget = QtWidgets.QWidget(self.qc_widget)
+            self.body_widget.setGeometry(-120, 30, 1200, 721)
+            self.body_widget.setStyleSheet(
+                "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
+            self.body_widget.show()
+
+            layout = QHBoxLayout(self.body_widget)
+
+            self.figure = plt.figure(figsize=(2, 2), dpi=80)
+            self.canvas = FigureCanvas(self.figure)
+            layout.addWidget(self.canvas)
+            self.figure.patch.set_facecolor("#eff3fe")
+
+            self.graph1 = self.figure.add_subplot(231)
+            self.graph2 = self.figure.add_subplot(232)
+            self.graph3 = self.figure.add_subplot(233)
+            self.graph4 = self.figure.add_subplot(234)
+            self.graph5 = self.figure.add_subplot(235)
+            self.graph6 = self.figure.add_subplot(236)
+
+            dateFrom_widget = QtWidgets.QComboBox(self.body_widget)
+            dateFrom_widget.setGeometry(200, 30, 100, 20)
+            dateFrom_widget.setStyleSheet("background-color: rgb(137, 137, 161)")
+            dateFrom_widget.addItem("JANUARY")
+            dateFrom_widget.addItem("FEBRUARY")
+            dateFrom_widget.addItem("MARCH")
+            dateFrom_widget.addItem("APRIL")
+            dateFrom_widget.addItem("MAY")
+            dateFrom_widget.addItem("JUNE")
+            dateFrom_widget.addItem("JULY")
+            dateFrom_widget.addItem("AUGUST")
+            dateFrom_widget.addItem("SEPTEMBER")
+            dateFrom_widget.addItem("OCTOBER")
+            dateFrom_widget.addItem("NOVEMBER")
+            dateFrom_widget.addItem("DECEMBER")
+            dateFrom_widget.currentTextChanged.connect(get_data)
+            dateFrom_widget.show()
+
+            dateTo_widget = QtWidgets.QComboBox(self.body_widget)
+            dateTo_widget.setGeometry(350, 30, 100, 20)
+            dateTo_widget.setStyleSheet("background-color: rgb(137, 137, 161)")
+            dateTo_widget.addItem("JANUARY")
+            dateTo_widget.addItem("FEBRUARY")
+            dateTo_widget.addItem("MARCH")
+            dateTo_widget.addItem("APRIL")
+            dateTo_widget.addItem("MAY")
+            dateTo_widget.addItem("JUNE")
+            dateTo_widget.addItem("JULY")
+            dateTo_widget.addItem("AUGUST")
+            dateTo_widget.addItem("SEPTEMBER")
+            dateTo_widget.addItem("OCTOBER")
+            dateTo_widget.addItem("NOVEMBER")
+            dateTo_widget.addItem("DECEMBER")
+            dateTo_widget.currentIndexChanged.connect(get_data)
+            dateTo_widget.show()
 
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3338,10 +3528,14 @@ class Ui_LoginWindow(object):
         self.qc_table.setRowCount(16)
 
         # Set Column Width
-        self.qc_table.setColumnWidth(1, 150)
+        self.qc_table.setColumnWidth(0, 80)
+        self.qc_table.setColumnWidth(1, 120)
         self.qc_table.setColumnWidth(2, 300)
-        self.qc_table.setColumnWidth(3, 150)
-        self.qc_table.setColumnWidth(4, 170)
+        self.qc_table.setColumnWidth(3, 120)
+        self.qc_table.setColumnWidth(4, 80)
+        self.qc_table.setColumnWidth(5, 170)
+
+
 
         self.qc_table.verticalHeader().setVisible(False)
         self.qc_table.setHorizontalHeaderLabels(["ID", "Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
@@ -3353,6 +3547,7 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
         self.qc_TableBtn.clicked.connect(self.quality_control)
+
 
         # Change the Row height of the table
         for i in range(self.qc_table.rowCount()):
@@ -3397,6 +3592,15 @@ class Ui_LoginWindow(object):
         self.qc_dataBtn.clicked.connect(show_qc_data)
         self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_dataBtn.show()
+
+        self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.dashboardBtn.setGeometry(450, 0, 150, 30)
+        self.dashboardBtn.setText("Dashboard")
+        self.dashboardBtn.setCursor(Qt.PointingHandCursor)
+        self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+        self.dashboardBtn.clicked.connect(show_dashboards)
+        self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+        self.dashboardBtn.show()
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
