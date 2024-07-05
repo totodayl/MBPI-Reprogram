@@ -10,9 +10,10 @@ from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time
 import holidays as hd
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+
 
 
 
@@ -2784,7 +2785,7 @@ class Ui_LoginWindow(object):
             label2.show()
 
             widget1 = QtWidgets.QWidget(self.body_widget)
-            widget1.setGeometry(0, 33, 440, 360)
+            widget1.setGeometry(0, 33, 440, 395)
             widget1.setStyleSheet("background-color: rgb(239, 243, 254); border: none;")
 
             font = QtGui.QFont("Arial", 10)
@@ -2935,20 +2936,19 @@ class Ui_LoginWindow(object):
             time_endorsed_input = QDateTimeEdit()
             time_endorsed_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 0)")
             time_endorsed_input.setFixedHeight(25)
-            time_endorsed_input.setFixedWidth(120)
             time_endorsed_input.setFixedWidth(296)
             time_endorsed_input.setFont(font)
             time_endorsed_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
             remarks_label = QLabel(self.body_widget)
-            remarks_label.setGeometry(0, 393, 100, 25)
+            remarks_label.setGeometry(0, 418, 100, 25)
             remarks_label.setText("   REMARKS")
             remarks_label.setFont(QtGui.QFont("Arial", 9))
             remarks_label.setStyleSheet("border: none;")
             remarks_label.show()
 
             remarks_box = QtWidgets.QTextEdit(self.body_widget)
-            remarks_box.setGeometry(125, 393, 595, 104)
+            remarks_box.setGeometry(125, 418, 595, 104)
             remarks_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             remarks_box.show()
 
@@ -2985,15 +2985,28 @@ class Ui_LoginWindow(object):
             correction_input.editingFinished.connect(correction_auto_input)
             correction_input.editingFinished.connect(get_old_lotNumbers)
 
+            formulaID_label = QLabel()
+            formulaID_label.setText("FORMULA ID")
+            formulaID_label.setFixedWidth(110)
+            formulaID_label.setFixedHeight(20)
+            formulaID_label.setFont(font)
+            formulaID_label.setStyleSheet("border: none;")
+
+            formulaID_input = QLineEdit()
+            formulaID_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            formulaID_input.setFixedHeight(25)
+            formulaID_input.setFixedWidth(296)
+
+
             actionTaken_label = QLabel(self.body_widget)
-            actionTaken_label.setGeometry(0, 500, 100, 25)
+            actionTaken_label.setGeometry(0, 525, 100, 25)
             actionTaken_label.setText("   ACTION TAKEN")
             actionTaken_label.setFont(QtGui.QFont("Arial", 9))
             actionTaken_label.setStyleSheet("border: none;")
             actionTaken_label.show()
 
             actionTake_box = QTextEdit(self.body_widget)
-            actionTake_box.setGeometry(125, 500, 595, 104)
+            actionTake_box.setGeometry(125, 525, 595, 104)
             actionTake_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             actionTake_box.show()
 
@@ -3043,12 +3056,13 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(customer_label, customer_dropdown)
             topFormLayout.addRow(lotNumber_label, lotNumber_input)
             topFormLayout.addRow(productCode_label, productCode_dropdown)
+            topFormLayout.addRow(formulaID_label, formulaID_input)
             topFormLayout.addRow(evaluatedBy_label, evaluatedBy_dropdown)
             topFormLayout.addRow(date_started_label, date_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
-
             topFormLayout.addRow(updatedBy_label, updatedBy_input)
+
 
             widget1.show()
 
@@ -3220,7 +3234,6 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
             df = pd.DataFrame(result)
             df.columns = ["original_lot", "status", "product_code", "row_number"]
-            print(df.shape)
             passToFail_counter = {}
             firstTry_failed = {}
 
@@ -3249,9 +3262,6 @@ class Ui_LoginWindow(object):
                         firstTry_failed[product_code] += 1
 
 
-            print(passToFail_counter, "Pass TO Fail")
-            print(firstTry_failed, "First Try Failed ")
-
             passToFail_x = []
             passToFail_y = []
 
@@ -3270,7 +3280,6 @@ class Ui_LoginWindow(object):
             total_productcode = {}
             for i in result:
                 total_productcode[i[0]] = i[1]
-
 
             # Getting the percentage of Pass to Fail of Product Codes
             passToFail_percentage = {}
@@ -3291,7 +3300,6 @@ class Ui_LoginWindow(object):
                 if i not in passToFail_percentage.keys():
                     passToFail_percentage[i] = 0
 
-            print(passToFail_percentage)
 
             # unpacking the dictionary to list
             for key, value in passToFail_percentage.items():
@@ -3308,39 +3316,6 @@ class Ui_LoginWindow(object):
             aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
             aggregated_products_table.show()
 
-
-            # Bar Graph
-
-            plot_widget = QtWidgets.QWidget(self.body_widget)
-            plot_widget.setGeometry(370, 360, 340, 340)
-            plot_widget.setStyleSheet("border: none")
-
-            layout = QVBoxLayout(plot_widget)
-
-            self.figure = Figure(figsize=(3, 2), dpi=70)
-            self.canvas = FigureCanvas(self.figure)
-            layout.addWidget(self.canvas)
-
-            self.ax = self.figure.add_subplot(111)
-
-            fruits = ['apple', 'blueberry', 'cherry', 'orange']
-            counts = [40, 100, 3]
-            bar_labels = ['red', 'blue', '_red', 'orange']
-            bar_colors = ['#54555A', 'tab:blue', 'tab:red', 'tab:orange']
-
-            print(passToFail_x)
-            print(passToFail_y)
-
-            self.ax.bar(passToFail_x, passToFail_y)
-            self.ax.set_ylim(0,0.5)
-            self.ax.set_ylabel('fruit supply')
-            self.ax.legend(title='Fruit color')
-
-            # Refresh canvas
-            self.canvas.draw()
-
-            plot_widget.show()
-
         def show_dashboards():
 
             def get_data():
@@ -3349,17 +3324,16 @@ class Ui_LoginWindow(object):
                 date2 = dateTo_widget.currentIndex()+1
                 print("date1 index:", date1)
                 # Get the last day of Month
-
+                print(calendar.monthrange(2024, date2)[1])
                 ph_holiday = hd.country_holidays('PH')
                 self.cursor.execute(f"""
                             SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
                             FROM qc_num_days  
-                            WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2014, date2)[1]}'
+                            WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
                             GROUP BY original_lot
 
                             """)
                 result = self.cursor.fetchall()
-                print(result)
 
                 dayoff = []
                 original_lot = []
@@ -3398,10 +3372,178 @@ class Ui_LoginWindow(object):
                 self.cursor.executemany(insert_query, data)
                 self.conn.commit()
 
-            def date_changed():
-                print(dateFrom_widget.currentIndex())
+                # Query For Getting the AVERAGE qc_days PER PRODUCT_CODE
+                self.cursor.execute(f"""
+                 SELECT product_code,
+    round(avg(days_float), 4) AS avg_qcdays
+   FROM ( SELECT t1.product_code,
+            EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0 AS days_float
+           FROM ( WITH aggregated_materials AS (
+         SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
+            quality_control_tbl2.original_lot
+           FROM quality_control_tbl2
+		   WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+          GROUP BY quality_control_tbl2.original_lot
+          
+        )
+ SELECT q.id AS qc_id,
+    q.lot_number,
+    q.evaluation_date,
+    q.original_lot,
+    q.status,
+    q.product_code,
+    a.qc_days,
+    q.qc_type
+	
+   FROM aggregated_materials a
+     JOIN quality_control_tbl2 q ON a.original_lot::text = q.original_lot::text) t1
+             JOIN qc_dayoff t2 ON t1.original_lot::text = t2.original_lot::text
+          GROUP BY t1.product_code, (EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0)) subquery
+  GROUP BY product_code
+  ORDER BY avg_qcdays DESC;
+                
+                """)
+                layout = QHBoxLayout(self.body_widget)
+
+                self.figure = plt.figure(figsize=(2, 2), dpi=60)
+                self.canvas = FigureCanvas(self.figure)
+                layout.addWidget(self.canvas)
+                self.figure.patch.set_facecolor("#eff3fe")
+
+                self.graph1 = self.figure.add_subplot(231)
+                self.graph2 = self.figure.add_subplot(232)
+                self.graph3 = self.figure.add_subplot(233)
+                self.graph4 = self.figure.add_subplot(234)
+                self.graph5 = self.figure.add_subplot(235)
+                self.graph6 = self.figure.add_subplot(236)
+
+                result = self.cursor.fetchall()
+                print(result)
+                x = []
+                y = []
+                # Unpack the List of tuple
+                for item, value in result:
+                    x.append(item)
+                    y.append(value)
+
+                # slice to only top 5
+                x = x[:5]
+                y = y[:5]
+                self.graph1.bar(x, y)
+                self.graph1.set_ylim(0,2)
+                self.graph1.set_xticklabels(x, rotation=30)
 
 
+
+                # Getting the Pass to Fail And Fail TO pass QC
+                self.cursor.execute(f"""
+                            WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
+            FROM (SELECT * FROM quality_control_tbl2 WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'))
+            SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
+            FROM numbered_row			
+                            """)
+
+                result = self.cursor.fetchall()
+                # Error Handling
+                if len(result) == 0 :
+                    print("NO DATA")
+                    return  0
+
+                df = pd.DataFrame(result)
+                df.columns = ["original_lot", "status", "product_code", "row_number"]
+                passToFail = {}
+                failToPass = {}
+                failed_firstrun = {}
+
+                # Getting the number of Lot Number with Passed Status and then become Failed Later
+                for index, row in df.iterrows():
+                    original_lot = row['original_lot']
+                    status = row['status']
+                    product_code = row['product_code']
+                    row_number = row['row_number']
+                    if status == "Passed" and row_number == 1:
+                        try:
+                            if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
+                                if product_code not in passToFail.keys():
+                                    passToFail[product_code] = 1
+                                else:
+                                    passToFail[product_code] += 1
+                        except Exception as e:
+                            print(e)
+                    elif status == "Failed" and row_number == 1:
+                        if product_code not in failToPass.keys():
+                            failToPass[product_code] = 1
+                            failed_firstrun[product_code] = 1
+                        else:
+                            failToPass[product_code] += 1
+                            failed_firstrun[product_code] += 1
+
+                # Get the Total Product Code runs from data x to date y
+                self.cursor.execute(f"""
+                SELECT product_code, COUNT(*) AS total_quantity
+            FROM (SELECT DISTINCT ON (product_code, original_lot) *
+                  FROM quality_control_tbl2
+				  WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                  ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
+            GROUP BY product_code
+            ORDER BY product_code
+
+                """)
+                result = self.cursor.fetchall()
+
+                total_productCodes = {}
+                for i in result:
+                    total_productCodes[i[0]] = i[1]
+
+                total_changeProductCodes = {}
+                # get the percentage of each product code From PASS TO FAIL AND FAIL TO PAS
+                for key,value in passToFail.items():
+                    passToFail[key] = passToFail[key] / total_productCodes[key]
+
+                for key, value in failToPass.items():
+                    failToPass[key] = failToPass[key] / total_productCodes[key]
+
+
+                # Combine the codes to see the most change
+
+                for key in total_productCodes.keys():
+                    if key in passToFail.keys():
+                        total_changeProductCodes[key] = passToFail[key]
+                    if key in failToPass.keys():
+                        if key in total_changeProductCodes.keys():
+                            total_changeProductCodes[key] += failToPass[key]
+                        else:
+                            total_changeProductCodes[key] = failToPass[key]
+
+
+                # sort the total_changeProductCodes
+                total_changeProductCodes = sorted(total_changeProductCodes.items(), key=lambda x:x[1], reverse=True)
+
+                total_changeProductCodes = dict(total_changeProductCodes)
+
+                # Graph2
+                x = []
+                y1 = []
+                y2 = []
+                for key in total_changeProductCodes.keys():
+                    try:
+                        y1.append(passToFail[key])
+                    except:
+                        y1.append(0)
+                    try:
+                        y2.append(failToPass[key])
+                    except:
+                        y2.append(0)
+                    x.append(key)
+
+                for i in range(len(x)):
+                    y1[i] = y1[i] * 100
+                    y2[i] = y2[i] * 100
+
+                self.graph2.bar(x, y1)
+                self.graph2.bar(x, y2, bottom=y1)
+                self.graph2.set_yticks(np.arange(0,100,10))
+                self.graph2.set_xticklabels(x, rotation=30)
 
             self.qc_widget.deleteLater()
 
@@ -3456,20 +3598,6 @@ class Ui_LoginWindow(object):
             self.body_widget.setStyleSheet(
                 "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
             self.body_widget.show()
-
-            layout = QHBoxLayout(self.body_widget)
-
-            self.figure = plt.figure(figsize=(2, 2), dpi=80)
-            self.canvas = FigureCanvas(self.figure)
-            layout.addWidget(self.canvas)
-            self.figure.patch.set_facecolor("#eff3fe")
-
-            self.graph1 = self.figure.add_subplot(231)
-            self.graph2 = self.figure.add_subplot(232)
-            self.graph3 = self.figure.add_subplot(233)
-            self.graph4 = self.figure.add_subplot(234)
-            self.graph5 = self.figure.add_subplot(235)
-            self.graph6 = self.figure.add_subplot(236)
 
             dateFrom_widget = QtWidgets.QComboBox(self.body_widget)
             dateFrom_widget.setGeometry(200, 30, 100, 20)
@@ -3535,8 +3663,6 @@ class Ui_LoginWindow(object):
         self.qc_table.setColumnWidth(4, 80)
         self.qc_table.setColumnWidth(5, 170)
 
-
-
         self.qc_table.verticalHeader().setVisible(False)
         self.qc_table.setHorizontalHeaderLabels(["ID", "Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
 
@@ -3547,7 +3673,6 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160)")
         self.qc_TableBtn.clicked.connect(self.quality_control)
-
 
         # Change the Row height of the table
         for i in range(self.qc_table.rowCount()):
