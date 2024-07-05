@@ -2582,6 +2582,8 @@ class Ui_LoginWindow(object):
                         string_code = lotNumber_input.text().split("-")[0][4:6]
 
                         for i in range(int(start_lot), int(end_lot) + 1):
+                            while len(str(i)) != 4:
+                                i = '0' + str(i)
                             new_lot_list.append(str(i) + string_code)
 
                         lotNumbers_board.setText("\n".join(new_lot_list))
@@ -2622,7 +2624,6 @@ class Ui_LoginWindow(object):
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                            '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
-
                                            """)
                         self.conn.commit()
 
@@ -2643,8 +2644,8 @@ class Ui_LoginWindow(object):
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
                                     product_code, qc_type, formula_id)
                                     VALUES('{qc_ID}', '{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}', )
-                                    '{formulaID_input.text()}'      """)
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}', 
+                                    '{formulaID_input.text()}')    """)
                             self.conn.commit()
 
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
@@ -2723,6 +2724,7 @@ class Ui_LoginWindow(object):
                 except Exception as e:
                     print(e)
                     QMessageBox.critical(self.body_widget, "ERROR", "test")
+                    self.conn.rollback()
 
             def correction_enabled():
                 if qcType_dropdown.currentText() == "CORRECTION":
