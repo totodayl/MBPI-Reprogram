@@ -2617,26 +2617,23 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                                            INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
-                                           evaluated_on, encoded_on, time_endorsed, qc_type)
+                                           evaluated_on, encoded_on, time_endorsed, qc_type, formula_id)
                                            VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
-                                           '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}' )
+                                           '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
 
                                            """)
                         self.conn.commit()
-
-
-
 
                         if "-" in lotNumber_input.text():
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
                                         INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
-                                         status, product_code, qc_type)
+                                         status, product_code, qc_type, formula_id)
                                         VALUES('{qc_ID}','{lot}', '{date_started_input.text()}', '{lot}',
                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', 
-                                        '{qcType_dropdown.currentText()}' )
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
 
                                                     """)
                                 self.conn.commit()
@@ -2644,10 +2641,10 @@ class Ui_LoginWindow(object):
                         else:
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
-                                    product_code, qc_type)
+                                    product_code, qc_type, formula_id)
                                     VALUES('{qc_ID}', '{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}' )
-                                                 """)
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}', )
+                                    '{formulaID_input.text()}'      """)
                             self.conn.commit()
 
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
@@ -2665,12 +2662,13 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
-                                           evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on)
+                                           evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on, formula_id)
                                            VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{orig_lot}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
-                                          '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
+                                          '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                          '{formulaID_input.text()}')
 
                                        """)
 
@@ -2690,10 +2688,10 @@ class Ui_LoginWindow(object):
 
                                 self.cursor.execute(f"""
                                                         INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                                        product_code, qc_type)
+                                                        product_code, qc_type, formula_id)
                                                         VALUES({qc_ID}, '{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
                                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
-                                                         '{qcType_dropdown.currentText()}')
+                                                         '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
 
                                                         """)
                                 self.conn.commit()
@@ -2711,10 +2709,10 @@ class Ui_LoginWindow(object):
 
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type)
+                                    product_code, qc_type, formula_id)
                                     VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
-                                     '{qcType_dropdown.currentText()}')
+                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
 
                                                 """)
                             self.conn.commit()
