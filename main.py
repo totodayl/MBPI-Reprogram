@@ -2603,11 +2603,21 @@ class Ui_LoginWindow(object):
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             old_lot_list.append(str(i) + string_code)
+                        print(old_lot_list)
 
                 except Exception as e:
                     print(e)
 
             def saveBtn_clicked():
+
+                def clear_entries():
+                    lotNumber_input.clear()
+                    productCode_dropdown.setCurrentIndex(0)
+                    customer_dropdown.setCurrentIndex(0)
+                    formulaID_input.clear()
+                    evaluatedBy_dropdown.setCurrentIndex(0)
+                    result_dropdown.setCurrentIndex(0)
+
                 try:
                     # For saving Multiple Lot Number in quality_control_tbl2
 
@@ -2639,6 +2649,7 @@ class Ui_LoginWindow(object):
                                                     """)
                                 self.conn.commit()
                             print("query successful")
+                            clear_entries() # Clear the entries after successful entry
                         else:
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
@@ -2647,18 +2658,23 @@ class Ui_LoginWindow(object):
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}', 
                                     '{formulaID_input.text()}')    """)
                             self.conn.commit()
+                            clear_entries()
 
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
                         new_lot_list.clear()
 
                     else: # CORRECTION
 
+                        # SAVE TO THE FIRST QC TABLE 1
                         self.cursor.execute(f""" SELECT original_lot FROM quality_control
                                             WHERE original_lot = '{correction_input.text().strip()}';
                                        """)
 
                         result = self.cursor.fetchall()
-                        orig_lot = result[0][0]
+                        try:
+                            orig_lot = result[0][0]
+                        except:
+                            orig_lot = correction_input.text().strip()
 
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
@@ -2678,15 +2694,27 @@ class Ui_LoginWindow(object):
                         # Save To quality_control_tbl2 DB
 
                         if "-" in lotNumber_input.text():
+                            if len(old_lot_list) == len(new_lot_list):
+                                pass
+                            else:
+                                QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
+                                                        "ERROR",
+                                                        "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
+                                return 0
+
+
                             for i in range(len(old_lot_list)):
+                                print("Run " + str(i))
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
                                 WHERE lot_number = '{old_lot_list[i]}'
 
                                 """)
+                                print(old_lot_list[i])
                                 result = self.cursor.fetchall()
                                 orig_lot = result[0][0]
-
+                                print(orig_lot, " ORIG")
+                                print(formulaID_input.text(), "formula id ")
                                 self.cursor.execute(f"""
                                                         INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                                         product_code, qc_type, formula_id)
@@ -2696,6 +2724,7 @@ class Ui_LoginWindow(object):
 
                                                         """)
                                 self.conn.commit()
+                            clear_entries()
 
                         else:
                             # Getting the original Lot
@@ -2720,6 +2749,7 @@ class Ui_LoginWindow(object):
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success",
                                                 "QC Entry Added")
                         new_lot_list.clear()
+                        clear_entries()
 
                 except Exception as e:
                     print(e)
@@ -3430,10 +3460,9 @@ class Ui_LoginWindow(object):
                 x = x[:5]
                 y = y[:5]
                 self.graph1.bar(x, y)
-                self.graph1.set_ylim(0,2)
                 self.graph1.set_xticklabels(x, rotation=30)
-
-
+                self.graph1.set_yticks(np.arange(0, 100, 10))
+                self.graph1.set_ylim(0, 100)
 
                 # Getting the Pass to Fail And Fail TO pass QC
                 self.cursor.execute(f"""
@@ -3495,6 +3524,9 @@ class Ui_LoginWindow(object):
                 for i in result:
                     total_productCodes[i[0]] = i[1]
 
+                print(failed_firstrun, " failed first run")
+                print(failToPass, "Failt to pass")
+
                 total_changeProductCodes = {}
                 # get the percentage of each product code From PASS TO FAIL AND FAIL TO PAS
                 for key,value in passToFail.items():
@@ -3521,6 +3553,8 @@ class Ui_LoginWindow(object):
 
                 total_changeProductCodes = dict(total_changeProductCodes)
 
+                print(total_changeProductCodes)
+
                 # Graph2
                 x = []
                 y1 = []
@@ -3540,9 +3574,13 @@ class Ui_LoginWindow(object):
                     y1[i] = y1[i] * 100
                     y2[i] = y2[i] * 100
 
+                y1 = y1[:5]
+                y2 = y2[:5]
+                x = x[:5]
+
                 self.graph2.bar(x, y1)
                 self.graph2.bar(x, y2, bottom=y1)
-                self.graph2.set_yticks(np.arange(0,100,10))
+                self.graph2.set_yticks(np.arange(0, 100, 10))
                 self.graph2.set_xticklabels(x, rotation=30)
 
             self.qc_widget.deleteLater()
