@@ -11,6 +11,7 @@ from datetime import timedelta, datetime, time
 import holidays as hd
 import pandas as pd
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -2709,7 +2710,7 @@ class Ui_LoginWindow(object):
                                 SELECT original_lot FROM quality_control_tbl2
                                 WHERE lot_number = '{old_lot_list[i]}'
 
-                                """) sa
+                                """)
                                 print(old_lot_list[i])
                                 result = self.cursor.fetchall()
                                 orig_lot = result[0][0]
@@ -3097,6 +3098,7 @@ class Ui_LoginWindow(object):
             widget1.show()
 
         def show_qc_data():
+            time_start = time.time()
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3150,6 +3152,7 @@ class Ui_LoginWindow(object):
                 "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
             self.body_widget.show()
 
+
             qc_data_table = QTableWidget(self.body_widget)
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
@@ -3175,6 +3178,7 @@ class Ui_LoginWindow(object):
             dayoff = []
             original_lot = []
             for entry in result:
+
                 prod_code = entry[0]
                 min_date = entry[1]
                 max_date = entry[2]
@@ -3188,11 +3192,11 @@ class Ui_LoginWindow(object):
                         holidays.append(i)
                     if datetime.strptime(i, '%m-%d-%Y').weekday() == 6:
                         sundays.append(i)
-
                 no_operation = holidays + sundays
                 no_operation = len(set(no_operation))
                 dayoff.append(no_operation)
                 original_lot.append(prod_code)
+
 
             data = [(x, y) for x, y in zip(original_lot, dayoff)]
 
@@ -3211,6 +3215,8 @@ class Ui_LoginWindow(object):
             self.cursor.executemany(insert_query, data)
             self.conn.commit()
 
+
+
             # get the data from the Database
             self.cursor.execute("""
             SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
@@ -3227,6 +3233,7 @@ class Ui_LoginWindow(object):
             qc_data_table.setRowCount(len(result))
             qc_data_table.setColumnCount(7)
 
+
             for i in range(len(result)):
                 if result[i][4] == "Failed":
                     for j in range(len(result[i])):
@@ -3242,6 +3249,7 @@ class Ui_LoginWindow(object):
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         item.setTextAlignment(Qt.AlignCenter)
                         qc_data_table.setItem(i, j, item)
+
 
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
