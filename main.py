@@ -3199,13 +3199,6 @@ class Ui_LoginWindow(object):
                 "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
             self.body_widget.show()
 
-
-
-
-
-
-
-
             qc_data_table = QTableWidget(self.body_widget)
             qc_data_table.setGeometry(50, 20, 890, 340)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
@@ -3226,7 +3219,6 @@ class Ui_LoginWindow(object):
 
             """)
             result = self.cursor.fetchall()
-
 
             dayoff = []
             original_lot = []
@@ -3838,9 +3830,100 @@ class Ui_LoginWindow(object):
             self.qc_returns.clicked.connect(qc_returns)
             self.qc_returns.show()
 
+            entry_widget = QtWidgets.QWidget(self.body_widget)
+            self.body_widget.setStyleSheet("border: none")
+            entry_widget.setGeometry(0, 0, 340, 450)
+            entry_widget.setStyleSheet("background-color: rgb(187, 228, 252)")
+            entry_widget.show()
+
+            form_layout = QFormLayout(entry_widget)
+            form_layout.setVerticalSpacing(30)
+
+            # Set Font
+            font = QtGui.QFont("Arial", 9)
 
 
+            lot_label = QLabel()
+            lot_label.setText("LOT NUMBER")
+            lot_label.setFont(font)
+            lot_input = QLineEdit()
+            lot_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            lot_input.setAlignment(Qt.AlignCenter)
+            lot_input.setFixedHeight(25)
 
+            quantity_label = QLabel()
+            quantity_label.setText("QUANTITY")
+            quantity_label.setFont(font)
+            quantity_input = QLineEdit()
+            quantity_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            quantity_input.setAlignment(Qt.AlignCenter)
+            quantity_input.setFixedHeight(25)
+
+            product_code_label = QLabel()
+            product_code_label.setText("PRODUCT CODE")
+            product_code_label.setFont(font)
+
+            product_code_input = QLineEdit()
+            product_code_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            product_code_input.setAlignment(Qt.AlignCenter)
+            product_code_input.setFixedHeight(25)
+
+            customer_label = QLabel()
+            customer_label.setText("CUSTOMER")
+            customer_label.setFont(font)
+            customer_input = QComboBox()
+            customer_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            customer_input.setFixedHeight(25)
+
+            self.cursor.execute("""
+                        SELECT customer FROM customer;
+
+                        """)
+            result = self.cursor.fetchall()
+            result = sorted(result)
+            result = [i[0] for i in result]
+            for i in range(len(result)):
+                customer_input.addItem(result[i])
+
+            remarks_label = QLabel()
+            remarks_label.setText("REMARKS")
+            remarks_label.setFont(font)
+            remarks_label.setAlignment(Qt.AlignRight)
+            remarks_input = QTextEdit()
+            remarks_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            remarks_input.setFont(font)
+            remarks_input.setFixedHeight(180)
+
+            form_layout.addRow(lot_label,lot_input)
+            form_layout.addRow(quantity_label, quantity_input)
+            form_layout.addRow(product_code_label, product_code_input)
+            form_layout.addRow(customer_label, customer_input)
+            form_layout.addRow(remarks_label, remarks_input)
+
+
+            # Create Return Table
+
+            return_table = QTableWidget(self.body_widget)
+            return_table.setGeometry(340, 0, 651, 450)
+            return_table.setColumnCount(5)
+            return_table.setRowCount(10)
+            return_table.verticalHeader().setVisible(False)
+            return_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Remarks"])
+            return_table.setColumnWidth(0, 120)
+            return_table.setColumnWidth(2, 120)
+            return_table.setColumnWidth(3, 200)
+            return_table.setColumnWidth(4, 200)
+            return_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
+            return_table.horizontalHeader().setStyleSheet("""
+            QHeaderView::section{
+            font-weight: bold;
+            background-color: rgb(187, 228, 252);
+            color: black;
+                }  
+            
+            """)
+
+            return_table.show()
 
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
