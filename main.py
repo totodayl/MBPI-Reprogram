@@ -3681,6 +3681,40 @@ class Ui_LoginWindow(object):
             dateTo_widget.currentIndexChanged.connect(get_data)
             dateTo_widget.show()
 
+        def show_items():
+            # Querying the selected item in the database
+            id = self.qc_table.selectedItems()[0].text()
+            self.cursor.execute(f"""
+            SELECT * FROM quality_control
+            WHERE id = '{id}'
+            
+            """)
+            result = self.cursor.fetchall()[0]
+            print(result)
+
+            # Unpacking the items
+
+            lot_num, product_code, customer, status, remarks, action = result[1:7]
+            evaluated_by, evaluated_date, encoded_on, updated_by, updated_on = result[8:13]
+            time_endorsed = result[13]
+            qc_type = result[15]
+            formula_id = result[16]
+
+            # showing the Selected Items
+            customer_selected.setText(customer)
+            productCode_selected.setText(product_code)
+            result_selected.setText(status)
+            evaluatedBy_selected.setText(evaluated_by)
+            evaluatedDate_selected.setText(str(evaluated_date))
+            encodedDate_selected.setText(str(encoded_on))
+
+            updatedBy_val1.setText(updated_by)
+            time_endorsed_val.setText(str(time_endorsed))
+            qc_type_selected.setText(qc_type)
+
+
+
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -3744,6 +3778,9 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 self.qc_table.setItem(i, j, item)
 
+        self.qc_table.itemSelectionChanged.connect(show_items)
+
+
         self.qc_TableBtn.show()
 
         self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3772,6 +3809,14 @@ class Ui_LoginWindow(object):
         self.dashboardBtn.clicked.connect(show_dashboards)
         self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
         self.dashboardBtn.show()
+
+        self.qc_returns  = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.qc_returns.setGeometry(600, 0, 150, 30)
+        self.qc_returns.setText("Returns")
+        self.qc_returns.setCursor(Qt.PointingHandCursor)
+        self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
+        self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+        self.qc_returns.show()
 
         # Top Border Widgets
         evaluation_lbl = QLabel(self.qc_topBorder)
@@ -3833,12 +3878,13 @@ class Ui_LoginWindow(object):
         leftSide1_widget.show()
 
         leftSide2_widget = QtWidgets.QWidget(bottom_widget)
-        leftSide2_widget.setGeometry(140, 0, 455, 265)
+        leftSide2_widget.setGeometry(140, 0, 455, 225)
         leftSide2_widget.show()
 
         rightSide_widget = QtWidgets.QWidget(bottom_widget)
         rightSide_widget.setGeometry(595, 0, 130, 114)
         rightSide_widget.show()
+
 
         label_font = QtGui.QFont("Segoe UI", 11)
 
@@ -3881,6 +3927,7 @@ class Ui_LoginWindow(object):
         evaluatedDate_selected = QLabel()
         encodedDate_selected = QLabel()
 
+
         # Right Side Labels
         updatedBy_label = QLabel()
         updatedBy_label.setText("Updated By :")
@@ -3918,10 +3965,22 @@ class Ui_LoginWindow(object):
         time_endorsed.setAlignment(Qt.AlignRight)
         time_endorsed.setFont(label_font)
 
+        time_endorsed_val = QLabel(self.qc_widget)
+        time_endorsed_val.setGeometry(721, 483, 120, 25)
+        time_endorsed_val.setFont(QtGui.QFont("Arial", 9))
+        time_endorsed_val.setStyleSheet("background-color: rgb(239, 243, 254)")
+        time_endorsed_val.show()
+
         qc_type_label = QLabel()
         qc_type_label.setText("QC Type : ")
         qc_type_label.setAlignment(Qt.AlignRight)
         qc_type_label.setFont(label_font)
+
+        qc_type_selected = QLabel(self.qc_widget)
+        qc_type_selected.setGeometry(721, 515, 120, 25)
+        qc_type_selected.setStyleSheet("background-color: rgb(239, 243, 254)")
+        qc_type_selected.setText("test")
+        qc_type_selected.show()
 
         # Adding the widgets to the Layout
         leftVBox1_layout.addWidget(customer_label)
