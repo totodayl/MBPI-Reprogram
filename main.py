@@ -2709,7 +2709,7 @@ class Ui_LoginWindow(object):
                                 SELECT original_lot FROM quality_control_tbl2
                                 WHERE lot_number = '{old_lot_list[i]}'
 
-                                """)
+                                """) sa
                                 print(old_lot_list[i])
                                 result = self.cursor.fetchall()
                                 orig_lot = result[0][0]
