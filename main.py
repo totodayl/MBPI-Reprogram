@@ -16,8 +16,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
-
-
 # For Clickable Icons
 class ClickableLabel(QtWidgets.QLabel):
     clicked = pyqtSignal()
@@ -2988,7 +2986,10 @@ class Ui_LoginWindow(object):
             date_started_input.setFixedHeight(25)
             date_started_input.setFont(font)
             date_started_input.setFixedWidth(296)
+            date_now = datetime.now()
+            date_started_input.setDateTime(date_now)
             date_started_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+
 
             lotNumber_input = QtWidgets.QLineEdit()
             lotNumber_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -3267,7 +3268,7 @@ class Ui_LoginWindow(object):
             SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
             FROM qc_num_days AS t1
             JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot
-            ORDER BY original_lot, evaluation_date
+            ORDER BY evaluation_date
             
             ;
             """)
@@ -3294,7 +3295,6 @@ class Ui_LoginWindow(object):
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         item.setTextAlignment(Qt.AlignCenter)
                         qc_data_table.setItem(i, j, item)
-
 
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
@@ -3513,7 +3513,7 @@ class Ui_LoginWindow(object):
                 y = y[:5]
                 self.graph1.bar(x, y)
                 self.graph1.set_xticklabels(x, rotation=30)
-                self.graph1.set_yticks(np.arange(0, 100, 10))
+                self.graph1.set_yticks(np.arange(0, 110, 10))
                 self.graph1.set_ylim(0, 100)
 
                 # Getting the Pass to Fail And Fail TO pass QC
@@ -3546,18 +3546,18 @@ class Ui_LoginWindow(object):
                         try:
                             if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
                                 if product_code not in passToFail.keys():
-                                    passToFail[product_code] = 1
+                                    passToFail[product_code.strip()] = 1
                                 else:
-                                    passToFail[product_code] += 1
+                                    passToFail[product_code.strip()] += 1
                         except Exception as e:
                             print(e)
                     elif status == "Failed" and row_number == 1:
                         if product_code not in failToPass.keys():
-                            failToPass[product_code] = 1
-                            failed_firstrun[product_code] = 1
+                            failToPass[product_code.strip()] = 1
+                            failed_firstrun[product_code.strip()] = 1
                         else:
-                            failToPass[product_code] += 1
-                            failed_firstrun[product_code] += 1
+                            failToPass[product_code.strip()] += 1
+                            failed_firstrun[product_code.strip()] += 1
 
                 # Get the Total Product Code runs from data x to date y
                 self.cursor.execute(f"""
@@ -3574,8 +3574,8 @@ class Ui_LoginWindow(object):
 
                 total_productCodes = {}
                 for i in result:
-                    total_productCodes[i[0]] = i[1]
-
+                    total_productCodes[i[0].strip()] = i[1]
+                    print(i[0].strip())
 
                 total_changeProductCodes = {}
                 # get the percentage of each product code From PASS TO FAIL AND FAIL TO PAS
@@ -3585,9 +3585,7 @@ class Ui_LoginWindow(object):
                 for key, value in failToPass.items():
                     failToPass[key] = failToPass[key] / total_productCodes[key]
 
-
                 # Combine the codes to see the most change
-
                 for key in total_productCodes.keys():
                     if key in passToFail.keys():
                         total_changeProductCodes[key] = passToFail[key]
@@ -3597,8 +3595,7 @@ class Ui_LoginWindow(object):
                         else:
                             total_changeProductCodes[key] = failToPass[key]
 
-
-                # sort the total_changeProductCodes
+                # Sort the total_changeProductCodes
                 total_changeProductCodes = sorted(total_changeProductCodes.items(), key=lambda x:x[1], reverse=True)
 
                 total_changeProductCodes = dict(total_changeProductCodes)
@@ -3609,6 +3606,7 @@ class Ui_LoginWindow(object):
                 x = []
                 y1 = []
                 y2 = []
+
                 for key in total_changeProductCodes.keys():
                     try:
                         y1.append(passToFail[key])
@@ -3630,8 +3628,17 @@ class Ui_LoginWindow(object):
 
                 self.graph2.bar(x, y1)
                 self.graph2.bar(x, y2, bottom=y1)
-                self.graph2.set_yticks(np.arange(0, 100, 10))
+                self.graph2.set_yticks(np.arange(0, 110, 10))
+                self.graph2.set_ylim(0, 100)
                 self.graph2.set_xticklabels(x, rotation=30)
+
+                # Getting the Percentage of Each Product Codes Failed in First Run
+                for key, value in failed_firstrun.items():
+                    failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
+
+                print(failToPass)
+                print(failed_firstrun)
+
 
             self.qc_widget.deleteLater()
 
@@ -3758,6 +3765,7 @@ class Ui_LoginWindow(object):
             evaluatedBy_selected.setText(evaluated_by)
             evaluatedDate_selected.setText(str(evaluated_date))
             encodedDate_selected.setText(str(encoded_on))
+            remarks_box.setText(remarks)
 
             updatedBy_val1.setText(updated_by)
             time_endorsed_val.setText(str(time_endorsed))
@@ -4163,7 +4171,8 @@ class Ui_LoginWindow(object):
         search_bar = QtWidgets.QLineEdit(self.qc_topBorder)
         search_bar.setGeometry(770, 5, 150, 25)
         search_bar.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);")
-        search_bar.setFont(QtGui.QFont("Segoe UI", 10))
+        search_bar.setFont(QtGui.QFont("Arial", 9))
+        search_bar.setPlaceholderText("Lot Number")
         search_bar.show()
 
         search_btn = QtWidgets.QPushButton(self.qc_topBorder)
