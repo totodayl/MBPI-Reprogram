@@ -3407,7 +3407,6 @@ class Ui_LoginWindow(object):
                 date2 = dateTo_widget.currentIndex()+1
                 print("date1 index:", date1)
                 # Get the last day of Month
-                print(calendar.monthrange(2024, date2)[1])
                 ph_holiday = hd.country_holidays('PH')
                 self.cursor.execute(f"""
                             SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
@@ -3577,8 +3576,6 @@ class Ui_LoginWindow(object):
                 for i in result:
                     total_productCodes[i[0]] = i[1]
 
-                print(failed_firstrun, " failed first run")
-                print(failToPass, "Failt to pass")
 
                 total_changeProductCodes = {}
                 # get the percentage of each product code From PASS TO FAIL AND FAIL TO PAS
@@ -3768,6 +3765,67 @@ class Ui_LoginWindow(object):
 
 
         def qc_returns():
+
+            def insert_entry():
+                try:
+                    self.cursor.execute(f"""
+                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id, remarks)
+                                    VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
+                                     '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}')
+                                    """)
+                    self.conn.commit()
+                    # Clear the Widgets
+                    lot_input.clear()
+                    quantity_input.clear()
+                    remarks_input.clear()
+                    QtWidgets.QMessageBox.information(self.qc_widget, "SUCCESS", "Successfully Inserted Data")
+                    lot_input.setFocus()
+
+                except psycopg2.Error as e:
+                    print(e)
+
+
+            def autofill():
+                if lot_input.text() in lot_list:
+                    self.cursor.execute(f"""
+                    SELECT t1.lot_number, t1.product_code, t1.formula_id, t2.customer
+                    FROM quality_control_tbl2 t1
+                    JOIN quality_control t2 ON t1.id = t2.id
+                    WHERE t1.lot_number = '{lot_input.text()}'
+                    
+                    """)
+                    result = self.cursor.fetchall()[0]
+                    # Set the Text
+                    product_code_input.setText(result[1])
+                    formulaID_input.setText(str(result[2]))
+                    customer_input.setText(result[3])
+                else:
+
+                    product_code_input.clear()
+                    formulaID_input.clear()
+                    customer_input.clear()
+
+            def show_table():
+
+                self.cursor.execute("""
+                SELECT lot_number, quantity, product_code, customer, formula_id, remarks  
+                FROM returns
+                
+                """)
+                result = self.cursor.fetchall()
+
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        returns_table.setItem(i, j, item)
+
+
+
+
+
+
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3846,14 +3904,17 @@ class Ui_LoginWindow(object):
             lot_label = QLabel()
             lot_label.setText("LOT NUMBER")
             lot_label.setFont(font)
+
             lot_input = QLineEdit()
             lot_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             lot_input.setAlignment(Qt.AlignCenter)
             lot_input.setFixedHeight(25)
+            lot_input.textChanged.connect(autofill)
 
             quantity_label = QLabel()
             quantity_label.setText("QUANTITY")
             quantity_label.setFont(font)
+
             quantity_input = QLineEdit()
             quantity_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             quantity_input.setAlignment(Qt.AlignCenter)
@@ -3867,54 +3928,60 @@ class Ui_LoginWindow(object):
             product_code_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             product_code_input.setAlignment(Qt.AlignCenter)
             product_code_input.setFixedHeight(25)
+            product_code_input.setEnabled(False)
+
+            formulaID_label = QLabel()
+            formulaID_label.setText("FORMULA ID")
+            formulaID_label.setFont(font)
+
+            formulaID_input = QLineEdit()
+            formulaID_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            formulaID_input.setAlignment(Qt.AlignCenter)
+            formulaID_input.setFixedHeight(25)
+            formulaID_input.setEnabled(False)
 
             customer_label = QLabel()
             customer_label.setText("CUSTOMER")
             customer_label.setFont(font)
-            customer_input = QComboBox()
+
+            customer_input = QLineEdit()
             customer_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             customer_input.setFixedHeight(25)
-
-            self.cursor.execute("""
-                        SELECT customer FROM customer;
-
-                        """)
-            result = self.cursor.fetchall()
-            result = sorted(result)
-            result = [i[0] for i in result]
-            for i in range(len(result)):
-                customer_input.addItem(result[i])
+            customer_input.setEnabled(False)
+            customer_input.setAlignment(Qt.AlignCenter)
 
             remarks_label = QLabel()
             remarks_label.setText("REMARKS")
             remarks_label.setFont(font)
             remarks_label.setAlignment(Qt.AlignRight)
+
             remarks_input = QTextEdit()
             remarks_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             remarks_input.setFont(font)
-            remarks_input.setFixedHeight(180)
+            remarks_input.setFixedHeight(160)
 
             form_layout.addRow(lot_label,lot_input)
             form_layout.addRow(quantity_label, quantity_input)
             form_layout.addRow(product_code_label, product_code_input)
+            form_layout.addRow(formulaID_label, formulaID_input)
             form_layout.addRow(customer_label, customer_input)
             form_layout.addRow(remarks_label, remarks_input)
 
 
             # Create Return Table
 
-            return_table = QTableWidget(self.body_widget)
-            return_table.setGeometry(340, 0, 651, 450)
-            return_table.setColumnCount(5)
-            return_table.setRowCount(10)
-            return_table.verticalHeader().setVisible(False)
-            return_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Remarks"])
-            return_table.setColumnWidth(0, 120)
-            return_table.setColumnWidth(2, 120)
-            return_table.setColumnWidth(3, 200)
-            return_table.setColumnWidth(4, 200)
-            return_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
-            return_table.horizontalHeader().setStyleSheet("""
+            returns_table = QTableWidget(self.body_widget)
+            returns_table.setGeometry(340, 0, 651, 450)
+            returns_table.setColumnCount(6)
+            returns_table.setRowCount(10)
+            returns_table.verticalHeader().setVisible(False)
+            returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID", "Remarks"])
+            returns_table.setColumnWidth(0, 120)
+            returns_table.setColumnWidth(2, 120)
+            returns_table.setColumnWidth(3, 200)
+            returns_table.setColumnWidth(5, 200)
+            returns_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
+            returns_table.horizontalHeader().setStyleSheet("""
             QHeaderView::section{
             font-weight: bold;
             background-color: rgb(187, 228, 252);
@@ -3922,8 +3989,35 @@ class Ui_LoginWindow(object):
                 }  
             
             """)
+            show_table()
+            returns_table.show()
 
-            return_table.show()
+            save_button = QPushButton(self.body_widget)
+            save_button.setGeometry(50, 475, 60, 25)
+            save_button.setText("Save")
+            save_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
+            save_button.setCursor(Qt.PointingHandCursor)
+            save_button.clicked.connect(insert_entry)
+            save_button.show()
+
+            clear_button = QPushButton(self.body_widget)
+            clear_button.setGeometry(50, 475, 60, 25)
+            clear_button.setText("Save")
+            save_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
+            save_button.setCursor(Qt.PointingHandCursor)
+            save_button.show()
+
+            # Get the Lot List
+            self.cursor.execute("""
+            SELECT lot_number FROM quality_control_tbl2
+            
+            """)
+            result = self.cursor.fetchall()
+            lot_list = []
+            for i in result:
+                lot_list.append(i[0])
+
+
 
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -4274,6 +4368,8 @@ class Ui_LoginWindow(object):
         delete_btn.setGeometry(710, 703, 60, 25)
         delete_btn.setText("DELETE")
         delete_btn.show()
+
+
 
         self.qc_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.qc_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
