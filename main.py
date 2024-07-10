@@ -2547,17 +2547,36 @@ class Ui_LoginWindow(object):
             print(e)
 
         def exportBtn_clicked():
-
-            self.cursor.execute("""
+            date_from = date1.text()
+            date_to = date2.text()
+            self.cursor.execute(f"""
             SELECT * FROM quality_control
-            WHERE evaluated_on::DATE BETWEEN 
-            
-            
+            WHERE evaluated_on::DATE BETWEEN '{date_from}' AND '{date_to}'
             
             """)
 
+            result = self.cursor.fetchall()
 
+            df = pd.DataFrame(result)
 
+            # Get the Column Names
+            self.cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE TABLE_NAME = 'quality_control'
+            
+            """)
+            result = self.cursor.fetchall()
+            column_names = ['id', 'lot_number', 'product_code', 'customer', 'status', 'remarks', 'action',
+                            'original_lot', 'evaluated_by', 'evaluated_on', 'encoded_on', 'updated_by',
+                            'updated_on', 'time_endorsed', 'edited', 'qc_type', 'formula_id']
+            print(column_names)
+            try:
+                df.to_excel(excel_writer=r'\\mbpi-server-01\IT\QC Data Imports\blank.xlsx', index=False,
+                            header=column_names)
+                QMessageBox.information(self.qc_widget, "File Imported", "Successfully Imported Data")
+            except PermissionError:
+                QMessageBox.critical(self.qc_widget, "Permission Error", "Unable to Export the File. \n "
+                                                                         "Someone is using blank.xlsx")
 
 
         def evaluation_entry():
@@ -2632,6 +2651,9 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
+
+
+
                         if "-" in lotNumber_input.text():
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
@@ -2696,7 +2718,6 @@ class Ui_LoginWindow(object):
                                                         "ERROR",
                                                         "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
                                 return 0
-
 
                             for i in range(len(old_lot_list)):
                                 print("Run " + str(i))
@@ -3779,7 +3800,6 @@ class Ui_LoginWindow(object):
             
             """)
             result = self.cursor.fetchall()[0]
-            print(result)
 
             # Unpacking the items
 
@@ -4410,8 +4430,6 @@ class Ui_LoginWindow(object):
         delete_btn.setGeometry(710, 703, 60, 25)
         delete_btn.setText("DELETE")
         delete_btn.show()
-
-
 
         self.qc_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.qc_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
