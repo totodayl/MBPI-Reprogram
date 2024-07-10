@@ -2547,7 +2547,18 @@ class Ui_LoginWindow(object):
             print(e)
 
         def exportBtn_clicked():
-            print("test")
+
+            self.cursor.execute("""
+            SELECT * FROM quality_control
+            WHERE evaluated_on::DATE BETWEEN 
+            
+            
+            
+            """)
+
+
+
+
 
         def evaluation_entry():
 
@@ -3622,15 +3633,35 @@ class Ui_LoginWindow(object):
                     y1[i] = y1[i] * 100
                     y2[i] = y2[i] * 100
 
-                y1 = y1[:5]
-                y2 = y2[:5]
-                x = x[:5]
+                std_ProductCodesTotal = {}
+                for key, value in total_productCodes.items():
+                    if total_productCodes[key] >= 5:
+                        std_ProductCodesTotal[key] = value
+                    else:
+                        pass
+                print(std_ProductCodesTotal)
 
-                self.graph2.bar(x, y1)
-                self.graph2.bar(x, y2, bottom=y1)
+                x_axis = []
+                y1_axis = []
+                y2_axis = []
+                for i in range(len(x)):
+                    if x[i] in std_ProductCodesTotal.keys():
+                        x_axis.append(x[i])
+                        y1_axis.append(y1[i])
+                        y2_axis.append(y2[i])
+
+                print(x_axis)
+                print(y1_axis)
+                print(y2_axis)
+
+
+                self.graph2.bar(x_axis, y1_axis)
+                self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
                 self.graph2.set_yticks(np.arange(0, 110, 10))
                 self.graph2.set_ylim(0, 100)
                 self.graph2.set_xticklabels(x, rotation=30)
+                self.graph2.set_title("Most Change")
+                self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
 
                 # Getting the Percentage of Each Product Codes Failed in First Run
                 for key, value in failed_firstrun.items():
@@ -4343,6 +4374,7 @@ class Ui_LoginWindow(object):
         date1 = QDateEdit(self.qc_widget)
         date1.setGeometry(75, 700, 100, 25)
         date1.setStyleSheet("background-color: rgb(239, 243, 254)")
+        date1.setDisplayFormat("yyyy-MM-dd")
         date1.show()
 
         label2 = QLabel(self.qc_widget)
@@ -4357,6 +4389,7 @@ class Ui_LoginWindow(object):
         date2 = QDateEdit(self.qc_widget)
         date2.setGeometry(215, 700, 100, 25)
         date2.setStyleSheet("background-color: rgb(239, 243, 254)")
+        date2.setDisplayFormat("yyyy-MM-dd")
         date2.setDate(now)
         date2.show()
 
