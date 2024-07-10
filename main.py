@@ -2578,6 +2578,46 @@ class Ui_LoginWindow(object):
                 QMessageBox.critical(self.qc_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
 
+        def edited_checkbox_changed():
+            # Select Only Edited Data
+            if edited_checkbox.isChecked():
+                self.qc_table.clearContents()
+                self.cursor.execute("""
+                SELECT * FROM quality_control
+                WHERE edited = 'True'
+                
+                """)
+
+                result = self.cursor.fetchall()
+
+                # Populate the table
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        self.qc_table.setItem(i, j, item)
+
+                self.qc_table.show()
+            else:
+                # Select ALL
+                self.qc_table.clearContents()
+                self.cursor.execute("""
+                                SELECT * FROM quality_control
+
+                                """)
+
+                result = self.cursor.fetchall()
+
+                # Populate the table
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        self.qc_table.setItem(i, j, item)
+
+                self.qc_table.show()
 
         def evaluation_entry():
 
@@ -4210,6 +4250,7 @@ class Ui_LoginWindow(object):
         edited_checkbox = QCheckBox(self.qc_topBorder)
         edited_checkbox.move(105, 5)
         edited_checkbox.setStyleSheet("border: none;")
+        edited_checkbox.stateChanged.connect(edited_checkbox_changed)
         edited_checkbox.show()
 
         edited_label = QLabel(self.qc_topBorder)
