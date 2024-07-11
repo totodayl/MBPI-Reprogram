@@ -1,4 +1,3 @@
-import datetime
 from openpyxl import load_workbook
 import json
 import psycopg2
@@ -7,12 +6,13 @@ from psycopg2 import sql
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
-from datetime import timedelta, datetime, time
+from datetime import timedelta, datetime, time, date
 import holidays as hd
 import pandas as pd
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import platform
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
@@ -28,6 +28,7 @@ class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
         LoginWindow.setObjectName("LoginWindow")
         LoginWindow.resize(800, 600)
+        LoginWindow.setWindowIcon(QtGui.QIcon("logo-logo.png"))
         self.login_window = QtWidgets.QWidget(LoginWindow)
         self.login_window.setStyleSheet("""background-color : qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, 
         stop:0 rgba(176, 0, 0, 255), stop:0.738636 rgba(255, 113, 250, 255))""")
@@ -65,6 +66,8 @@ class Ui_LoginWindow(object):
     def login(self):
         username = self.username.text()
         pass1 = self.password.text()
+
+        self.computerName = platform.node()
 
         # Connect to the Database
         try:
@@ -150,10 +153,26 @@ class Ui_LoginWindow(object):
         self.qualityControl_lbl.setCursor(Qt.PointingHandCursor)
         self.qualityControl_lbl.show()
 
+        self.logo = QLabel(self.login_window)
+        self.logo.setGeometry(23, 10, 170, 121)
+        pixmap = QtGui.QPixmap('MBPI-ADJUST.png')
+        pixmap = pixmap.scaled(170, 121)
+        self.logo.setPixmap(pixmap)
+        self.logo.show()
+
+        self.logo2 = QLabel(self.login_window)
+        self.logo2.setGeometry(0, 145, 210, 15)
+        pixmap = QtGui.QPixmap('LOGO-NEW.png')
+        pixmap = pixmap.scaled(210, 15)
+        self.logo2.setPixmap(pixmap)
+        self.logo2.show()
 
 
 
-        self.quality_control_label =QtWidgets.QLabel()
+
+
+        self.production()
+
 
     def production(self):
 
@@ -2581,9 +2600,14 @@ class Ui_LoginWindow(object):
         def edited_checkbox_changed():
             # Select Only Edited Data
             if edited_checkbox.isChecked():
-                self.qc_table.clearContents()
+                self.qc_table.itemSelectionChanged.disconnect(show_items)
+                self.qc_table.clearSelection()
+                self.qc_table.clear()
+                self.qc_table.setHorizontalHeaderLabels(['ID', 'Lot Number', 'Customer','Product Code',
+                                                         'Status', 'Remarks', 'Action Taken'])
                 self.cursor.execute("""
-                SELECT * FROM quality_control
+                SELECT id, lot_number, customer, product_code, status, remarks, action
+                FROM quality_control
                 WHERE edited = 'True'
                 
                 """)
@@ -2597,13 +2621,18 @@ class Ui_LoginWindow(object):
                         item.setTextAlignment(Qt.AlignCenter)
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         self.qc_table.setItem(i, j, item)
-
+                self.qc_table.itemSelectionChanged.connect(show_items)
                 self.qc_table.show()
             else:
                 # Select ALL
-                self.qc_table.clearContents()
+                self.qc_table.itemSelectionChanged.disconnect(show_items)
+                self.qc_table.clearSelection()
+                self.qc_table.clear()
+                self.qc_table.setHorizontalHeaderLabels(['ID', 'Lot Number', 'Customer', 'Product Code',
+                                                         'Status', 'Remarks', 'Action Taken'])
                 self.cursor.execute("""
-                                SELECT * FROM quality_control
+                                SELECT id, lot_number, customer, product_code, status, remarks, action 
+                                FROM quality_control
 
                                 """)
 
@@ -2617,7 +2646,36 @@ class Ui_LoginWindow(object):
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         self.qc_table.setItem(i, j, item)
 
+                self.qc_table.itemSelectionChanged.connect(show_items)
                 self.qc_table.show()
+
+        def lotNumber_search():
+            if search_bar.text() != '':
+                self.qc_table.itemSelectionChanged.disconnect(show_items)
+                self.qc_table.clearSelection()
+                self.qc_table.clear()
+                self.qc_table.setHorizontalHeaderLabels(['ID', 'Lot Number', 'Customer', 'Product Code',
+                                                         'Status', 'Remarks', 'Action Taken'])
+
+                self.cursor.execute(f"""
+                            SELECT id, lot_number, customer, product_code, status, remarks, action
+                            FROM quality_control
+                            WHERE lot_number ILIKE '%{search_bar.text()}%'
+
+                            """)
+                result = self.cursor.fetchall()
+
+                # Populate the table
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        self.qc_table.setItem(i, j, item)
+
+                self.qc_table.itemSelectionChanged.connect(show_items)
+                self.qc_table.show()
+
 
         def evaluation_entry():
 
@@ -3475,6 +3533,12 @@ class Ui_LoginWindow(object):
 
             def get_data():
 
+                def next_graph():
+                    self.graph4.clear()
+                    self.graph4.set_title("Highest AVG QC days")
+                    self.canvas.draw()
+
+
                 date1 = dateFrom_widget.currentIndex()+1
                 date2 = dateTo_widget.currentIndex()+1
                 print("date1 index:", date1)
@@ -3564,6 +3628,27 @@ class Ui_LoginWindow(object):
                 layout.addWidget(self.canvas)
                 self.figure.patch.set_facecolor("#eff3fe")
 
+                font = QtGui.QFont("Arial", 14)
+
+                dateRangeLabel = QLabel(self.body_widget)
+                dateRangeLabel.setGeometry(450, 25, 320, 30)
+                dateRangeLabel.setAlignment(Qt.AlignCenter)
+                if dateTo_widget.currentText() == dateFrom_widget.currentText():
+                    dateRangeLabel.setText(dateFrom_widget.currentText())
+                else:
+                    dateRangeLabel.setText(dateFrom_widget.currentText() + " - " + dateTo_widget.currentText())
+                dateRangeLabel.setFont(font)
+                dateRangeLabel.setStyleSheet("color: rgb(0, 109, 189); border: none;")
+                dateRangeLabel.show()
+
+                # Show Next graph button
+                next_btn = QPushButton(self.body_widget)
+                next_btn.setGeometry(200, 670, 10, 10)
+                next_btn.setCursor(Qt.PointingHandCursor)
+                next_btn.setStyleSheet("background-color: black")
+                next_btn.clicked.connect(next_graph)
+                next_btn.show()
+
                 self.graph1 = self.figure.add_subplot(231)
                 self.graph2 = self.figure.add_subplot(232)
                 self.graph3 = self.figure.add_subplot(233)
@@ -3572,7 +3657,6 @@ class Ui_LoginWindow(object):
                 self.graph6 = self.figure.add_subplot(236)
 
                 result = self.cursor.fetchall()
-                print(result)
                 x = []
                 y = []
                 # Unpack the List of tuple
@@ -3587,6 +3671,7 @@ class Ui_LoginWindow(object):
                 self.graph1.set_xticklabels(x, rotation=30)
                 self.graph1.set_yticks(np.arange(0, 110, 10))
                 self.graph1.set_ylim(0, 100)
+                self.graph1.set_title("Highest AVG QC days", fontsize=15)
 
                 # Getting the Pass to Fail And Fail TO pass QC
                 self.cursor.execute(f"""
@@ -3598,9 +3683,9 @@ class Ui_LoginWindow(object):
 
                 result = self.cursor.fetchall()
                 # Error Handling
-                if len(result) == 0 :
+                if len(result) == 0:
                     print("NO DATA")
-                    return  0
+                    return 0
 
                 df = pd.DataFrame(result)
                 df.columns = ["original_lot", "status", "product_code", "row_number"]
@@ -3635,9 +3720,9 @@ class Ui_LoginWindow(object):
                 self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) AS total_quantity
             FROM (SELECT DISTINCT ON (product_code, original_lot) *
-                  FROM quality_control_tbl2
-				  WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
-                  ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
+            FROM quality_control_tbl2
+		    WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
             GROUP BY product_code
             ORDER BY product_code
 
@@ -3647,7 +3732,6 @@ class Ui_LoginWindow(object):
                 total_productCodes = {}
                 for i in result:
                     total_productCodes[i[0].strip()] = i[1]
-                    print(i[0].strip())
 
                 total_changeProductCodes = {}
                 # get the percentage of each product code From PASS TO FAIL AND FAIL TO PAS
@@ -3700,7 +3784,6 @@ class Ui_LoginWindow(object):
                         std_ProductCodesTotal[key] = value
                     else:
                         pass
-                print(std_ProductCodesTotal)
 
                 x_axis = []
                 y1_axis = []
@@ -3711,25 +3794,58 @@ class Ui_LoginWindow(object):
                         y1_axis.append(y1[i])
                         y2_axis.append(y2[i])
 
-                print(x_axis)
-                print(y1_axis)
-                print(y2_axis)
-
-
                 self.graph2.bar(x_axis, y1_axis)
                 self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
                 self.graph2.set_yticks(np.arange(0, 110, 10))
                 self.graph2.set_ylim(0, 100)
                 self.graph2.set_xticklabels(x, rotation=30)
-                self.graph2.set_title("Most Change")
+                self.graph2.set_title("Most Change", fontsize = 15)
                 self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
 
                 # Getting the Percentage of Each Product Codes Failed in First Run
                 for key, value in failed_firstrun.items():
                     failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
 
-                print(failToPass)
-                print(failed_firstrun)
+
+
+                # Visual 4
+
+                self.cursor.execute("""
+                SELECT product_code, COUNT(product_code)
+                FROM returns
+                GROUP BY product_code
+                """)
+
+                result = self.cursor.fetchall()
+
+                productCodeReturns = {}
+                print(result)
+
+                for i, j in result:
+                    productCodeReturns[i] = j
+
+                # Getting the Percentage of Product Code returns for each Product Codes
+                print(total_productCodes)
+                for key in productCodeReturns.keys():
+                    print(key, productCodeReturns[key])
+                    productCodeReturns[key] = (productCodeReturns[key] / total_productCodes[key]) * 100
+
+                print(productCodeReturns)
+                x = []
+                y = []
+                # Getting the x and y from the Returns dictionary
+                for key, value in productCodeReturns.items():
+                    x.append(key)
+                    y.append(value)
+
+
+                # Plot the Visual 4
+
+                self.graph4.bar(x, y)
+                self.graph4.set_yticks(np.arange(0,110,10))
+                self.graph4.set_xticklabels(x, rotation = 30)
+                self.graph4.set_title("Highest Return Percentage", fontsize = 15)
+                self.graph4.set_position([0.125, 0.08, 0.228, 0.35])
 
 
             self.qc_widget.deleteLater()
@@ -3810,7 +3926,6 @@ class Ui_LoginWindow(object):
             dateFrom_widget.addItem("OCTOBER")
             dateFrom_widget.addItem("NOVEMBER")
             dateFrom_widget.addItem("DECEMBER")
-            dateFrom_widget.currentTextChanged.connect(get_data)
             dateFrom_widget.show()
 
             dateTo_widget = QtWidgets.QComboBox(self.body_widget)
@@ -3828,7 +3943,7 @@ class Ui_LoginWindow(object):
             dateTo_widget.addItem("OCTOBER")
             dateTo_widget.addItem("NOVEMBER")
             dateTo_widget.addItem("DECEMBER")
-            dateTo_widget.currentIndexChanged.connect(get_data)
+            dateTo_widget.activated.connect(get_data)
             dateTo_widget.show()
 
         def show_items():
@@ -3868,9 +3983,10 @@ class Ui_LoginWindow(object):
             def insert_entry():
                 try:
                     self.cursor.execute(f"""
-                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id, remarks)
+                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id, remarks, return_date)
                                     VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
-                                     '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}')
+                                     '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
+                                     '{date_return.text()}')
                                     """)
                     self.conn.commit()
                     # Clear the Widgets
@@ -3879,6 +3995,7 @@ class Ui_LoginWindow(object):
                     remarks_input.clear()
                     QtWidgets.QMessageBox.information(self.qc_widget, "SUCCESS", "Successfully Inserted Data")
                     lot_input.setFocus()
+                    show_table()
 
                 except psycopg2.Error as e:
                     print(e)
@@ -3907,8 +4024,9 @@ class Ui_LoginWindow(object):
             def show_table():
 
                 self.cursor.execute("""
-                SELECT lot_number, quantity, product_code, customer, formula_id, remarks  
+                SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks  
                 FROM returns
+                ORDER BY return_date DESC
                 
                 """)
                 result = self.cursor.fetchall()
@@ -3920,9 +4038,10 @@ class Ui_LoginWindow(object):
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         returns_table.setItem(i, j, item)
 
-
-
-
+            def clear_entry():
+                lot_input.clear()
+                quantity_input.clear()
+                remarks_input.clear()
 
 
             self.qc_widget.deleteLater()
@@ -3994,7 +4113,7 @@ class Ui_LoginWindow(object):
             entry_widget.show()
 
             form_layout = QFormLayout(entry_widget)
-            form_layout.setVerticalSpacing(30)
+            form_layout.setVerticalSpacing(23)
 
             # Set Font
             font = QtGui.QFont("Arial", 9)
@@ -4059,25 +4178,40 @@ class Ui_LoginWindow(object):
             remarks_input.setFont(font)
             remarks_input.setFixedHeight(160)
 
+            date_label = QLabel()
+            date_label.setText("RETURN DATE")
+            date_label.setFont(font)
+            date_label.setAlignment(Qt.AlignRight)
+
+            date_return = QDateEdit()
+            date_return.setStyleSheet("background-color: rgb(255, 255, 0)")
+            date_return.setFont(font)
+            date_return.setFixedHeight(25)
+            today = date.today()
+            date_return.setDate(today)
+            date_return.setDisplayFormat("MM-dd-yyyy")
+
             form_layout.addRow(lot_label,lot_input)
             form_layout.addRow(quantity_label, quantity_input)
             form_layout.addRow(product_code_label, product_code_input)
             form_layout.addRow(formulaID_label, formulaID_input)
             form_layout.addRow(customer_label, customer_input)
+            form_layout.addRow(date_label, date_return)
             form_layout.addRow(remarks_label, remarks_input)
-
 
             # Create Return Table
 
             returns_table = QTableWidget(self.body_widget)
             returns_table.setGeometry(340, 0, 651, 450)
-            returns_table.setColumnCount(6)
+            returns_table.setColumnCount(7)
             returns_table.setRowCount(10)
             returns_table.verticalHeader().setVisible(False)
-            returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID", "Remarks"])
+            returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                                                     "Return Date", "Remarks"])
             returns_table.setColumnWidth(0, 120)
             returns_table.setColumnWidth(2, 120)
             returns_table.setColumnWidth(3, 200)
+            returns_table.setColumnWidth(4, 115)
             returns_table.setColumnWidth(5, 200)
             returns_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
             returns_table.horizontalHeader().setStyleSheet("""
@@ -4100,11 +4234,13 @@ class Ui_LoginWindow(object):
             save_button.show()
 
             clear_button = QPushButton(self.body_widget)
-            clear_button.setGeometry(50, 475, 60, 25)
-            clear_button.setText("Save")
-            save_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
-            save_button.setCursor(Qt.PointingHandCursor)
-            save_button.show()
+            clear_button.setGeometry(150, 475, 60, 25)
+            clear_button.setText("Clear")
+            clear_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
+            clear_button.setCursor(Qt.PointingHandCursor)
+            clear_button.clicked.connect(clear_entry)
+
+            clear_button.show()
 
             # Get the Lot List
             self.cursor.execute("""
@@ -4115,8 +4251,6 @@ class Ui_LoginWindow(object):
             lot_list = []
             for i in result:
                 lot_list.append(i[0])
-
-
 
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -4271,6 +4405,7 @@ class Ui_LoginWindow(object):
         search_btn.setGeometry(925, 5, 60, 25)
         search_btn.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
         search_btn.setText("Search")
+        search_btn.clicked.connect(lotNumber_search)
         search_btn.show()
 
         # Bottom Widgets
@@ -4385,7 +4520,6 @@ class Ui_LoginWindow(object):
         qc_type_selected = QLabel(self.qc_widget)
         qc_type_selected.setGeometry(721, 515, 120, 25)
         qc_type_selected.setStyleSheet("background-color: rgb(239, 243, 254)")
-        qc_type_selected.setText("test")
         qc_type_selected.show()
 
         # Adding the widgets to the Layout
