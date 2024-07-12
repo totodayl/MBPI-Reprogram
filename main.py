@@ -4230,6 +4230,33 @@ class Ui_LoginWindow(object):
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         returns_table.setItem(i, j, item)
 
+            def search_table():
+
+                returns_table.clear()
+                returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                                                     "Return Date", "Remarks"])
+
+
+                self.cursor.execute(f"""
+                
+                SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks  
+                FROM returns
+                WHERE lot_number ILIKE '%{search_bar.text()}%'
+                
+                
+                """)
+                result = self.cursor.fetchall()
+
+                for i in range(len(result)):
+                    for j in range(len(result[i])):
+                        item = QTableWidgetItem(str(result[i][j]))
+                        item.setTextAlignment(Qt.AlignCenter)
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        returns_table.setItem(i, j, item)
+
+                returns_table.show()
+
+
             def clear_entry():
                 lot_input.clear()
                 quantity_input.clear()
@@ -4356,6 +4383,7 @@ class Ui_LoginWindow(object):
             search_btn.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
             search_btn.setText("Search")
             search_btn.setShortcut("Ctrl+Return")
+            search_btn.clicked.connect(search_table)
             search_btn.show()
 
             self.body_widget.setStyleSheet("border: none")
