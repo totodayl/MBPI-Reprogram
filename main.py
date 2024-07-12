@@ -2588,7 +2588,7 @@ class Ui_LoginWindow(object):
             column_names = ['id', 'lot_number', 'product_code', 'customer', 'status', 'remarks', 'action',
                             'original_lot', 'evaluated_by', 'evaluated_on', 'encoded_on', 'updated_by',
                             'updated_on', 'time_endorsed', 'edited', 'qc_type', 'formula_id']
-            print(column_names)
+
             try:
                 df.to_excel(excel_writer=r'\\mbpi-server-01\IT\QC Data Imports\blank.xlsx', index=False,
                             header=column_names)
@@ -2715,7 +2715,7 @@ class Ui_LoginWindow(object):
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             old_lot_list.append(str(i) + string_code)
-                        print(old_lot_list)
+
 
                 except Exception as e:
                     print(e)
@@ -2824,11 +2824,10 @@ class Ui_LoginWindow(object):
                                 WHERE lot_number = '{old_lot_list[i]}'
 
                                 """)
-                                print(old_lot_list[i])
+
                                 result = self.cursor.fetchall()
                                 orig_lot = result[0][0]
-                                print(orig_lot, " ORIG")
-                                print(formulaID_input.text(), "formula id ")
+
                                 self.cursor.execute(f"""
                                                         INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                                         product_code, qc_type, formula_id)
@@ -3228,6 +3227,7 @@ class Ui_LoginWindow(object):
             user_input = QLineEdit(self.body_widget)
             user_input.setGeometry(194, 650, 221, 25)
             user_input.setEnabled(False)
+            user_input.setText(platform.node())
             user_input.setStyleSheet("border: 1px solid rgb(177, 206, 237); background-color: rgb(192, 192, 192); ")
             user_input.show()
 
@@ -3533,6 +3533,8 @@ class Ui_LoginWindow(object):
 
             def get_data():
 
+
+                # This is for the Other Graphs that cant make it in the First Six
                 def next_graph():
                     self.graph4.clear()
                     self.graph4.set_title("Highest AVG QC days")
@@ -3541,7 +3543,7 @@ class Ui_LoginWindow(object):
 
                 date1 = dateFrom_widget.currentIndex()+1
                 date2 = dateTo_widget.currentIndex()+1
-                print("date1 index:", date1)
+
                 # Get the last day of Month
                 ph_holiday = hd.country_holidays('PH')
                 self.cursor.execute(f"""
@@ -3640,14 +3642,6 @@ class Ui_LoginWindow(object):
                 dateRangeLabel.setFont(font)
                 dateRangeLabel.setStyleSheet("color: rgb(0, 109, 189); border: none;")
                 dateRangeLabel.show()
-
-                # Show Next graph button
-                next_btn = QPushButton(self.body_widget)
-                next_btn.setGeometry(200, 670, 10, 10)
-                next_btn.setCursor(Qt.PointingHandCursor)
-                next_btn.setStyleSheet("background-color: black")
-                next_btn.clicked.connect(next_graph)
-                next_btn.show()
 
                 self.graph1 = self.figure.add_subplot(231)
                 self.graph2 = self.figure.add_subplot(232)
@@ -3756,7 +3750,7 @@ class Ui_LoginWindow(object):
 
                 total_changeProductCodes = dict(total_changeProductCodes)
 
-                print(total_changeProductCodes)
+
 
                 # Graph2
                 x = []
@@ -3810,27 +3804,29 @@ class Ui_LoginWindow(object):
 
                 # Visual 4
 
-                self.cursor.execute("""
-                SELECT product_code, COUNT(product_code)
+                self.cursor.execute(f"""
+                SELECT product_code, COUNT(*) 
                 FROM returns
-                GROUP BY product_code
+				WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY product_code				
+                LIMIT 5
                 """)
 
                 result = self.cursor.fetchall()
 
                 productCodeReturns = {}
-                print(result)
+
 
                 for i, j in result:
                     productCodeReturns[i] = j
 
                 # Getting the Percentage of Product Code returns for each Product Codes
-                print(total_productCodes)
+
                 for key in productCodeReturns.keys():
                     print(key, productCodeReturns[key])
                     productCodeReturns[key] = (productCodeReturns[key] / total_productCodes[key]) * 100
 
-                print(productCodeReturns)
+
                 x = []
                 y = []
                 # Getting the x and y from the Returns dictionary
@@ -3838,14 +3834,43 @@ class Ui_LoginWindow(object):
                     x.append(key)
                     y.append(value)
 
-
                 # Plot the Visual 4
 
                 self.graph4.bar(x, y)
-                self.graph4.set_yticks(np.arange(0,110,10))
-                self.graph4.set_xticklabels(x, rotation = 30)
-                self.graph4.set_title("Highest Return Percentage", fontsize = 15)
+                self.graph4.set_yticks(np.arange(0, 110, 10))
+                self.graph4.set_xticklabels(x, rotation=30)
+                self.graph4.set_title("Highest Return Percentage", fontsize=15)
                 self.graph4.set_position([0.125, 0.08, 0.228, 0.35])
+
+
+                # Getting the data For Visualization 5
+
+                # Getting the Data for how many times an operator have a Returned product
+                self.cursor.execute(f"""
+                                    SELECT operator, COUNT(operator)
+                                    FROM
+                                    (SELECT t1.lot_number, t2.operator, t2.supervisor
+                                    FROM returns t1
+                                    JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                                    WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                                    GROUP BY operator
+                
+                """)
+                result = self.cursor.fetchall()
+                x = []
+                y = []
+                for i, j in result:
+                    x.append(i)
+                    y.append(j)
+
+
+                self.graph5.bar(x, y)
+                self.graph5.set_yticks(np.arange(0, 100, 10))
+                self.graph5.set_xticklabels(x, rotation = 30)
+                self.graph5.set_title("Highest AVG Returns By Operator", fontsize = 15)
+                self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
+
+
 
 
             self.qc_widget.deleteLater()
@@ -3977,16 +4002,16 @@ class Ui_LoginWindow(object):
             time_endorsed_val.setText(str(time_endorsed))
             qc_type_selected.setText(qc_type)
 
-
         def qc_returns():
 
             def insert_entry():
                 try:
                     self.cursor.execute(f"""
-                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id, remarks, return_date)
+                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
+                                     remarks, return_date, origin_lot)
                                     VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
                                      '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
-                                     '{date_return.text()}')
+                                     '{date_return.text()}', '{origin_lot.text()}')
                                     """)
                     self.conn.commit()
                     # Clear the Widgets
@@ -4004,17 +4029,20 @@ class Ui_LoginWindow(object):
             def autofill():
                 if lot_input.text() in lot_list:
                     self.cursor.execute(f"""
-                    SELECT t1.lot_number, t1.product_code, t1.formula_id, t2.customer
+                    SELECT t2.lot_number as origin_lot, t1.lot_number, t1.product_code, t1.formula_id, t2.customer
                     FROM quality_control_tbl2 t1
-                    JOIN quality_control t2 ON t1.id = t2.id
+                    JOIN quality_control t2 ON t1.id + 1 = t2.id
                     WHERE t1.lot_number = '{lot_input.text()}'
                     
                     """)
                     result = self.cursor.fetchall()[0]
                     # Set the Text
-                    product_code_input.setText(result[1])
-                    formulaID_input.setText(str(result[2]))
-                    customer_input.setText(result[3])
+                    origin_lot.setText(result[0])
+                    product_code_input.setText(result[2])
+                    formulaID_input.setText(str(result[3]))
+                    customer_input.setText(result[4])
+
+
                 else:
 
                     product_code_input.clear()
@@ -4113,7 +4141,7 @@ class Ui_LoginWindow(object):
             entry_widget.show()
 
             form_layout = QFormLayout(entry_widget)
-            form_layout.setVerticalSpacing(23)
+            form_layout.setVerticalSpacing(20)
 
             # Set Font
             font = QtGui.QFont("Arial", 9)
@@ -4143,7 +4171,7 @@ class Ui_LoginWindow(object):
             product_code_label.setFont(font)
 
             product_code_input = QLineEdit()
-            product_code_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            product_code_input.setStyleSheet("background-color: rgb(240, 240, 240)")
             product_code_input.setAlignment(Qt.AlignCenter)
             product_code_input.setFixedHeight(25)
             product_code_input.setEnabled(False)
@@ -4153,7 +4181,7 @@ class Ui_LoginWindow(object):
             formulaID_label.setFont(font)
 
             formulaID_input = QLineEdit()
-            formulaID_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            formulaID_input.setStyleSheet("background-color: rgb(240, 240, 240)")
             formulaID_input.setAlignment(Qt.AlignCenter)
             formulaID_input.setFixedHeight(25)
             formulaID_input.setEnabled(False)
@@ -4163,7 +4191,7 @@ class Ui_LoginWindow(object):
             customer_label.setFont(font)
 
             customer_input = QLineEdit()
-            customer_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            customer_input.setStyleSheet("background-color: rgb(240, 240, 240)")
             customer_input.setFixedHeight(25)
             customer_input.setEnabled(False)
             customer_input.setAlignment(Qt.AlignCenter)
@@ -4191,11 +4219,23 @@ class Ui_LoginWindow(object):
             date_return.setDate(today)
             date_return.setDisplayFormat("MM-dd-yyyy")
 
+            origin_lot_label = QLabel()
+            origin_lot_label.setText("ORIGIN LOT")
+            origin_lot_label.setFont(font)
+            origin_lot_label.setAlignment(Qt.AlignRight)
+
+            origin_lot = QLineEdit()
+            origin_lot.setStyleSheet("background-color: rgb(240, 240, 240)")
+            origin_lot.setFixedHeight(25)
+            origin_lot.setEnabled(False)
+            origin_lot.setAlignment(Qt.AlignCenter)
+
             form_layout.addRow(lot_label,lot_input)
             form_layout.addRow(quantity_label, quantity_input)
             form_layout.addRow(product_code_label, product_code_input)
             form_layout.addRow(formulaID_label, formulaID_input)
             form_layout.addRow(customer_label, customer_input)
+            form_layout.addRow(origin_lot_label, origin_lot)
             form_layout.addRow(date_label, date_return)
             form_layout.addRow(remarks_label, remarks_input)
 
