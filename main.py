@@ -2676,7 +2676,6 @@ class Ui_LoginWindow(object):
                 self.qc_table.itemSelectionChanged.connect(show_items)
                 self.qc_table.show()
 
-
         def evaluation_entry():
 
             # Getting every single Lot Number in a Multiple Lot Number
@@ -2923,6 +2922,7 @@ class Ui_LoginWindow(object):
             self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
             self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -2932,6 +2932,7 @@ class Ui_LoginWindow(object):
             self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189);")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
             self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -2941,6 +2942,7 @@ class Ui_LoginWindow(object):
             self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
             self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -2950,6 +2952,7 @@ class Ui_LoginWindow(object):
             self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.dashboardBtn.clicked.connect(show_dashboards)
             self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.body_widget = QtWidgets.QWidget(self.qc_widget)
@@ -2965,6 +2968,7 @@ class Ui_LoginWindow(object):
             self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
             self.qc_returns.setFont(QtGui.QFont("Arial", 11))
             self.qc_returns.clicked.connect(qc_returns)
+            self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
 
             label1 = QtWidgets.QLabel(self.body_widget)
@@ -3286,6 +3290,7 @@ class Ui_LoginWindow(object):
             self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
             self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3295,6 +3300,7 @@ class Ui_LoginWindow(object):
             self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
             self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3304,6 +3310,7 @@ class Ui_LoginWindow(object):
             self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189);")
             self.qc_dataBtn.clicked.connect(show_qc_data)
             self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3313,6 +3320,7 @@ class Ui_LoginWindow(object):
             self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.dashboardBtn.clicked.connect(show_dashboards)
             self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3322,6 +3330,7 @@ class Ui_LoginWindow(object):
             self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_returns.setFont(QtGui.QFont("Arial", 11))
             self.qc_returns.clicked.connect(qc_returns)
+            self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
 
             self.body_widget = QtWidgets.QWidget(self.qc_widget)
@@ -3533,12 +3542,149 @@ class Ui_LoginWindow(object):
 
             def get_data():
 
-
                 # This is for the Other Graphs that cant make it in the First Six
-                def next_graph():
-                    self.graph4.clear()
-                    self.graph4.set_title("Highest AVG QC days")
-                    self.canvas.draw()
+                def change_graph():
+                    if graph5_selections.currentText() == 'Supervisor':
+                        self.cursor.execute(f"""
+                                                SELECT supervisor, COUNT(supervisor)
+                                                FROM
+                                                (SELECT t1.lot_number, t2.operator, t2.supervisor
+                                                FROM returns t1
+                                                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                                                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                                                GROUP BY supervisor
+
+                                                                                """)
+                        result = self.cursor.fetchall()
+                        x = []
+                        y = []
+                        for i, j in result:
+                            x.append(i)
+                            y.append(j)
+                        self.graph5.clear()
+                        self.graph5.bar(x, y)
+                        self.graph5.set_yticks(np.arange(0, 110, 10))
+                        self.graph5.set_ylim(0,110)
+                        self.graph5.set_xticklabels(x, rotation=30)
+                        self.graph5.set_title("Highest AVG Returns By Supervisor", fontsize=15)
+                        self.canvas.draw()
+                    elif graph5_selections.currentText() == 'Operator':
+
+                        self.cursor.execute(f"""
+                                            SELECT operator, COUNT(operator)
+                                            FROM
+                                            (SELECT t1.lot_number, t2.operator, t2.supervisor
+                                            FROM returns t1
+                                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                                            WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                                            GROUP BY operator
+
+                                        """)
+                        result = self.cursor.fetchall()
+                        x = []
+                        y = []
+                        for i, j in result:
+                            x.append(i)
+                            y.append(j)
+
+                        self.graph5.clear()
+                        self.graph5.bar(x, y)
+                        self.graph5.set_yticks(np.arange(0, 110, 10))
+                        self.graph5.set_ylim(0, 110)
+                        self.graph5.set_xticklabels(x, rotation=30)
+                        self.graph5.set_title("Highest AVG Returns By Operator", fontsize=15)
+                        self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
+
+                        self.canvas.draw()
+
+                    elif graph5_selections.currentText() == 'QC Analyst':
+
+                        self.cursor.execute(f"""
+                        SELECT evaluated_by, COUNT(evaluated_by)
+                        FROM (SELECT t1.*, t2.evaluated_by
+                        FROM returns t1
+                        JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
+                        WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                        GROUP BY evaluated_by
+
+                        """)
+                        result = self.cursor.fetchall()
+
+
+                        x = []
+                        y = []
+                        for i, j in result:
+                            x.append(i)
+                            y.append(j)
+
+                        self.graph5.clear()
+                        self.graph5.bar(x, y)
+                        self.graph5.set_yticks(np.arange(0, 110, 10))
+                        self.graph5.set_ylim(0, 110)
+                        self.graph5.set_xticklabels(x, rotation=30)
+                        self.graph5.set_title("Highest Returns By QC Analyst", fontsize=15)
+                        self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
+
+
+                        self.canvas.draw()
+
+                    elif graph5_selections.currentText() == 'Extruder':
+
+                        self.cursor.execute(f"""
+                        SELECT machine, COUNT(machine)
+                        FROM
+                        (SELECT t1.lot_number, t2.machine
+                        FROM returns t1
+                        JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                        WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                        GROUP BY machine
+                        """)
+
+                        result = self.cursor.fetchall()
+
+                        x = []
+                        y = []
+                        for i, j in result:
+                            x.append(i)
+                            y.append(j)
+
+                        self.graph5.clear()
+                        self.graph5.bar(x, y)
+                        self.graph5.set_yticks(np.arange(0, 110, 10))
+                        self.graph5.set_ylim(0, 110)
+                        self.graph5.set_xticklabels(x, rotation=30)
+                        self.graph5.set_title("Highest Returns By Extruder", fontsize=15)
+                        self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
+
+                        self.canvas.draw()
+
+                    elif graph5_selections.currentText() == 'Total Kg':
+
+                        self.cursor.execute(f"""
+                        SELECT product_code, SUM(quantity) as total_kg
+                        FROM returns
+                        WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                        GROUP BY product_code
+                        
+                        ORDER BY total_kg
+                        """)
+
+                        result = self.cursor.fetchall()
+
+                        x = []
+                        y = []
+                        for i, j in result:
+                            x.append(i)
+                            y.append(j)
+
+                        self.graph5.clear()
+                        self.graph5.bar(x, y)
+                        self.graph5.set_xticklabels(x, rotation=30)
+                        self.graph5.set_title("Total Returns(kg) By Product Code", fontsize=15)
+                        self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
+
+                        self.canvas.draw()
+
 
 
                 date1 = dateFrom_widget.currentIndex()+1
@@ -3663,8 +3809,9 @@ class Ui_LoginWindow(object):
                 y = y[:5]
                 self.graph1.bar(x, y)
                 self.graph1.set_xticklabels(x, rotation=30)
+                self.graph1.set_ylim(0, 110)
                 self.graph1.set_yticks(np.arange(0, 110, 10))
-                self.graph1.set_ylim(0, 100)
+
                 self.graph1.set_title("Highest AVG QC days", fontsize=15)
 
                 # Getting the Pass to Fail And Fail TO pass QC
@@ -3791,7 +3938,7 @@ class Ui_LoginWindow(object):
                 self.graph2.bar(x_axis, y1_axis)
                 self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
                 self.graph2.set_yticks(np.arange(0, 110, 10))
-                self.graph2.set_ylim(0, 100)
+                self.graph2.set_ylim(0, 110)
                 self.graph2.set_xticklabels(x, rotation=30)
                 self.graph2.set_title("Most Change", fontsize = 15)
                 self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
@@ -3799,8 +3946,6 @@ class Ui_LoginWindow(object):
                 # Getting the Percentage of Each Product Codes Failed in First Run
                 for key, value in failed_firstrun.items():
                     failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
-
-
 
                 # Visual 4
 
@@ -3823,9 +3968,7 @@ class Ui_LoginWindow(object):
                 # Getting the Percentage of Product Code returns for each Product Codes
 
                 for key in productCodeReturns.keys():
-                    print(key, productCodeReturns[key])
                     productCodeReturns[key] = (productCodeReturns[key] / total_productCodes[key]) * 100
-
 
                 x = []
                 y = []
@@ -3838,6 +3981,7 @@ class Ui_LoginWindow(object):
 
                 self.graph4.bar(x, y)
                 self.graph4.set_yticks(np.arange(0, 110, 10))
+                self.graph4.set_ylim(0,110)
                 self.graph4.set_xticklabels(x, rotation=30)
                 self.graph4.set_title("Highest Return Percentage", fontsize=15)
                 self.graph4.set_position([0.125, 0.08, 0.228, 0.35])
@@ -3863,13 +4007,27 @@ class Ui_LoginWindow(object):
                     x.append(i)
                     y.append(j)
 
+                # Set Page for Graph 5
+                graph5_page = 1
+
 
                 self.graph5.bar(x, y)
-                self.graph5.set_yticks(np.arange(0, 100, 10))
+                self.graph5.set_yticks(np.arange(0, 110, 10))
+                self.graph5.set_ylim(0, 110)
                 self.graph5.set_xticklabels(x, rotation = 30)
                 self.graph5.set_title("Highest AVG Returns By Operator", fontsize = 15)
                 self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
 
+                graph5_selections = QComboBox(self.body_widget)
+                graph5_selections.setGeometry(650, 682, 100, 20)
+
+                graph5_selections.addItem('Operator')
+                graph5_selections.addItem('Supervisor')
+                graph5_selections.addItem('Total Kg')
+                graph5_selections.addItem("QC Analyst")
+                graph5_selections.addItem('Extruder')
+                graph5_selections.currentIndexChanged.connect(change_graph)
+                graph5_selections.show()
 
 
 
@@ -3892,6 +4050,7 @@ class Ui_LoginWindow(object):
             self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
             self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3901,6 +4060,7 @@ class Ui_LoginWindow(object):
             self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
             self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3910,6 +4070,7 @@ class Ui_LoginWindow(object):
             self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
             self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3919,6 +4080,7 @@ class Ui_LoginWindow(object):
             self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189)")
             self.dashboardBtn.clicked.connect(show_dashboards)
             self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -3928,6 +4090,7 @@ class Ui_LoginWindow(object):
             self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_returns.setFont(QtGui.QFont("Arial", 11))
             self.qc_returns.clicked.connect(qc_returns)
+            self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
 
             self.body_widget = QtWidgets.QWidget(self.qc_widget)
@@ -4023,6 +4186,7 @@ class Ui_LoginWindow(object):
                     show_table()
 
                 except psycopg2.Error as e:
+                    self.conn.rollback()
                     print(e)
 
 
@@ -4090,6 +4254,7 @@ class Ui_LoginWindow(object):
             self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
             self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
+            self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4099,6 +4264,7 @@ class Ui_LoginWindow(object):
             self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
             self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4108,6 +4274,7 @@ class Ui_LoginWindow(object):
             self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
             self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4117,12 +4284,13 @@ class Ui_LoginWindow(object):
             self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
             self.dashboardBtn.clicked.connect(show_dashboards)
             self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.body_widget = QtWidgets.QWidget(self.qc_widget)
             self.body_widget.setGeometry(0, 30, 991, 721)
             self.body_widget.setStyleSheet(
-                "background-color: rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
+                "background-color:rgb(239, 243, 254); border-top : 1px solid rgb(160, 160, 160);")
             self.body_widget.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4132,11 +4300,67 @@ class Ui_LoginWindow(object):
             self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189)")
             self.qc_returns.setFont(QtGui.QFont("Arial", 11))
             self.qc_returns.clicked.connect(qc_returns)
+            self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
 
-            entry_widget = QtWidgets.QWidget(self.body_widget)
+            header_widget = QWidget(self.body_widget)
+            header_widget.setGeometry(0, 0, 991, 60)
+            header_widget.setStyleSheet('border: 1px solid black; background-color:rgb(239, 243, 254)')
+            header_widget.show()
+
+            edited_checkbox = QCheckBox(header_widget)
+            edited_checkbox.move(355, 5)
+            edited_checkbox.setStyleSheet("border: none;")
+            edited_checkbox.show()
+
+            edited_label = QLabel(header_widget)
+            edited_label.setGeometry(370, 4, 90, 15)
+            edited_label.setStyleSheet("border: none;")
+            edited_label.setText("EDITED RECORDS")
+            edited_label.setFont(QtGui.QFont("Arial", 8))
+            edited_label.show()
+
+            masterbatch_checkbox = QCheckBox(header_widget)
+            masterbatch_checkbox.move(470, 5)
+            masterbatch_checkbox.setStyleSheet('border:none')
+            masterbatch_checkbox.show()
+
+            masterbatch_label = QLabel(header_widget)
+            masterbatch_label.setGeometry(485, 4, 90, 15)
+            masterbatch_label.setStyleSheet("border: none;")
+            masterbatch_label.setText("MASTERBATCH")
+            masterbatch_label.setFont(QtGui.QFont("Arial", 8))
+            masterbatch_label.show()
+
+            dryColor_checkbox = QCheckBox(header_widget)
+            dryColor_checkbox.move(580, 5)
+            dryColor_checkbox.setStyleSheet('border:none')
+            dryColor_checkbox.show()
+
+            drycolor_label = QLabel(header_widget)
+            drycolor_label.setGeometry(595, 4, 90, 15)
+            drycolor_label.setStyleSheet("border: none;")
+            drycolor_label.setText("DRYCOLOR")
+            drycolor_label.setFont(QtGui.QFont("Arial", 8))
+            drycolor_label.show()
+
+            search_bar = QtWidgets.QLineEdit(header_widget)
+            search_bar.setGeometry(770, 5, 150, 25)
+            search_bar.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);")
+            search_bar.setFont(QtGui.QFont("Arial", 9))
+            search_bar.setPlaceholderText("Lot Number")
+            search_bar.show()
+
+            search_btn = QtWidgets.QPushButton(header_widget)
+            search_btn.setGeometry(925, 5, 60, 25)
+            search_btn.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
+            search_btn.setText("Search")
+            search_btn.setShortcut("Ctrl+Return")
+            search_btn.show()
+
             self.body_widget.setStyleSheet("border: none")
-            entry_widget.setGeometry(0, 0, 340, 450)
+            entry_widget = QtWidgets.QWidget(self.body_widget)
+            entry_widget.setGeometry(0, 60, 340, 600)
             entry_widget.setStyleSheet("background-color: rgb(187, 228, 252)")
             entry_widget.show()
 
@@ -4242,7 +4466,7 @@ class Ui_LoginWindow(object):
             # Create Return Table
 
             returns_table = QTableWidget(self.body_widget)
-            returns_table.setGeometry(340, 0, 651, 450)
+            returns_table.setGeometry(340, 60, 651, 600)
             returns_table.setColumnCount(7)
             returns_table.setRowCount(10)
             returns_table.verticalHeader().setVisible(False)
@@ -4266,19 +4490,26 @@ class Ui_LoginWindow(object):
             returns_table.show()
 
             save_button = QPushButton(self.body_widget)
-            save_button.setGeometry(50, 475, 60, 25)
+            save_button.setGeometry(50, 680, 60, 25)
             save_button.setText("Save")
             save_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
             save_button.setCursor(Qt.PointingHandCursor)
             save_button.clicked.connect(insert_entry)
+            save_button.setShortcut("Return")
             save_button.show()
 
             clear_button = QPushButton(self.body_widget)
-            clear_button.setGeometry(150, 475, 60, 25)
+            clear_button.setGeometry(150, 680, 60, 25)
             clear_button.setText("Clear")
             clear_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
             clear_button.setCursor(Qt.PointingHandCursor)
             clear_button.clicked.connect(clear_entry)
+
+            edit_button = QPushButton(self.body_widget)
+            edit_button.setGeometry(250, 680, 60, 25)
+            edit_button.setText("Edit")
+            edit_button.setStyleSheet("background-color: rgb(150, 147, 147);")
+            edit_button.show()
 
             clear_button.show()
 
@@ -4330,6 +4561,7 @@ class Ui_LoginWindow(object):
         self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
         self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
         self.qc_TableBtn.clicked.connect(self.quality_control)
+        self.qc_TableBtn.setShortcut("F1")
 
         # Change the Row height of the table
         for i in range(self.qc_table.rowCount()):
@@ -4367,6 +4599,7 @@ class Ui_LoginWindow(object):
         self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);  text-align: top;")
         self.qc_addEntryBtn.clicked.connect(evaluation_entry)
         self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_addEntryBtn.setShortcut("F2")
         self.qc_addEntryBtn.show()
 
         self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4376,6 +4609,7 @@ class Ui_LoginWindow(object):
         self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
         self.qc_dataBtn.clicked.connect(show_qc_data)
         self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_dataBtn.setShortcut("F3")
         self.qc_dataBtn.show()
 
         self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4385,6 +4619,7 @@ class Ui_LoginWindow(object):
         self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
         self.dashboardBtn.clicked.connect(show_dashboards)
         self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+        self.dashboardBtn.setShortcut("F4")
         self.dashboardBtn.show()
 
         self.qc_returns  = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4394,6 +4629,7 @@ class Ui_LoginWindow(object):
         self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
         self.qc_returns.setFont(QtGui.QFont("Arial", 11))
         self.qc_returns.clicked.connect(qc_returns)
+        self.qc_returns.setShortcut("F5")
         self.qc_returns.show()
 
         # Top Border Widgets
