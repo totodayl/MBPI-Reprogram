@@ -4168,22 +4168,40 @@ class Ui_LoginWindow(object):
         def qc_returns():
 
             def insert_entry():
+                # Check if the lot number is not entered yet in the Database
+                self.cursor.execute(f"""
+                SELECT * FROM returns
+                WHERE  lot_number = '{lot_input.text()}'
+                
+                """)
+                result = self.cursor.fetchall()
+
                 try:
-                    self.cursor.execute(f"""
-                                    INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
-                                     remarks, return_date, origin_lot)
-                                    VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
-                                     '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
-                                     '{date_return.text()}', '{origin_lot.text()}')
-                                    """)
-                    self.conn.commit()
-                    # Clear the Widgets
-                    lot_input.clear()
-                    quantity_input.clear()
-                    remarks_input.clear()
-                    QtWidgets.QMessageBox.information(self.qc_widget, "SUCCESS", "Successfully Inserted Data")
-                    lot_input.setFocus()
-                    show_table()
+                    if len(result) == 1:
+                        QMessageBox.information(self.body_widget, "Data Exist", "Lot Number already exist.")
+                        lot_input.clear()
+                        quantity_input.clear()
+                        remarks_input.clear()
+                        lot_input.setFocus()
+                        origin_lot.clear()
+                        return
+                    else:
+                        self.cursor.execute(f"""
+                                                            INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
+                                                             remarks, return_date, origin_lot)
+                                                            VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
+                                                             '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
+                                                             '{date_return.text()}', '{origin_lot.text()}')
+                                                            """)
+                        self.conn.commit()
+                        # Clear the Widgets
+                        lot_input.clear()
+                        quantity_input.clear()
+                        remarks_input.clear()
+                        origin_lot.clear()
+                        QtWidgets.QMessageBox.information(self.qc_widget, "SUCCESS", "Successfully Inserted Data")
+                        lot_input.setFocus()
+                        show_table()
 
                 except psycopg2.Error as e:
                     self.conn.rollback()
@@ -4261,7 +4279,6 @@ class Ui_LoginWindow(object):
                 lot_input.clear()
                 quantity_input.clear()
                 remarks_input.clear()
-
 
             self.qc_widget.deleteLater()
 
