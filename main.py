@@ -2748,8 +2748,10 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
+                        # For saving Multiple Lot Number in quality_control_tbl2
 
-
+                        self.cursor.execute("SELECT MAX(id) FROM quality_control")
+                        qc_ID = self.cursor.fetchone()[0]
 
                         if "-" in lotNumber_input.text():
                             for lot in new_lot_list:
@@ -2805,6 +2807,11 @@ class Ui_LoginWindow(object):
 
                         self.conn.commit()
 
+                        # For saving Multiple Lot Number in quality_control_tbl2
+
+                        self.cursor.execute("SELECT MAX(id) FROM quality_control")
+                        qc_ID = self.cursor.fetchone()[0]
+
                         # Save To quality_control_tbl2 DB
 
                         if "-" in lotNumber_input.text():
@@ -2850,11 +2857,11 @@ class Ui_LoginWindow(object):
 
 
                             self.cursor.execute(f"""
-                                    INSERT INTO quality_control_tbl2(lot_number, evaluation_date, original_lot, status,
+                                    INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                     product_code, qc_type, formula_id)
-                                    VALUES('{lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
+                                    VALUES('{qc_ID}, {lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
-                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
+                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
 
                                                 """)
                             self.conn.commit()
