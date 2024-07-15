@@ -2728,6 +2728,7 @@ class Ui_LoginWindow(object):
                     formulaID_input.clear()
                     evaluatedBy_dropdown.setCurrentIndex(0)
                     result_dropdown.setCurrentIndex(0)
+                    remarks_box.clear()
 
                 try:
                     # For saving Multiple Lot Number in quality_control_tbl2
@@ -3097,7 +3098,7 @@ class Ui_LoginWindow(object):
 
             # ADD customer to dropdown Menu
             self.cursor.execute("""
-            SELECT customer FROM customer;
+            SELECT customers FROM customer;
             
             """)
             result = self.cursor.fetchall()
@@ -3149,6 +3150,7 @@ class Ui_LoginWindow(object):
             time_endorsed_input.setFixedHeight(25)
             time_endorsed_input.setFixedWidth(296)
             time_endorsed_input.setFont(font)
+            time_endorsed_input.setDate(date_now)
             time_endorsed_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
             remarks_label = QLabel(self.body_widget)
@@ -3414,7 +3416,7 @@ class Ui_LoginWindow(object):
             SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
             FROM qc_num_days AS t1
             JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot
-            ORDER BY evaluation_date
+            ORDER BY t1.qc_id DESC
             
             ;
             """)
@@ -4359,6 +4361,8 @@ class Ui_LoginWindow(object):
                 quantity_input.clear()
                 remarks_input.clear()
 
+
+
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -4649,6 +4653,160 @@ class Ui_LoginWindow(object):
             for i in result:
                 lot_list.append(i[0])
 
+        def update_entry():
+            def save_update():
+
+                self.cursor.execute(f"""
+                UPDATE quality_control 
+                SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
+                evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}',
+                remarks = '{remarks_box.toPlainText()}'
+                WHERE lot_number = '{lot_number}'
+                
+                
+                """)
+
+                self.conn.commit()
+                self.update_qc_widget.close()
+                QMessageBox.information(self.qc_widget, "Success", "Update Successful")
+
+            selected = self.qc_table.selectedItems()
+            lot_number = selected[1].text()
+
+            self.cursor.execute(f"""
+            SELECT * FROM quality_control
+            WHERE lot_number = '{lot_number}'
+            
+            """)
+            result = self.cursor.fetchone()
+
+            lot_number = result[1].strip()
+            product_code = result[2].strip()
+            customer = result[3]
+            status = result[4]
+            remarks = result[5].strip()
+            date_evaluated = result[9]
+            formula_id = result[-1]
+
+
+            if selected:
+                self.update_qc_widget = QWidget()
+                self.update_qc_widget.setGeometry(0, 0, 350, 550)
+                self.update_qc_widget.setFixedSize(350, 550)
+                self.update_qc_widget.setWindowModality(Qt.ApplicationModal)
+                self.update_qc_widget.setStyleSheet("background-color: ")
+                self.update_qc_widget.setWindowTitle("Edit Entry")
+
+                widget1 = QWidget(self.update_qc_widget)
+                widget1.setGeometry(0, 0, 350, 500)
+
+                form_layout = QFormLayout(widget1)
+
+                font = QtGui.QFont("Arial", 11)
+
+                lotnumber_label = QLabel()
+                lotnumber_label.setText("Lot Number")
+                lotnumber_label.setFixedHeight(30)
+                lotnumber_label.setFixedWidth(100)
+                lotnumber_label.setFont(font)
+                lotnumber_label.setStyleSheet("background-color: rgb(240, 240, 240)")
+
+                lotnumber_input = QLineEdit()
+                lotnumber_input.setFixedHeight(30)
+                lotnumber_input.setText(lot_number)
+                lotnumber_input.setEnabled(False)
+
+                customer_label = QLabel()
+                customer_label.setText("Customer")
+                customer_label.setFont(font)
+                customer_label.setFixedWidth(100)
+
+                customer_list = QComboBox()
+                customer_list.setFixedHeight(30)
+
+
+                self.cursor.execute("""
+                            SELECT customers FROM customer
+                            ORDER BY customers
+                            """)
+                result = self.cursor.fetchall()
+
+                for i in result:
+                    customer_list.addItem(i[0])
+                customer_list.setCurrentText(customer)
+
+                productCode_label = QLabel()
+                productCode_label.setText("Product Code")
+                productCode_label.setFont(font)
+                productCode_label.setFixedWidth(100)
+
+                productCode_input = QLineEdit()
+                productCode_input.setFixedHeight(30)
+                productCode_input.setText(product_code)
+                productCode_input.setEnabled(False)
+
+                formulaID_label = QLabel()
+                formulaID_label.setText("Formula ID")
+                formulaID_label.setFixedWidth(100)
+                formulaID_label.setFont(font)
+
+                formulaID_input = QLineEdit()
+                formulaID_input.setFixedHeight(30)
+                formulaID_input.setText(str(formula_id))
+
+                date_started_label = QLabel()
+                date_started_label.setText("Date Evaluated")
+                date_started_label.setFont(font)
+
+                date_started = QDateTimeEdit()
+                date_started.setDisplayFormat("MM-dd-yyyy HH:mm")
+                date_started.setFixedHeight(30)
+                date_started.setDate(date_evaluated)
+
+                test_result_label = QLabel()
+                test_result_label.setText("Test Result")
+                test_result_label.setFont(font)
+                test_result_label.setFixedWidth(100)
+
+                test_result_dropdown = QComboBox()
+                test_result_dropdown.addItem("Passed")
+                test_result_dropdown.addItem("Failed")
+                test_result_dropdown.setFixedHeight(30)
+                test_result_dropdown.setCurrentText(status)
+
+                remarks_label = QLabel()
+                remarks_label.setText("Remarks")
+                remarks_label.setFont(font)
+                remarks_label.setFixedWidth(100)
+
+                remarks_box = QTextEdit()
+                remarks_box.setFixedHeight(120)
+                remarks_box.setText(remarks)
+
+                form_layout.addRow(lotnumber_label, lotnumber_input)
+                form_layout.addRow(customer_label, customer_list)
+                form_layout.addRow(productCode_label, productCode_input)
+                form_layout.addRow(formulaID_label, formulaID_input)
+                form_layout.addRow(date_started_label, date_started)
+                form_layout.addRow(test_result_label, test_result_dropdown)
+                form_layout.addRow(remarks_label, remarks_box)
+
+                save_button = QPushButton(self.update_qc_widget)
+                save_button.setGeometry(100, 500, 60, 25)
+                save_button.setText("Save")
+                save_button.clicked.connect(save_update)
+                save_button.show()
+
+                cancel_button = QPushButton(self.update_qc_widget)
+                cancel_button.setGeometry(200, 500, 60, 25)
+                cancel_button.setText("Cancel")
+                cancel_button.show()
+
+                self.update_qc_widget.show()
+
+            else:
+                QMessageBox.information(self.qc_widget, "No Selected", "No Item Selected")
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -4667,7 +4825,7 @@ class Ui_LoginWindow(object):
         self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
         self.qc_table.setGeometry(0, 90, 991, 350)
         self.qc_table.setColumnCount(7)
-        self.qc_table.setRowCount(16)
+        self.qc_table.setRowCount(30)
 
         # Set Column Width
         self.qc_table.setColumnWidth(0, 80)
@@ -5001,12 +5159,14 @@ class Ui_LoginWindow(object):
         update_btn = QtWidgets.QPushButton(self.qc_widget)
         update_btn.setGeometry(650, 703, 60, 25)
         update_btn.setText("UPDATE")
+        update_btn.clicked.connect(update_entry)
         update_btn.show()
 
         delete_btn = QtWidgets.QPushButton(self.qc_widget)
         delete_btn.setGeometry(710, 703, 60, 25)
         delete_btn.setText("DELETE")
         delete_btn.show()
+
 
         self.qc_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.qc_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
