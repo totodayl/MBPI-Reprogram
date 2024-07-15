@@ -4207,7 +4207,6 @@ class Ui_LoginWindow(object):
                     self.conn.rollback()
                     print(e)
 
-
             def autofill():
                 if lot_input.text() in lot_list:
                     self.cursor.execute(f"""
@@ -4273,6 +4272,79 @@ class Ui_LoginWindow(object):
                         returns_table.setItem(i, j, item)
 
                 returns_table.show()
+
+            def filter_data():
+                if masterbatch_checkbox.isChecked() == True and dryColor_checkbox.isChecked() == False:
+                    self.cursor.execute("""
+                    SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks
+                    FROM returns
+                    WHERE RIGHT(lot_number, 2) ~ '^[A-Za-z]';
+                    """)
+                    result = self.cursor.fetchall()
+
+                    if len(result) > 20 :
+                        returns_table.setColumnCount(len(result))
+
+                    returns_table.clear()
+                    returns_table.setHorizontalHeaderLabels(
+                        ["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                         "Return Date", "Remarks"])
+
+                    for i in range(len(result)):
+                        for j in range(len(result[i])):
+                            item = QTableWidgetItem(str(result[i][j]))
+                            item.setTextAlignment(Qt.AlignCenter)
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            returns_table.setItem(i, j, item)
+
+                    returns_table.show()
+                elif masterbatch_checkbox.isChecked() == False and dryColor_checkbox.isChecked() == True:
+                    self.cursor.execute("""
+                                        SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks
+                                        FROM returns
+                                        WHERE RIGHT(lot_number, 2) !~ '^[A-Za-z]';
+                                        """)
+                    result = self.cursor.fetchall()
+
+                    if len(result) > 20:
+                        returns_table.setColumnCount(len(result))
+
+                    returns_table.clear()
+                    returns_table.setHorizontalHeaderLabels(
+                        ["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                         "Return Date", "Remarks"])
+
+                    for i in range(len(result)):
+                        for j in range(len(result[i])):
+                            item = QTableWidgetItem(str(result[i][j]))
+                            item.setTextAlignment(Qt.AlignCenter)
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            returns_table.setItem(i, j, item)
+
+                    returns_table.show()
+                else:
+                    self.cursor.execute("""
+                                        SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks
+                                        FROM returns
+                                        """)
+                    result = self.cursor.fetchall()
+
+                    if len(result) > 20:
+                        returns_table.setColumnCount(len(result))
+
+                    returns_table.clear()
+                    returns_table.setHorizontalHeaderLabels(
+                        ["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                         "Return Date", "Remarks"])
+
+                    for i in range(len(result)):
+                        for j in range(len(result[i])):
+                            item = QTableWidgetItem(str(result[i][j]))
+                            item.setTextAlignment(Qt.AlignCenter)
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            returns_table.setItem(i, j, item)
+
+                    returns_table.show()
 
 
             def clear_entry():
@@ -4367,6 +4439,7 @@ class Ui_LoginWindow(object):
             masterbatch_checkbox = QCheckBox(header_widget)
             masterbatch_checkbox.move(470, 5)
             masterbatch_checkbox.setStyleSheet('border:none')
+            masterbatch_checkbox.stateChanged.connect(filter_data)
             masterbatch_checkbox.show()
 
             masterbatch_label = QLabel(header_widget)
@@ -4379,6 +4452,7 @@ class Ui_LoginWindow(object):
             dryColor_checkbox = QCheckBox(header_widget)
             dryColor_checkbox.move(580, 5)
             dryColor_checkbox.setStyleSheet('border:none')
+            dryColor_checkbox.stateChanged.connect(filter_data)
             dryColor_checkbox.show()
 
             drycolor_label = QLabel(header_widget)
@@ -4513,7 +4587,7 @@ class Ui_LoginWindow(object):
             returns_table = QTableWidget(self.body_widget)
             returns_table.setGeometry(340, 60, 651, 600)
             returns_table.setColumnCount(7)
-            returns_table.setRowCount(10)
+            returns_table.setRowCount(20)
             returns_table.verticalHeader().setVisible(False)
             returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
                                                      "Return Date", "Remarks"])
