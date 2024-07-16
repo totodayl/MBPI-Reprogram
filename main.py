@@ -4246,7 +4246,7 @@ class Ui_LoginWindow(object):
                     self.cursor.execute(f"""
                     SELECT t2.lot_number as origin_lot, t1.lot_number, t1.product_code, t1.formula_id, t2.customer
                     FROM quality_control_tbl2 t1
-                    JOIN quality_control t2 ON t1.id + 1 = t2.id
+                    JOIN quality_control t2 ON t1.id = t2.id
                     WHERE t1.lot_number = '{lot_input.text()}'
                     
                     """)
