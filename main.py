@@ -4714,6 +4714,7 @@ class Ui_LoginWindow(object):
             formula_id = result[-1]
 
 
+
             if selected:
                 self.update_qc_widget = QWidget()
                 self.update_qc_widget.setGeometry(0, 0, 350, 550)
@@ -4786,7 +4787,8 @@ class Ui_LoginWindow(object):
                 date_started = QDateTimeEdit()
                 date_started.setDisplayFormat("MM-dd-yyyy HH:mm")
                 date_started.setFixedHeight(30)
-                date_started.setDate(date_evaluated)
+
+                date_started.setDateTime(date_evaluated)
 
                 test_result_label = QLabel()
                 test_result_label.setText("Test Result")
