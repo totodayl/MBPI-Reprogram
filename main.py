@@ -2739,6 +2739,22 @@ class Ui_LoginWindow(object):
 
 
                     if qcType_dropdown.currentText() == "NEW":
+
+                        self.cursor.execute(f"""
+                        SELECT lot_number 
+                        FROM quality_control
+                        WHERE lot_number = '{lotNumber_input.text()}'
+                        
+                        """)
+                        result = self.cursor.fetchone()
+                        print(result)
+
+                        # This if statement break the cancel the saving if the lot number is already in the Database
+                        if lotNumber_input.text() in result:
+                            QMessageBox.information(self.qc_widget, "Data Exist", "Data is already Entered.")
+                            return
+
+
                         self.cursor.execute(f"""
                                            INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
@@ -3948,8 +3964,6 @@ class Ui_LoginWindow(object):
                         x_axis.append(x[i])
                         y1_axis.append(y1[i])
                         y2_axis.append(y2[i])
-
-                print(x_axis, y1_axis, y2_axis)
 
                 self.graph2.bar(x_axis, y1_axis)
                 self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
