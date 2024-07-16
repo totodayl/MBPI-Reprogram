@@ -2571,6 +2571,7 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
             SELECT * FROM quality_control
             WHERE evaluated_on::DATE BETWEEN '{date_from}' AND '{date_to}'
+            ORDER BY id 
             
             """)
 
@@ -2742,7 +2743,7 @@ class Ui_LoginWindow(object):
                                            INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, formula_id)
-                                           VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customer_dropdown.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                            '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
@@ -2759,8 +2760,8 @@ class Ui_LoginWindow(object):
                                 self.cursor.execute(f"""
                                         INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
                                          status, product_code, qc_type, formula_id)
-                                        VALUES('{qc_ID}','{lot}', '{date_started_input.text()}', '{lot}',
-                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', 
+                                        VALUES('{qc_ID}','{lot.strip()}', '{date_started_input.text()}', '{lot.strip()}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', 
                                         '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
 
                                                     """)
@@ -2771,8 +2772,8 @@ class Ui_LoginWindow(object):
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
                                     product_code, qc_type, formula_id)
-                                    VALUES('{qc_ID}', '{lotNumber_input.text()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}', '{qcType_dropdown.currentText()}', 
+                                    VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', '{qcType_dropdown.currentText()}', 
                                     '{formulaID_input.text()}')    """)
                             self.conn.commit()
                             clear_entries()
@@ -2793,13 +2794,14 @@ class Ui_LoginWindow(object):
                         except:
                             orig_lot = correction_input.text().strip()
 
+
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on, formula_id)
-                                           VALUES('{lotNumber_input.text()}', '{productCode_dropdown.currentText()}', '{customer_dropdown.currentText()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customer_dropdown.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
-                                           '{orig_lot}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                           '{orig_lot.strip()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
                                           '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           '{formulaID_input.text()}')
@@ -2822,7 +2824,7 @@ class Ui_LoginWindow(object):
                                 QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
                                                         "ERROR",
                                                         "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
-                                return 0
+                                return
 
                             for i in range(len(old_lot_list)):
                                 print("Run " + str(i))
@@ -2838,8 +2840,8 @@ class Ui_LoginWindow(object):
                                 self.cursor.execute(f"""
                                                         INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                                         product_code, qc_type, formula_id)
-                                                        VALUES({qc_ID}, '{new_lot_list[i]}', '{date_started_input.text()}', '{orig_lot}',
-                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
+                                                        VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
                                                          '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
 
                                                         """)
@@ -2853,17 +2855,19 @@ class Ui_LoginWindow(object):
                                                             WHERE lot_number = '{correction_input.text()}'
 
                                                             """)
+
                             result = self.cursor.fetchall()
+                            print(result)
                             orig_lot = result[0][0]
 
+                            print(qc_ID, lotNumber_input.text())
 
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                     product_code, qc_type, formula_id)
-                                    VALUES('{qc_ID}, {lotNumber_input.text()}', '{date_started_input.text()}', '{orig_lot}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText()}',
+                                    VALUES('{qc_ID}, {lotNumber_input.text().strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
-
                                                 """)
                             self.conn.commit()
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success",
@@ -3906,6 +3910,7 @@ class Ui_LoginWindow(object):
 
                 total_changeProductCodes = dict(total_changeProductCodes)
 
+                print(total_changeProductCodes)
 
 
                 # Graph2
@@ -3944,11 +3949,13 @@ class Ui_LoginWindow(object):
                         y1_axis.append(y1[i])
                         y2_axis.append(y2[i])
 
+                print(x_axis, y1_axis, y2_axis)
+
                 self.graph2.bar(x_axis, y1_axis)
                 self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
                 self.graph2.set_yticks(np.arange(0, 110, 10))
                 self.graph2.set_ylim(0, 110)
-                self.graph2.set_xticklabels(x, rotation=30)
+                self.graph2.set_xticklabels(x_axis, rotation=30)
                 self.graph2.set_title("Most Change", fontsize = 15)
                 self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
 
@@ -4144,35 +4151,39 @@ class Ui_LoginWindow(object):
             dateTo_widget.show()
 
         def show_items():
-            # Querying the selected item in the database
-            id = self.qc_table.selectedItems()[0].text()
-            self.cursor.execute(f"""
-            SELECT * FROM quality_control
-            WHERE id = '{id}'
-            
-            """)
-            result = self.cursor.fetchall()[0]
+            try:
+                # Querying the selected item in the database
+                id = self.qc_table.selectedItems()[0].text()
+                self.cursor.execute(f"""
+                            SELECT * FROM quality_control
+                            WHERE id = '{id}'
 
-            # Unpacking the items
+                            """)
+                result = self.cursor.fetchall()[0]
 
-            lot_num, product_code, customer, status, remarks, action = result[1:7]
-            evaluated_by, evaluated_date, encoded_on, updated_by, updated_on = result[8:13]
-            time_endorsed = result[13]
-            qc_type = result[15]
-            formula_id = result[16]
+                # Unpacking the items
 
-            # showing the Selected Items
-            customer_selected.setText(customer)
-            productCode_selected.setText(product_code)
-            result_selected.setText(status)
-            evaluatedBy_selected.setText(evaluated_by)
-            evaluatedDate_selected.setText(str(evaluated_date))
-            encodedDate_selected.setText(str(encoded_on))
-            remarks_box.setText(remarks)
+                lot_num, product_code, customer, status, remarks, action = result[1:7]
+                evaluated_by, evaluated_date, encoded_on, updated_by, updated_on = result[8:13]
+                time_endorsed = result[13]
+                qc_type = result[15]
+                formula_id = result[16]
 
-            updatedBy_val1.setText(updated_by)
-            time_endorsed_val.setText(str(time_endorsed))
-            qc_type_selected.setText(qc_type)
+                # showing the Selected Items
+                customer_selected.setText(customer)
+                productCode_selected.setText(product_code)
+                result_selected.setText(status)
+                evaluatedBy_selected.setText(evaluated_by)
+                evaluatedDate_selected.setText(str(evaluated_date))
+                encodedDate_selected.setText(str(encoded_on))
+                remarks_box.setText(remarks)
+
+                updatedBy_val1.setText(updated_by)
+                time_endorsed_val.setText(str(time_endorsed))
+                qc_type_selected.setText(qc_type)
+            except:
+                QMessageBox.information(self.qc_widget, "Selection Error", "No Items Selected")
+                self.qc_table.clearSelection()
 
         def qc_returns():
 
@@ -4196,12 +4207,12 @@ class Ui_LoginWindow(object):
                         return
                     else:
                         self.cursor.execute(f"""
-                                                            INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
-                                                             remarks, return_date, origin_lot)
-                                                            VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
-                                                             '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
-                                                             '{date_return.text()}', '{origin_lot.text()}')
-                                                            """)
+                                            INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
+                                            remarks, return_date, origin_lot)
+                                            VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
+                                            '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
+                                            '{date_return.text()}', '{origin_lot.text()}')
+                                            """)
                         self.conn.commit()
                         # Clear the Widgets
                         lot_input.clear()
@@ -4858,6 +4869,7 @@ class Ui_LoginWindow(object):
         self.cursor.execute("""
         SELECT id, lot_number, customer, product_code, status, remarks, action
         FROM quality_control
+        ORDER BY id DESC
         
         """)
 
@@ -4872,7 +4884,6 @@ class Ui_LoginWindow(object):
                 self.qc_table.setItem(i, j, item)
 
         self.qc_table.itemSelectionChanged.connect(show_items)
-
 
         self.qc_TableBtn.show()
 

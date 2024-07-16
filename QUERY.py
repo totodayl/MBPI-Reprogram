@@ -15,10 +15,7 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 
 cursor.execute("""
-SELECT ((SELECT count(*) FROM qc_num_days
-WHERE status = 'Failed' AND qc_type = 'NEW' AND product_code = 'DA5176E')::FLOAT
-/ (SELECT COUNT(*) FROM qc_num_days
-WHERE product_code = 'DA5176E' AND qc_type = 'NEW')::FLOAT)
+SELECT lot_number FROM quality_control
 
 """)
 
