@@ -883,7 +883,7 @@ class Ui_LoginWindow(object):
                                         loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                                         rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
                                         remarks, lot_number) 
-                                        VALUES('{machine_input.text()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
+                                        VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                                         '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
@@ -1422,7 +1422,6 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.setAlignment(Qt.AlignCenter)
             machine_input.addItem("Extruder 1")
             machine_input.addItem("Extruder 2")
             machine_input.addItem("Extruder 3")
@@ -1763,7 +1762,7 @@ class Ui_LoginWindow(object):
 
                     self.cursor.execute(f"""
                                 UPDATE extruder
-                                SET  total_time = {total_hours}, machine = '{machine_input.text()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
+                                SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                                 temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                                 feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                                 screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.text()}',
@@ -1931,9 +1930,14 @@ class Ui_LoginWindow(object):
             productionID_input.setText(str(result[28]))
             productionID_input.setEnabled(False)
 
-            machine_input = QtWidgets.QLineEdit()
+            machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.setAlignment(Qt.AlignCenter)
+            machine_input.addItem("Extruder 1")
+            machine_input.addItem("Extruder 2")
+            machine_input.addItem("Extruder 3")
+            machine_input.addItem("Extruder 4")
+            machine_input.addItem("Extruder 5")
+            machine_input.addItem("Extruder 6")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setText(result[1])
 
@@ -3281,6 +3285,7 @@ class Ui_LoginWindow(object):
             save_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
             save_btn.setText("SAVE")
             save_btn.clicked.connect(saveBtn_clicked)
+            save_btn.setShortcut("Return")
             save_btn.show()
 
             clear_btn = QPushButton(self.body_widget)
