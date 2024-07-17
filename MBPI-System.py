@@ -261,7 +261,6 @@ class Ui_LoginWindow(object):
                 materials = items[-10]
                 lot_number = items[30]
                 purge_duration = time(hour=items[-8])
-                print(materials)
 
                 wb = load_workbook(
                     r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\Extruder Template.xlsx")
