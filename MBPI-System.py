@@ -1939,7 +1939,7 @@ class Ui_LoginWindow(object):
             machine_input.addItem("Extruder 5")
             machine_input.addItem("Extruder 6")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
-            machine_input.setText(result[1])
+            machine_input.setCurrentText(result[1])
 
 
             customer_input = QtWidgets.QLineEdit()
@@ -4699,9 +4699,8 @@ class Ui_LoginWindow(object):
                 UPDATE quality_control 
                 SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
                 evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}',
-                remarks = '{remarks_box.toPlainText()}'
+                remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp
                 WHERE lot_number = '{lot_number}'
-                
                 
                 """)
 
