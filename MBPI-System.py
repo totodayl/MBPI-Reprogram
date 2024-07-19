@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import platform
+import re
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
@@ -1121,6 +1122,7 @@ class Ui_LoginWindow(object):
                 self.cursor.execute("""
                 SELECT production_id, lot_number
                 FROM production_merge
+                ORDER BY production_id::Integer DESC
 
                 """)
                 result = self.cursor.fetchall()
@@ -2948,6 +2950,84 @@ class Ui_LoginWindow(object):
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
 
+            def autofill():
+
+                self.cursor.execute(f"""
+                SELECT t_fid as formula_id, product_code, customer  
+                FROM production_merge
+                WHERE lot_number = '{lotNumber_input.text()}'
+                
+                
+                """)
+                result = self.cursor.fetchone()
+                if result != None:
+                    productCode_dropdown.setCurrentText(result[1])
+                    formulaID_input.setText(str(result[0]))
+                    customer_dropdown.setCurrentText(result[2])
+                else:
+                    if '-' in lotNumber_input.text():
+                        lot_number = lotNumber_input.text().strip()
+                        code = re.findall(r'[A-Z]+', lot_number)[0]
+                        num1 = re.findall(r'(\d+)', lot_number)[0]
+                        num2 = re.findall(r'(\d+)', lot_number)[1]
+
+                        self.cursor.execute(f"""
+                                                                    SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
+                                                                            (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                                                               CASE 
+                                                                                   WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                                                   ELSE NULL
+                                                                               END AS range2
+                                                                        FROM public.production_merge
+                                                                        WHERE lot_number LIKE '%-%' 
+                                                                          AND lot_number LIKE '%{code}%' 
+                                                                          AND deleted = false
+                                                                        ORDER BY production_id::INTEGER DESC
+                                                                        )
+
+                                                                        WHERE {num1} >= range1 AND {num2} <= range2
+                                                                    """)
+                        result = self.cursor.fetchone()
+                        print(result)
+                        productCode_dropdown.setCurrentText(result[2])
+                        formulaID_input.setText(str(result[3]))
+                        customer_dropdown.setCurrentText(result[1])
+
+
+
+                    else:
+                        lot_number = lotNumber_input.text().strip()
+                        code = re.findall(r'[A-Z]+', lot_number)[0]
+                        num1 = int(lot_number[:4])
+
+
+                        self.cursor.execute(f"""
+                                            SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
+                                                    (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                                       CASE 
+                                                           WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                           ELSE NULL
+                                                       END AS range2
+                                                FROM public.production_merge
+                                                WHERE lot_number LIKE '%-%' 
+                                                  AND lot_number LIKE '%{code}%' 
+                                                  AND deleted = false
+                                                ORDER BY production_id::INTEGER DESC
+                                                )
+
+                                                WHERE {num1} >= range1 AND {num1} <= range2
+                                            """)
+                        result = self.cursor.fetchone()
+                        print(result)
+                        productCode_dropdown.setCurrentText(result[2])
+                        formulaID_input.setText(str(result[3]))
+                        customer_dropdown.setCurrentText(result[1])
+
+
+
+
+
+
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3156,7 +3236,7 @@ class Ui_LoginWindow(object):
             evaluatedBy_dropdown.addItem("Linzy Jam")
             evaluatedBy_dropdown.addItem("Jinky")
             evaluatedBy_dropdown.addItem("Ana")
-
+            evaluatedBy_dropdown.addItem("Chelsea")
 
             date_started_input = QDateTimeEdit()
             date_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -3167,12 +3247,12 @@ class Ui_LoginWindow(object):
             date_started_input.setDateTime(date_now)
             date_started_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
-
             lotNumber_input = QtWidgets.QLineEdit()
             lotNumber_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             lotNumber_input.setFixedHeight(25)
             lotNumber_input.setFixedWidth(296)
             lotNumber_input.editingFinished.connect(multiple_lotNumber)
+            lotNumber_input.editingFinished.connect(autofill)
 
             time_started_input = QTimeEdit()
             time_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
@@ -3501,7 +3581,11 @@ class Ui_LoginWindow(object):
 
             result = self.cursor.fetchall()
             df = pd.DataFrame(result)
-            df.columns = ["original_lot", "status", "product_code", "row_number"]
+            try:
+                df.columns = ["original_lot", "status", "product_code", "row_number"]
+            except:
+                QMessageBox.information(self.qc_widget, "No Data", "No Data Found")
+                return
             passToFail_counter = {}
             firstTry_failed = {}
 
@@ -3662,6 +3746,8 @@ class Ui_LoginWindow(object):
                         for i, j in result:
                             x.append(i)
                             y.append(j)
+
+                        print(x, y)
 
                         self.graph5.clear()
                         self.graph5.bar(x, y)
@@ -4281,7 +4367,7 @@ class Ui_LoginWindow(object):
             def show_table():
 
                 self.cursor.execute("""
-                SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks  
+                SELECT lot_number, quantity, product_code, customer, formula_id, origin_lot, return_date, remarks  
                 FROM returns
                 ORDER BY return_date DESC
                 
@@ -4299,8 +4385,7 @@ class Ui_LoginWindow(object):
 
                 returns_table.clear()
                 returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
-                                                     "Return Date", "Remarks"])
-
+                                                         "Origin Lot", "Return Date", "Remarks"])
 
                 self.cursor.execute(f"""
                 
@@ -4636,11 +4721,11 @@ class Ui_LoginWindow(object):
 
             returns_table = QTableWidget(self.body_widget)
             returns_table.setGeometry(340, 60, 651, 600)
-            returns_table.setColumnCount(7)
+            returns_table.setColumnCount(8)
             returns_table.setRowCount(20)
             returns_table.verticalHeader().setVisible(False)
             returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
-                                                     "Return Date", "Remarks"])
+                                                     "Origin Lot", "Return Date", "Remarks"])
             returns_table.setColumnWidth(0, 120)
             returns_table.setColumnWidth(2, 120)
             returns_table.setColumnWidth(3, 200)
@@ -4726,8 +4811,6 @@ class Ui_LoginWindow(object):
             date_evaluated = result[9]
             formula_id = result[-1]
 
-
-
             if selected:
                 self.update_qc_widget = QWidget()
                 self.update_qc_widget.setGeometry(0, 0, 350, 550)
@@ -4762,7 +4845,6 @@ class Ui_LoginWindow(object):
 
                 customer_list = QComboBox()
                 customer_list.setFixedHeight(30)
-
 
                 self.cursor.execute("""
                             SELECT customers FROM customer
