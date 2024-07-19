@@ -888,7 +888,7 @@ class Ui_LoginWindow(object):
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                                         '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
-                                         '{resin_input.text()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
+                                         '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
@@ -1280,6 +1280,108 @@ class Ui_LoginWindow(object):
                     except:
                         loss_input.setText("INVALID")
 
+            def autofill_temperature():
+                if machine_input.currentText() == 'MC #1':
+
+                    temperature_table.clear()
+                    temperature_table.setHorizontalHeaderLabels(['Temperature'])
+                    if resin_input.currentText() == 'LDPE(HMI)':
+                        temp = [120, 140, 150, 150, 150, 150, 150, 150, 140, 140]
+                    elif resin_input.currentText() == 'LDPE(LMI)':
+                        temp = [200, 220, 220, 220, 220, 220, 220, 220, 220, 220]
+                    elif resin_input.currentText() == 'HDPE(HMI)':
+                        temp = [160, 180, 180, 180, 180, 180, 180, 180, 160, 160]
+                    elif resin_input.currentText() == 'PP':
+                        temp = [180, 200, 180, 180, 180, 180, 180, 180, 180, 180]
+                    elif resin_input.currentText() == 'PET':
+                        temp = [200, 220, 220, 220, 220, 220, 220, 220, 220, 220]
+                    elif resin_input.currentText() == 'GPPS':
+                        temp = [200, 220, 220, 220, 220, 220, 220, 220, 220, 220]
+                    else:
+                        return
+
+                    # Set the setting to the Temperature Table
+                    for i in range(len(temp)):
+                        print(temp[i])
+                        item = QTableWidgetItem(str(temp[i]))
+                        temperature_table.setItem(i, 0, item)
+
+                elif machine_input.currentText() == 'MC #2':
+
+                    temperature_table.clear()
+                    temperature_table.setHorizontalHeaderLabels(['Temperature'])
+
+                    if resin_input.currentText() == 'LDPE(HMI)':
+                        temp = [150, 160, 160, 160, 160]
+                    elif resin_input.currentText() == 'HDPE(HMI)':
+                        temp = [160, 160, 180, 180, 180]
+                    elif resin_input.currentText() == 'PP':
+                        temp = [180, 200, 200, 200, 200]
+                    else:
+                        return
+
+                    for i in range(len(temp)):
+                        item = QTableWidgetItem(str(temp[i]))
+                        temperature_table.setItem(i, 0, item)
+
+                elif machine_input.currentText() == 'MC #3':
+
+                    temperature_table.clear()
+                    temperature_table.setHorizontalHeaderLabels(['Temperature'])
+
+                    if resin_input.currentText() == 'LDPE(HMI)':
+                        temp = [150, 150, 150, 150, 150, 130, 130]
+                    elif resin_input.currentText() == 'HDPE(HMI)':
+                        temp = [160, 180, 180, 180, 180, 180, 160]
+                    elif resin_input.currentText() == 'PP':
+                        temp = [180, 200, 180, 180, 180, 180, 180]
+                    else:
+                        return
+
+                    for i in range(len(temp)):
+                        item = QTableWidgetItem(str(temp[i]))
+                        temperature_table.setItem(i, 0, item)
+
+                elif machine_input.currentText() == 'MC #5':
+
+                    temperature_table.clear()
+                    temperature_table.setHorizontalHeaderLabels(['Temperature'])
+
+                    if resin_input.currentText() == 'LDPE(HMI)':
+                        temp = [150, 150, 150, 150, 150, 130, 130]
+                    elif resin_input.currentText() == 'HDPE(HMI)':
+                        temp = [160, 180, 180, 180, 180, 180, 160]
+                    elif resin_input.currentText() == 'PP':
+                        temp = [180, 200, 180, 180, 180, 180, 180]
+                    else:
+                        return
+
+                    for i in range(len(temp)):
+                        item = QTableWidgetItem(str(temp[i]))
+                        temperature_table.setItem(i, 0, item)
+
+
+                elif machine_input.currentText() == 'MC #8':
+
+                    temperature_table.clear()
+                    temperature_table.setHorizontalHeaderLabels(['Temperature'])
+
+                    if resin_input.currentText() == 'LDPE(HMI)':
+                        temp = [170, 170, 170, 170, 170, 170, 160, 160, 160, 160, 150, 150]
+                    elif resin_input.currentText() == 'HDPE(HMI)':
+                        temp = [180, 180, 180, 180, 180, 180, 180, 180, 180, 160, 140, 140]
+                    elif resin_input.currentText() == 'PP':
+                        temp = [180, 200, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180]
+                    elif resin_input.currentText() == 'PET':
+                        temp = [210, 220, 200, 220, 220, 220, 220, 220, 220, 220, 230, 230]
+                    else:
+                        return
+
+                    for i in range(len(temp)):
+                        item = QTableWidgetItem(str(temp[i]))
+                        temperature_table.setItem(i, 0, item)
+
+
             def clear_inputs():
                 try:
 
@@ -1424,12 +1526,12 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.addItem("Extruder 1")
-            machine_input.addItem("Extruder 2")
-            machine_input.addItem("Extruder 3")
-            machine_input.addItem("Extruder 4")
-            machine_input.addItem("Extruder 5")
-            machine_input.addItem("Extruder 6")
+            machine_input.addItem("MC #1")
+            machine_input.addItem("MC #2")
+            machine_input.addItem("MC #3")
+            machine_input.addItem("MC #5")
+            machine_input.addItem("MC #8")
+            machine_input.activated.connect(autofill_temperature)
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             customer_input = QtWidgets.QLineEdit()
@@ -1518,9 +1620,15 @@ class Ui_LoginWindow(object):
             order_number_input.setAlignment(Qt.AlignCenter)
             order_number_input.setStyleSheet("background-color: white; border: 1px solid black")
 
-            resin_input = QtWidgets.QLineEdit()
+            resin_input = QtWidgets.QComboBox()
             resin_input.setFixedHeight(25)
-            resin_input.setAlignment(Qt.AlignCenter)
+            resin_input.addItem('LDPE(HMI)')
+            resin_input.addItem('LDPE(LMI)')
+            resin_input.addItem('HDPE(HMI)')
+            resin_input.addItem('PP')
+            resin_input.addItem('PET')
+            resin_input.addItem('GPPS')
+            resin_input.activated.connect(autofill_temperature)
             resin_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             purging_input = QtWidgets.QLineEdit()
@@ -1767,7 +1875,7 @@ class Ui_LoginWindow(object):
                                 SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                                 temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                                 feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
-                                screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.text()}',
+                                screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
                                 purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                                 time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                                 output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
@@ -1934,12 +2042,11 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.addItem("Extruder 1")
-            machine_input.addItem("Extruder 2")
-            machine_input.addItem("Extruder 3")
-            machine_input.addItem("Extruder 4")
-            machine_input.addItem("Extruder 5")
-            machine_input.addItem("Extruder 6")
+            machine_input.addItem("MC #1")
+            machine_input.addItem("MC #2")
+            machine_input.addItem("MC #3")
+            machine_input.addItem("MC #5")
+            machine_input.addItem("MC #8")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setCurrentText(result[1])
 
@@ -2047,11 +2154,16 @@ class Ui_LoginWindow(object):
             order_number_input.setStyleSheet("background-color: white; border: 1px solid black")
             order_number_input.setText(str(result[7]))
 
-            resin_input = QtWidgets.QLineEdit()
+            resin_input = QtWidgets.QComboBox()
             resin_input.setFixedHeight(25)
-            resin_input.setAlignment(Qt.AlignCenter)
+            resin_input.addItem('LDPE(HMI)')
+            resin_input.addItem('LDPE(LMI)')
+            resin_input.addItem('HDPE(HMI)')
+            resin_input.addItem('PP')
+            resin_input.addItem('PET')
+            resin_input.addItem('GPPS')
             resin_input.setStyleSheet("background-color: white; border: 1px solid black")
-            resin_input.setText(result[15])
+            resin_input.setCurrentText(result[15])
 
             purging_input = QtWidgets.QLineEdit()
             purging_input.setFixedHeight(25)
@@ -2988,7 +3100,6 @@ class Ui_LoginWindow(object):
                                                                         WHERE {num1} >= range1 AND {num2} <= range2
                                                                     """)
                         result = self.cursor.fetchone()
-                        print(result)
                         productCode_dropdown.setCurrentText(result[2])
                         formulaID_input.setText(str(result[3]))
                         customer_dropdown.setCurrentText(result[1])
@@ -3018,15 +3129,9 @@ class Ui_LoginWindow(object):
                                                 WHERE {num1} >= range1 AND {num1} <= range2
                                             """)
                         result = self.cursor.fetchone()
-                        print(result)
                         productCode_dropdown.setCurrentText(result[2])
                         formulaID_input.setText(str(result[3]))
                         customer_dropdown.setCurrentText(result[1])
-
-
-
-
-
 
             self.qc_widget.deleteLater()
 
