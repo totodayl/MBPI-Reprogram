@@ -167,10 +167,6 @@ class Ui_LoginWindow(object):
         self.logo2.setPixmap(pixmap)
         self.logo2.show()
 
-
-
-
-
         self.production()
 
 
@@ -208,8 +204,6 @@ class Ui_LoginWindow(object):
                 main_time_table.deleteLater()
                 material_table.deleteLater()
                 lotNumber_table.deleteLater()
-
-
 
             except:
                 QMessageBox.information(self.production_widget, "ERROR", "No Selected Item")
@@ -2509,7 +2503,9 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str(lotNumber[i]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 lotNumber_table.setItem(i, 0, item)
-        
+
+
+
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
         self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
