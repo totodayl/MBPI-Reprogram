@@ -1,16 +1,13 @@
 from openpyxl import load_workbook
 import json
-import psycopg2
 import calendar
-from psycopg2 import sql
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time, date
 import holidays as hd
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import platform
 import re
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -64,6 +61,10 @@ class Ui_LoginWindow(object):
         self.login_btn.setText(_translate("LoginWindow", "Login"))
 
     def login(self):
+
+        import psycopg2
+        from psycopg2 import sql
+
         username = self.username.text()
         pass1 = self.password.text()
 
@@ -2720,6 +2721,10 @@ class Ui_LoginWindow(object):
         lotNumber_table.show()
 
     def quality_control(self):
+
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
         try:
             self.production_widget.deleteLater()
             body_widget.deleteLater()
