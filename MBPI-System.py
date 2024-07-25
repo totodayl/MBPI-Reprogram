@@ -1,14 +1,14 @@
+import os
+
 from openpyxl import load_workbook
 import json
 import calendar
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import *
 from datetime import timedelta, datetime, time, date
 import holidays as hd
 import numpy as np
-import platform
 import re
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -63,12 +63,11 @@ class Ui_LoginWindow(object):
     def login(self):
 
         import psycopg2
-        from psycopg2 import sql
+
 
         username = self.username.text()
         pass1 = self.password.text()
 
-        self.computerName = platform.node()
 
         # Connect to the Database
         try:
@@ -892,7 +891,6 @@ class Ui_LoginWindow(object):
                                                 """)
                         print("query successful")
                         self.conn.commit()
-                        refresh_table()
                         clear_inputs()
                     except Exception as e:
                         print("Insert Failed")
@@ -2506,31 +2504,6 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 lotNumber_table.setItem(i, 0, item)
 
-        def refresh_table():
-            self.cursor.execute("""
-                                    SELECT 
-                                    process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-                                    FROM extruder
-                                    ORDER BY process_id DESC
-                                    ; 
-
-                                    """)
-            result = self.cursor.fetchall()
-
-            # Populate table with data
-            for i in range(len(result)):
-                for j in range(len(column_names)):
-                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
-                    # Set Alignment for specific columns
-                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7 or j == 5:
-                        item.setTextAlignment(Qt.AlignCenter)
-                    else:
-                        pass
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                    self.extruder_table.setItem(i, j, item)
-
-            self.extruder_table.show()
-
 
 
         self.production_widget = QtWidgets.QWidget(self.main_widget)
@@ -2654,7 +2627,7 @@ class Ui_LoginWindow(object):
         self.productCode_combo.show()
 
         self.view_btn = QtWidgets.QPushButton(self.production_widget)
-        self.view_btn.setGeometry(600, 700, 60, 30)
+        self.view_btn.setGeometry(600, 700, 80, 30)
         self.view_btn.setText("View")
         self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.view_btn.clicked.connect(show_form)
@@ -2662,16 +2635,15 @@ class Ui_LoginWindow(object):
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.production_widget)
-        self.add_btn.setGeometry(661, 700, 60, 30)
+        self.add_btn.setGeometry(681, 700, 80, 30)
         self.add_btn.setText("Add Entry")
         self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.add_btn.clicked.connect(add_entry)
         self.add_btn.setCursor(Qt.PointingHandCursor)
         self.add_btn.show()
 
-
         self.update_btn = QtWidgets.QPushButton(self.production_widget)
-        self.update_btn.setGeometry(722, 700, 60, 30)
+        self.update_btn.setGeometry(762, 700, 80, 30)
         self.update_btn.setText("Update")
         self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.update_btn.clicked.connect(update_entry)
@@ -2679,19 +2651,12 @@ class Ui_LoginWindow(object):
         self.update_btn.show()
 
         self.print_btn = QtWidgets.QPushButton(self.production_widget)
-        self.print_btn.setGeometry(783, 700, 60, 30)
+        self.print_btn.setGeometry(843, 700, 80, 30)
         self.print_btn.setText("Print")
         self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
         self.print_btn.clicked.connect(print_file)
         self.print_btn.setCursor(Qt.PointingHandCursor)
         self.print_btn.show()
-
-        self.refresh_btn = QPushButton(self.production_widget)
-        self.refresh_btn.setGeometry(843, 700, 60, 30)
-        self.refresh_btn.setText("Refresh")
-        self.refresh_btn.setCursor(Qt.PointingHandCursor)
-        self.refresh_btn.clicked.connect(refresh_table)
-        self.refresh_btn.show()
 
         main_time_table = QtWidgets.QTableWidget(self.production_widget)
         main_time_table.setGeometry(20, 455, 475, 225)
@@ -2724,6 +2689,7 @@ class Ui_LoginWindow(object):
 
         import pandas as pd
         import matplotlib.pyplot as plt
+        from psycopg2 import sql
 
         try:
             self.production_widget.deleteLater()
@@ -3111,67 +3077,69 @@ class Ui_LoginWindow(object):
                     productCode_dropdown.setCurrentText(result[1])
                     formulaID_input.setText(str(result[0]))
                     customer_dropdown.setCurrentText(result[2])
-                else:
-                    if '-' in lotNumber_input.text():
-                        try:
-                            lot_number = lotNumber_input.text().strip()
-                            code = re.findall(r'[A-Z]+', lot_number)[0]
-                            num1 = re.findall(r'(\d+)', lot_number)[0]
-                            num2 = re.findall(r'(\d+)', lot_number)[1]
 
-                            self.cursor.execute(f"""
-                                SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
-                                        (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
-                                           CASE 
-                                               WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
-                                               ELSE NULL
-                                           END AS range2
-                                    FROM public.production_merge
-                                    WHERE lot_number LIKE '%-%' 
-                                      AND lot_number LIKE '%{code}%' 
-                                      AND deleted = false
-                                    ORDER BY production_id::INTEGER DESC
-                                    )
-    
-                                    WHERE {num1} >= range1 AND {num2} <= range2
-                                """)
-                            result = self.cursor.fetchone()
-                            productCode_dropdown.setCurrentText(result[2])
-                            formulaID_input.setText(str(result[3]))
-                            customer_dropdown.setCurrentText(result[1])
-                        except:
-                            QMessageBox.critical(self.qc_widget, "ERROR", "LOT NUMBER not Found.")
+
+                else: # For lot numbers in between the original lots
+                    if '-' in lotNumber_input.text():
+                        lot_number = lotNumber_input.text().strip()
+                        code = re.findall(r'[A-Z]+', lot_number)[0]
+                        num1 = re.findall(r'(\d+)', lot_number)[0]
+                        num2 = re.findall(r'(\d+)', lot_number)[1]
+
+                        self.cursor.execute(f"""
+                                                                    SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
+                                                                            (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                                                               CASE 
+                                                                                   WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                                                   ELSE NULL
+                                                                               END AS range2
+                                                                        FROM public.production_merge
+                                                                        WHERE lot_number LIKE '%-%' 
+                                                                          AND lot_number LIKE '%{code}%' 
+                                                                          AND deleted = false
+                                                                        ORDER BY production_id::INTEGER DESC
+                                                                        )
+
+                                                                        WHERE {num1} >= range1 AND {num2} <= range2
+                                                                    """)
+                        result = self.cursor.fetchone()
+                        productCode_dropdown.setCurrentText(result[2])
+                        formulaID_input.setText(str(result[3]))
+                        customer_dropdown.setCurrentText(result[1])
 
                     else:
-                        try:
-                            lot_number = lotNumber_input.text().strip()
-                            code = re.findall(r'[A-Z]+', lot_number)[0]
-                            num1 = int(lot_number[:4])
 
-                            self.cursor.execute(f"""
-                                                                        SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
-                                                                                (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
-                                                                                   CASE 
-                                                                                       WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
-                                                                                       ELSE NULL
-                                                                                   END AS range2
-                                                                            FROM public.production_merge
-                                                                            WHERE lot_number LIKE '%-%' 
-                                                                              AND lot_number LIKE '%{code}%' 
-                                                                              AND deleted = false
-                                                                            ORDER BY production_id::INTEGER DESC
-                                                                            )
+                        lot_number = lotNumber_input.text().strip()
+                        code = re.findall(r'[A-Z]+', lot_number)[0]
+                        num1 = int(lot_number[:4])
 
-                                                                            WHERE {num1} >= range1 AND {num1} <= range2
-                                                                        """)
-                            result = self.cursor.fetchone()
+                        self.cursor.execute(f"""
+                                            SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
+                                                    (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                                       CASE 
+                                                           WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                           ELSE NULL
+                                                       END AS range2
+                                                FROM public.production_merge
+                                                WHERE lot_number LIKE '%-%' 
+                                                  AND lot_number LIKE '%{code}%' 
+                                                  AND deleted = false
+                                                ORDER BY production_id::INTEGER DESC
+                                                )
+
+                                                WHERE {num1} >= range1 AND {num1} <= range2
+                                            """)
+                        result = self.cursor.fetchone()
+                        if result:
                             productCode_dropdown.setCurrentText(result[2])
                             formulaID_input.setText(str(result[3]))
-                            print(result[1])
                             customer_dropdown.setCurrentText(result[1])
+                        else:
+                            QMessageBox.information(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
+                            return
 
-                        except :
-                            QMessageBox.critical(self.qc_widget, "ERROR", "LOT NUMBER not Found.")
+
+
 
             self.qc_widget.deleteLater()
 
@@ -3501,7 +3469,7 @@ class Ui_LoginWindow(object):
             user_input = QLineEdit(self.body_widget)
             user_input.setGeometry(194, 650, 221, 25)
             user_input.setEnabled(False)
-            user_input.setText(platform.node())
+            user_input.setText(os.environ['COMPUTERNAME'])
             user_input.setStyleSheet("border: 1px solid rgb(177, 206, 237); background-color: rgb(192, 192, 192); ")
             user_input.show()
 
@@ -3810,6 +3778,7 @@ class Ui_LoginWindow(object):
             aggregated_products_table.verticalHeader().setVisible(False)
             aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
             aggregated_products_table.show()
+
 
 
         def show_dashboards():
@@ -4628,6 +4597,8 @@ class Ui_LoginWindow(object):
                 lot_input.clear()
                 quantity_input.clear()
                 remarks_input.clear()
+
+
 
             self.qc_widget.deleteLater()
 
