@@ -2871,6 +2871,7 @@ class Ui_LoginWindow(object):
                     qc_ID = self.cursor.fetchone()[0]
 
 
+
                     if qcType_dropdown.currentText() == "NEW":
 
                         self.cursor.execute(f"""
@@ -2881,9 +2882,8 @@ class Ui_LoginWindow(object):
                         """)
                         result = self.cursor.fetchone()
 
-
                         # This if statement break the cancel the saving if the lot number is already in the Database
-                        if lotNumber_input.text() in result:
+                        if result:
                             QMessageBox.information(self.qc_widget, "Data Exist", "Data is already Entered.")
                             return
 
@@ -2899,6 +2899,7 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
+                        print("test")
                         # For saving Multiple Lot Number in quality_control_tbl2
 
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
@@ -3129,6 +3130,7 @@ class Ui_LoginWindow(object):
 
                                                 WHERE {num1} >= range1 AND {num1} <= range2
                                             """)
+
                         result = self.cursor.fetchone()
                         if result:
                             productCode_dropdown.setCurrentText(result[2])
@@ -3137,9 +3139,6 @@ class Ui_LoginWindow(object):
                         else:
                             QMessageBox.information(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                             return
-
-
-
 
             self.qc_widget.deleteLater()
 
