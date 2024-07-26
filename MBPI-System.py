@@ -1,5 +1,4 @@
 import os
-
 from openpyxl import load_workbook
 import json
 import calendar
@@ -2724,9 +2723,22 @@ class Ui_LoginWindow(object):
                             'updated_on', 'time_endorsed', 'edited', 'qc_type', 'formula_id']
 
             try:
-                df.to_excel(excel_writer=r'\\mbpi-server-01\IT\QC Data Imports\blank.xlsx', index=False,
-                            header=column_names)
-                QMessageBox.information(self.qc_widget, "File Imported", "Successfully Imported Data")
+
+                filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.qc_widget, "Save File", r"C:\Users\Administrator\Documents",
+                                                                 'Excel Files (*.xlsx)',options=QtWidgets.QFileDialog.Options())
+
+
+                if filename:
+                    # Ensuring the file name ends with .xlsx
+                    if not filename.lower().endswith('.xlsx'):
+                        filename += '.xlsx'
+
+                    # Print or use the file name
+                    print(f'Selected file: {filename}')
+                    df.to_excel(excel_writer=filename, index=False,
+                                header=column_names)
+                    QMessageBox.information(self.qc_widget, "File Imported", "Successfully Imported Data")
+
             except PermissionError:
                 QMessageBox.critical(self.qc_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
