@@ -2377,8 +2377,19 @@ class Ui_LoginWindow(object):
                 worksheet["M28"] = operator
                 worksheet["M29"] = supervisor
 
-                wb.save(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\text.xlsx")
-                QMessageBox.information(self.production_widget, "Export Success", "File Successfully Exported!")
+                # Open QFileDialog
+
+                filename, _ = QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
+                                                      "Excel Files (*.xlsx)", options=QFileDialog.Options())
+
+                if filename:
+                    if not filename.lower().endswith('.xlsx'):
+                        filename += '.xlsx'
+
+                    wb.save(filename)
+                    QMessageBox.information(self.production_widget, "Export Success", "File Successfully Exported!")
+
+
             except Exception as e:
                 print(e)
                 QMessageBox.information(self.production_widget, "ERROR", "No Selected Items")
@@ -2734,7 +2745,6 @@ class Ui_LoginWindow(object):
                         filename += '.xlsx'
 
                     # Print or use the file name
-                    print(f'Selected file: {filename}')
                     df.to_excel(excel_writer=filename, index=False,
                                 header=column_names)
                     QMessageBox.information(self.qc_widget, "File Imported", "Successfully Imported Data")
