@@ -35,6 +35,7 @@ class Ui_LoginWindow(object):
         self.username.setStyleSheet("background-color: rgb(255, 255, 255); border-radius: 5px")
         self.username.setObjectName("username")
         self.username.setText("postgres")
+        self.username.setEnabled(False)
         self.password = QtWidgets.QLineEdit(self.login_window)
         self.password.setGeometry(QtCore.QRect(310, 230, 171, 31))
         self.password.setAutoFillBackground(False)
@@ -42,6 +43,7 @@ class Ui_LoginWindow(object):
         self.password.setObjectName("password")
         self.password.setEchoMode(QtWidgets.QLineEdit.Password)  # Make the input hidden
         self.password.setText("mbpi")
+        self.password.setEnabled(False)
         self.login_btn = QtWidgets.QPushButton(self.login_window)
         self.login_btn.setGeometry(QtCore.QRect(360, 340, 75, 23))
         self.login_btn.setStyleSheet("\n"
@@ -52,7 +54,11 @@ class Ui_LoginWindow(object):
         self.login_btn.clicked.connect(self.login)
         LoginWindow.setCentralWidget(self.login_window)
         self.retranslateUi(LoginWindow)
+
+        LoginWindow.setStatusBar(self.statusbar)
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
+
+
 
     def retranslateUi(self, LoginWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -1295,7 +1301,6 @@ class Ui_LoginWindow(object):
 
                     # Set the setting to the Temperature Table
                     for i in range(len(temp)):
-                        print(temp[i])
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
@@ -2324,13 +2329,12 @@ class Ui_LoginWindow(object):
                 outputs = items[26]
                 materials = items[23]
                 lot_number = items[30]
-                print(lot_number)
 
                 wb = load_workbook(r"\\mbpi-server-01\IT\AMIEL\Extruder System\dist\Extruder Template.xlsx")
                 worksheet = wb.active
 
                 font = Font(size=8, bold=True, name='Arial')
-                center_Alignment = Alignment(horizontal='center', vertical='center')
+                center_Alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
                 worksheet["F5"] = "Extruder Machine No. " + machine_number[-1]
                 worksheet["A8"] = machine_number[-1]
@@ -2338,6 +2342,7 @@ class Ui_LoginWindow(object):
                 worksheet["C8"].font = font
                 worksheet["C8"].alignment = center_Alignment
                 worksheet["C8"] = customer  # customer
+
                 worksheet["F8"] = code  # product code
                 worksheet["G9"] = total_input  # total input
                 worksheet["H9"] = total_time  # total time used
@@ -3162,6 +3167,9 @@ class Ui_LoginWindow(object):
                             QMessageBox.information(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                             return
 
+            def clear_field():
+                evaluation_entry()
+
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -3506,6 +3514,7 @@ class Ui_LoginWindow(object):
             clear_btn.setGeometry(866, 648, 60, 27)
             clear_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
             clear_btn.setText("CLEAR")
+            clear_btn.clicked.connect(clear_field)
             clear_btn.show()
 
             close_btn = QPushButton(self.body_widget)
@@ -3881,7 +3890,7 @@ class Ui_LoginWindow(object):
                             x.append(i)
                             y.append(j)
 
-                        print(x, y)
+
 
                         self.graph5.clear()
                         self.graph5.bar(x, y)
