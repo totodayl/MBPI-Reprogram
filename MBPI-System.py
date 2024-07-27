@@ -55,7 +55,7 @@ class Ui_LoginWindow(object):
         LoginWindow.setCentralWidget(self.login_window)
         self.retranslateUi(LoginWindow)
 
-        LoginWindow.setStatusBar(self.statusbar)
+
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
 
 
@@ -2932,7 +2932,7 @@ class Ui_LoginWindow(object):
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
                         qc_ID = self.cursor.fetchone()[0]
 
-                        if "-" in lotNumber_input.text():
+                        if "-" == lotNumber_input.text()[6]:
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
                                         INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
@@ -2943,7 +2943,8 @@ class Ui_LoginWindow(object):
 
                                                     """)
                                 self.conn.commit()
-                            print("query successful")
+
+                            print("Query Successful")
                             clear_entries() # Clear the entries after successful entry
                         else:
                             self.cursor.execute(f"""
@@ -4101,7 +4102,7 @@ class Ui_LoginWindow(object):
                 # Error Handling
                 if len(result) == 0:
                     print("NO DATA")
-                    return 0
+                    return
 
                 df = pd.DataFrame(result)
                 df.columns = ["original_lot", "status", "product_code", "row_number"]
