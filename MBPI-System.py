@@ -19,7 +19,6 @@ class ClickableLabel(QtWidgets.QLabel):
     def mousePressEvent(self, event):
         self.clicked.emit()
 
-
 class Ui_LoginWindow(object):
     def setupUi(self, LoginWindow):
         LoginWindow.setObjectName("LoginWindow")
@@ -55,10 +54,7 @@ class Ui_LoginWindow(object):
         LoginWindow.setCentralWidget(self.login_window)
         self.retranslateUi(LoginWindow)
 
-
         QtCore.QMetaObject.connectSlotsByName(LoginWindow)
-
-
 
     def retranslateUi(self, LoginWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -66,13 +62,10 @@ class Ui_LoginWindow(object):
         self.login_btn.setText(_translate("LoginWindow", "Login"))
 
     def login(self):
-
         import psycopg2
-
 
         username = self.username.text()
         pass1 = self.password.text()
-
 
         # Connect to the Database
         try:
@@ -174,9 +167,7 @@ class Ui_LoginWindow(object):
 
         self.production()
 
-
     def production(self):
-
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
@@ -3809,8 +3800,6 @@ class Ui_LoginWindow(object):
             aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
             aggregated_products_table.show()
 
-
-
         def show_dashboards():
 
             def get_data():
@@ -4485,7 +4474,14 @@ class Ui_LoginWindow(object):
                     print(e)
 
             def autofill():
-                if lot_input.text() in lot_list:
+
+                self.cursor.execute(f"""
+                SELECT * FROM quality_control_tbl2
+                WHERE lot_number = '{lot_input.text()}'
+                """)
+                result = self.cursor.fetchall()
+
+                if result != None:
                     self.cursor.execute(f"""
                     SELECT t2.lot_number as origin_lot, t1.lot_number, t1.product_code, t1.formula_id, t2.customer
                     FROM quality_control_tbl2 t1
@@ -4494,15 +4490,13 @@ class Ui_LoginWindow(object):
                     
                     """)
                     result = self.cursor.fetchall()[0]
+                    print(result)
                     # Set the Text
                     origin_lot.setText(result[0])
                     product_code_input.setText(result[2])
                     formulaID_input.setText(str(result[3]))
                     customer_input.setText(result[4])
-
-
                 else:
-
                     product_code_input.clear()
                     formulaID_input.clear()
                     customer_input.clear()
@@ -4776,7 +4770,7 @@ class Ui_LoginWindow(object):
             lot_input.setStyleSheet("background-color: rgb(255, 255, 0)")
             lot_input.setAlignment(Qt.AlignCenter)
             lot_input.setFixedHeight(25)
-            lot_input.textChanged.connect(autofill)
+            lot_input.editingFinished.connect(autofill)
 
             quantity_label = QLabel()
             quantity_label.setText("QUANTITY")
@@ -4910,15 +4904,6 @@ class Ui_LoginWindow(object):
 
             clear_button.show()
 
-            # Get the Lot List
-            self.cursor.execute("""
-            SELECT lot_number FROM quality_control_tbl2
-            
-            """)
-            result = self.cursor.fetchall()
-            lot_list = []
-            for i in result:
-                lot_list.append(i[0])
 
         def update_entry():
             def save_update():
