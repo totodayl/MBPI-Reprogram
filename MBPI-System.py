@@ -866,7 +866,7 @@ class Ui_LoginWindow(object):
                     purge_duration = purge_duration // 60
                     # SQL command here to insert Items
                     self.cursor.execute(
-                        f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
+                        f"SELECT materials FROM production_merge WHERE t_prodid = '{productionID_input.text()}'")
 
                     self.total_mats = json.dumps(self.total_mats)
                     self.total_mats = self.total_mats.replace('\\', "")
@@ -924,9 +924,9 @@ class Ui_LoginWindow(object):
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
                     self.cursor.execute(f"""
-                    SELECT production_id, lot_number, t_qtyreq, materials
+                    SELECT TRIM(t_prodid), t_lotnum, t_qtyreq, materials
                     FROM production_merge
-                    WHERE production_id = '{item[0]}'
+                    WHERE t_prodid = '{item[0]}'
                     """)
 
                     result = self.cursor.fetchall()
@@ -972,24 +972,24 @@ class Ui_LoginWindow(object):
 
                     self.cursor.execute(f"""
                                                                 SELECT * FROM production_merge
-                                                                WHERE production_id = '{item[0]}' 
+                                                                WHERE t_prodid = '{item[0]}' 
 
                                                                 """)
                     result = self.cursor.fetchall()
                     result = result[0]
 
                     # Unpack the result
-                    prod_id = result[0]
-                    customer = result[2]
-                    formula_id = result[3]
-                    product_code = result[5]
-                    product_color = result[6]
-                    lot_number = result[9]
-                    order_number = result[10]
-                    machine_name = result[14]
-                    quantity_order = result[15]
-                    output_quantity = result[17]
-                    remarks = result[18]
+                    prod_id = result[25]
+                    customer = result[1]
+                    formula_id = result[26]
+                    product_code = result[3]
+                    product_color = result[4]
+                    lot_number = result[7]
+                    order_number = result[8]
+                    machine_name = result[12]
+                    quantity_order = result[13]
+                    output_quantity = result[15]
+                    remarks = result[16]
                     materials = result[-1]
 
                     self.added_entry += 1
@@ -1015,10 +1015,10 @@ class Ui_LoginWindow(object):
                     label2.setText(str(self.total_materialQty))
 
                     self.cursor.execute(f"""
-                    SELECT production_id, lot_number
+                    SELECT t_prodid, t_lotnum
                     FROM production_merge
-                    WHERE product_code = '{product_code}' AND 
-                    machine = '{machine_name}' AND t_fid = '{formula_id}';
+                    WHERE t_prodcode = '{product_code}' AND 
+                    t_machine = '{machine_name}' AND t_fid = '{formula_id}';
                     
                     """)
                     query_result = self.cursor.fetchall()
@@ -1055,9 +1055,9 @@ class Ui_LoginWindow(object):
                         self.table.itemSelectionChanged.disconnect(show_table)
                         self.table.clearContents()
                         self.cursor.execute(f"""
-                                            SELECT production_id, lot_number
+                                            SELECT t_prodid, t_lotnum
                                             FROM production_merge
-                                            WHERE lot_number ILIKE '%{search_bar.text()}%'
+                                            WHERE t_lotnum ILIKE '%{search_bar.text()}%'
                                             """)
                         search_result = self.cursor.fetchall()
 
@@ -1079,7 +1079,7 @@ class Ui_LoginWindow(object):
 
                     try:
                         self.cursor.execute("""
-                                            SELECT production_id, lot_number
+                                            SELECT t_prodid, t_lotnum
                                             FROM production_merge
 
                                                                                 """)
@@ -1119,9 +1119,9 @@ class Ui_LoginWindow(object):
                     self.selectProd_widget.close()
 
                 self.cursor.execute("""
-                SELECT production_id, lot_number
+                SELECT t_prodid, t_lotnum
                 FROM production_merge
-                ORDER BY production_id::Integer DESC
+                ORDER BY t_prodid::Integer DESC
 
                 """)
                 result = self.cursor.fetchall()
@@ -1857,7 +1857,7 @@ class Ui_LoginWindow(object):
 
                 # SQL command here to insert Items
                 self.cursor.execute(
-                    f"SELECT materials FROM production_merge WHERE production_id = '{productionID_input.text()}'")
+                    f"SELECT materials FROM production_merge WHERE t_prodid = '{productionID_input.text()}'")
                 material = self.cursor.fetchall()
                 material = material[0][0]
                 material = json.dumps(material)
@@ -3095,9 +3095,9 @@ class Ui_LoginWindow(object):
             def autofill():
 
                 self.cursor.execute(f"""
-                SELECT t_fid as formula_id, product_code, customer  
+                SELECT t_fid as formula_id, t_prodcode, t_customer  
                 FROM production_merge
-                WHERE lot_number = '{lotNumber_input.text()}'
+                WHERE t_lotnum = '{lotNumber_input.text()}'
                 
                 
                 """)
@@ -3107,7 +3107,6 @@ class Ui_LoginWindow(object):
                     formulaID_input.setText(str(result[0]))
                     customer_dropdown.setCurrentText(result[2])
 
-
                 else: # For lot numbers in between the original lots
                     if '-' in lotNumber_input.text():
                         lot_number = lotNumber_input.text().strip()
@@ -3116,17 +3115,17 @@ class Ui_LoginWindow(object):
                         num2 = re.findall(r'(\d+)', lot_number)[1]
 
                         self.cursor.execute(f"""
-                                                                    SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
-                                                                            (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                                                    SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
+                                                                            (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
                                                                                CASE 
-                                                                                   WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                                                   WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
                                                                                    ELSE NULL
                                                                                END AS range2
                                                                         FROM public.production_merge
-                                                                        WHERE lot_number LIKE '%-%' 
-                                                                          AND lot_number LIKE '%{code}%' 
+                                                                        WHERE t_lotnum LIKE '%-%' 
+                                                                          AND t_lotnum LIKE '%{code}%' 
                                                                           AND deleted = false
-                                                                        ORDER BY production_id::INTEGER DESC
+                                                                        ORDER BY t_prodid::INTEGER DESC
                                                                         )
 
                                                                         WHERE {num1} >= range1 AND {num2} <= range2
@@ -3143,17 +3142,17 @@ class Ui_LoginWindow(object):
                         num1 = int(lot_number[:4])
 
                         self.cursor.execute(f"""
-                                            SELECT lot_number, customer, product_code, t_fid, range1, range2 FROM 
-                                                    (SELECT lot_number, customer, product_code, t_fid, LEFT(lot_number, 4)::INTEGER AS range1,
+                                            SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
+                                                    (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
                                                        CASE 
-                                                           WHEN LENGTH(lot_number) = 13 THEN SUBSTRING(lot_number FROM 8 FOR 4)::INTEGER
+                                                           WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
                                                            ELSE NULL
                                                        END AS range2
                                                 FROM public.production_merge
-                                                WHERE lot_number LIKE '%-%' 
-                                                  AND lot_number LIKE '%{code}%' 
-                                                  AND deleted = false
-                                                ORDER BY production_id::INTEGER DESC
+                                                WHERE t_lotnum LIKE '%-%' 
+                                                  AND t_lotnum LIKE '%{code}%' 
+                                                  AND t_deleted = false
+                                                ORDER BY t_prodid::INTEGER DESC
                                                 )
 
                                                 WHERE {num1} >= range1 AND {num1} <= range2
@@ -3409,7 +3408,7 @@ class Ui_LoginWindow(object):
             time_endorsed_input.setFixedHeight(25)
             time_endorsed_input.setFixedWidth(296)
             time_endorsed_input.setFont(font)
-            time_endorsed_input.setDate(date_now)
+            time_endorsed_input.setDateTime(date_now)
             time_endorsed_input.setDisplayFormat("MM-dd-yyyy HH:mm")
 
             remarks_label = QLabel(self.body_widget)
