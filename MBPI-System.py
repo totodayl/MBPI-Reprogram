@@ -2888,8 +2888,6 @@ class Ui_LoginWindow(object):
                     self.cursor.execute("SELECT MAX(id) FROM quality_control")
                     qc_ID = self.cursor.fetchone()[0]
 
-
-
                     if qcType_dropdown.currentText() == "NEW":
 
                         self.cursor.execute(f"""
@@ -2917,13 +2915,16 @@ class Ui_LoginWindow(object):
                                            """)
                         self.conn.commit()
 
-                        print("test")
+
                         # For saving Multiple Lot Number in quality_control_tbl2
 
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
                         qc_ID = self.cursor.fetchone()[0]
+                        print("line 2923")
+                        print(qc_ID)
 
-                        if "-" == lotNumber_input.text()[6]:
+                        if "-" in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
+                            print("test")
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
                                         INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
@@ -2936,8 +2937,9 @@ class Ui_LoginWindow(object):
                                 self.conn.commit()
 
                             print("Query Successful")
-                            clear_entries() # Clear the entries after successful entry
+                            clear_entries()  # Clear the entries after successful entry
                         else:
+                            print("test")
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
                                     product_code, qc_type, formula_id)
@@ -2950,7 +2952,7 @@ class Ui_LoginWindow(object):
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
                         new_lot_list.clear()
 
-                    else: # CORRECTION
+                    else:  # CORRECTION
 
                         # SAVE TO THE FIRST QC TABLE 1
                         self.cursor.execute(f""" SELECT original_lot FROM quality_control
@@ -3044,6 +3046,7 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     print(e)
+                    print("3046")
                     QMessageBox.critical(self.body_widget, "ERROR", "test")
                     self.conn.rollback()
 
@@ -3085,11 +3088,12 @@ class Ui_LoginWindow(object):
 
             def autofill():
 
+                lotNumber_input.setText(lotNumber_input.text().upper())
+
                 self.cursor.execute(f"""
                 SELECT t_fid as formula_id, t_prodcode, t_customer  
                 FROM production_merge
-                WHERE t_lotnum = '{lotNumber_input.text()}'
-                
+                WHERE t_lotnum = '{lotNumber_input.text()}'                
                 
                 """)
                 result = self.cursor.fetchone()
@@ -3099,27 +3103,27 @@ class Ui_LoginWindow(object):
                     customer_dropdown.setCurrentText(result[2])
 
                 else: # For lot numbers in between the original lots
-                    if '-' in lotNumber_input.text():
+                    if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
                         lot_number = lotNumber_input.text().strip()
                         code = re.findall(r'[A-Z]+', lot_number)[0]
                         num1 = re.findall(r'(\d+)', lot_number)[0]
                         num2 = re.findall(r'(\d+)', lot_number)[1]
 
                         self.cursor.execute(f"""
-                                                                    SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
-                                                                            (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
-                                                                               CASE 
-                                                                                   WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
-                                                                                   ELSE NULL
-                                                                               END AS range2
-                                                                        FROM public.production_merge
-                                                                        WHERE t_lotnum LIKE '%-%' 
-                                                                          AND t_lotnum LIKE '%{code}%' 
-                                                                          AND deleted = false
-                                                                        ORDER BY t_prodid::INTEGER DESC
-                                                                        )
-
-                                                                        WHERE {num1} >= range1 AND {num2} <= range2
+                            SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
+                                    (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
+                                       CASE 
+                                           WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                                           ELSE NULL
+                                       END AS range2
+                                FROM public.production_merge
+                                WHERE t_lotnum LIKE '%-%' 
+                                  AND t_lotnum LIKE '%{code}%' 
+                                  AND deleted = false
+                                ORDER BY t_prodid::INTEGER DESC
+                                )
+    
+                                WHERE {num1} >= range1 AND {num2} <= range2
                                                                     """)
                         result = self.cursor.fetchone()
                         productCode_dropdown.setCurrentText(result[2])
@@ -3155,7 +3159,7 @@ class Ui_LoginWindow(object):
                             formulaID_input.setText(str(result[3]))
                             customer_dropdown.setCurrentText(result[1])
                         else:
-                            QMessageBox.information(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
+                            QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                             return
 
             def clear_field():
@@ -4469,7 +4473,7 @@ class Ui_LoginWindow(object):
                         lot_input.setFocus()
                         show_table()
 
-                except psycopg2.Error as e:
+                except Exception as e:
                     self.conn.rollback()
                     print(e)
 
@@ -4479,7 +4483,8 @@ class Ui_LoginWindow(object):
                 SELECT * FROM quality_control_tbl2
                 WHERE lot_number = '{lot_input.text()}'
                 """)
-                result = self.cursor.fetchall()
+                result = self.cursor.fetchone()
+                print(result)
 
                 if result != None:
                     self.cursor.execute(f"""
@@ -4497,6 +4502,7 @@ class Ui_LoginWindow(object):
                     formulaID_input.setText(str(result[3]))
                     customer_input.setText(result[4])
                 else:
+                    QMessageBox.information(self.qc_widget, "Not Found", "LOT NUMBER Does not Exist!")
                     product_code_input.clear()
                     formulaID_input.clear()
                     customer_input.clear()
