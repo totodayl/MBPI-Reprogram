@@ -4907,13 +4907,24 @@ class Ui_LoginWindow(object):
 
         def update_entry():
             def save_update():
-
+                # Update quality_control table
                 self.cursor.execute(f"""
                 UPDATE quality_control 
                 SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
                 evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}',
                 remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp
                 WHERE lot_number = '{lot_number}'
+                
+                """)
+
+                self.conn.commit()
+
+                # Update quality_control_tbl2
+                self.cursor.execute(f"""
+                UPDATE quality_control_tbl2
+                SET status = '{test_result_dropdown.currentText()}', evaluation_date = '{date_started.text()}',
+                formula_id = '{formulaID_input.text()}'
+                WHERE id = '{id}'
                 
                 """)
 
@@ -4931,6 +4942,7 @@ class Ui_LoginWindow(object):
             """)
             result = self.cursor.fetchone()
 
+            id = result[0]
             lot_number = result[1].strip()
             product_code = result[2].strip()
             customer = result[3]
