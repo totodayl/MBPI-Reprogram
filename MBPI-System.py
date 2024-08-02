@@ -2839,10 +2839,10 @@ class Ui_LoginWindow(object):
                 try:
                     new_lot_list.clear()
                     lotNumbers_board.clear()
-                    if len(lotNumber_input.text().split("-")) == 2:
-                        start_lot = lotNumber_input.text().split("-")[0][:4]
-                        end_lot = lotNumber_input.text().split("-")[1][:4]
-                        string_code = lotNumber_input.text().split("-")[0][4:6]
+                    if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
+                        start_lot = re.findall(r'\d+', lotNumber_input.text())[0]
+                        end_lot = re.findall(r'\d+', lotNumber_input.text())[1]
+                        string_code = re.findall(r'[a-zA-Z]+', lotNumber_input.text())[0]
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             while len(str(i)) != 4:
@@ -2876,7 +2876,7 @@ class Ui_LoginWindow(object):
                 def clear_entries():
                     lotNumber_input.clear()
                     productCode_dropdown.setCurrentIndex(0)
-                    customer_dropdown.setCurrentIndex(0)
+                    customers_box.clear()
                     formulaID_input.clear()
                     evaluatedBy_dropdown.setCurrentIndex(0)
                     result_dropdown.setCurrentIndex(0)
@@ -2908,7 +2908,7 @@ class Ui_LoginWindow(object):
                                            INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, formula_id)
-                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customer_dropdown.currentText()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.text()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                            '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
@@ -2964,7 +2964,7 @@ class Ui_LoginWindow(object):
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on, formula_id)
-                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customer_dropdown.currentText()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.text()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{orig_lot.strip()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
@@ -3076,7 +3076,7 @@ class Ui_LoginWindow(object):
                 if result == None:
                     print("no result")
                 else:
-                    customer_dropdown.setCurrentText(result[1])
+                    customers_box.setText(result[1])
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
 
@@ -3092,7 +3092,7 @@ class Ui_LoginWindow(object):
                 """)
                 result = self.cursor.fetchone()
                 if result != None:
-                    customer_dropdown.setCurrentText(result[2])
+                    customers_box.setText(result[2])
                     productCode_dropdown.setCurrentText(result[1])
                     formulaID_input.setText(str(result[0]))
 
@@ -3120,13 +3120,10 @@ class Ui_LoginWindow(object):
                                       
                                     ORDER BY t_prodid::INTEGER DESC
                                     )
-
                                     WHERE {num1} >= range1 AND {num2} <= range2
                                                                         """)
                             result = self.cursor.fetchone()
-                            print(result)
-                            print("test")
-                            customer_dropdown.setCurrentText(result[1])
+                            customers_box.setText(result[1])
                             productCode_dropdown.setCurrentText(result[2])
                             formulaID_input.setText(str(result[3]))
 
@@ -3158,7 +3155,7 @@ class Ui_LoginWindow(object):
                             if result:
                                 productCode_dropdown.setCurrentText(result[2])
                                 formulaID_input.setText(str(result[3]))
-                                customer_dropdown.setCurrentText(result[1])
+                                customers_box.setText(result[1])
                             else:
                                 QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                                 return
@@ -3350,22 +3347,11 @@ class Ui_LoginWindow(object):
             qcControl_input.setEnabled(False)
             qcControl_input.setFixedWidth(296)
 
-            customer_dropdown = QtWidgets.QComboBox()
-            customer_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
-            customer_dropdown.setFixedHeight(25)
-            customer_dropdown.setFixedWidth(296)
-
-
-            # ADD customer to dropdown Menu
-            self.cursor.execute("""
-            SELECT customers FROM customer;
-            
-            """)
-            result = self.cursor.fetchall()
-            result = sorted(result)
-            result = [i[0] for i in result]
-            for i in range(len(result)):
-                customer_dropdown.addItem(result[i])
+            customers_box = QtWidgets.QLineEdit()
+            customers_box.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
+            customers_box.setFixedHeight(25)
+            customers_box.setFixedWidth(296)
+            customers_box.setEnabled(False)
 
             productCode_dropdown = QtWidgets.QComboBox()
             productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
@@ -3530,7 +3516,7 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(qcType_label, qcType_dropdown)
             topFormLayout.addRow(qcControl_label, qcControl_input)
             topFormLayout.addRow(correction_label, correction_input)
-            topFormLayout.addRow(customer_label, customer_dropdown)
+            topFormLayout.addRow(customer_label, customers_box)
             topFormLayout.addRow(lotNumber_label, lotNumber_input)
             topFormLayout.addRow(productCode_label, productCode_dropdown)
             topFormLayout.addRow(formulaID_label, formulaID_input)
