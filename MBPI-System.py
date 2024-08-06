@@ -2867,7 +2867,6 @@ class Ui_LoginWindow(object):
                         string_code = re.findall('[a-zA-Z]+', correction_input.text())[0]
                         print(start_lot, end_lot, string_code)
                         for i in range(int(start_lot), int(end_lot) + 1):
-                            print(str(i) + string_code)
                             old_lot_list.append(str(i) + string_code)
                 except Exception as e:
                     print(e)
@@ -3004,12 +3003,11 @@ class Ui_LoginWindow(object):
                                 orig_lot = result[0][0]
 
                                 self.cursor.execute(f"""
-                                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                                        product_code, qc_type, formula_id)
-                                                        VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
-                                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
-
+                                    INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                    product_code, qc_type, formula_id, date_endorsed)
+                                    VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
+                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
                                 self.conn.commit()
                             clear_entries()
@@ -3028,11 +3026,11 @@ class Ui_LoginWindow(object):
 
 
                             self.cursor.execute(f"""
-                                    INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type, formula_id)
-                                    VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
+                                INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                product_code, qc_type, formula_id, date_endorsed)
+                                VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
+                                '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                 """)
                             self.conn.commit()
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success",
