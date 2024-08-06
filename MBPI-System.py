@@ -2396,8 +2396,8 @@ class Ui_LoginWindow(object):
 
             if self.machine_combo.currentText() != "-":
                 queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
-            if self.company_combo.currentText() != "-":
-                queryConList.append(f"customer = '{self.company_combo.currentText().replace("'", "''")}'")
+            # if self.company_combo.currentText() != "-":
+            #     queryConList.append(f"customer = '{self.company_combo.currentText().replace("'", "''")}'")
             if self.formula_combo.currentText() != "":
                 queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
             if self.productCode_combo.currentText() != "":
@@ -2859,15 +2859,13 @@ class Ui_LoginWindow(object):
             def get_old_lotNumbers():
 
                 try:
-                    if len(correction_input.text().split("-")) == 2:
+                    if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
                         start_lot = correction_input.text().split("-")[0][:4]
                         end_lot = correction_input.text().split("-")[1][:4]
                         string_code = correction_input.text().split("-")[0][4:6]
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             old_lot_list.append(str(i) + string_code)
-
-
                 except Exception as e:
                     print(e)
 
@@ -2908,7 +2906,7 @@ class Ui_LoginWindow(object):
                                            INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, formula_id)
-                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.text()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                            '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
@@ -2923,10 +2921,10 @@ class Ui_LoginWindow(object):
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
                                         INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
-                                         status, product_code, qc_type, formula_id)
+                                         status, product_code, qc_type, formula_id, date_endorsed)
                                         VALUES('{qc_ID}','{lot.strip()}', '{date_started_input.text()}', '{lot.strip()}',
                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', 
-                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
 
                                                     """)
                                 self.conn.commit()
@@ -2947,12 +2945,10 @@ class Ui_LoginWindow(object):
                         new_lot_list.clear()
 
                     else:  # CORRECTION
-
                         # SAVE TO THE FIRST QC TABLE 1
                         self.cursor.execute(f""" SELECT original_lot FROM quality_control
-                                            WHERE original_lot = '{correction_input.text().strip()}';
+                                            WHERE original_lot = '{correction_input.text()}'
                                        """)
-
                         result = self.cursor.fetchall()
                         try:
                             orig_lot = result[0][0]
@@ -2964,7 +2960,7 @@ class Ui_LoginWindow(object):
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
                                            evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on, formula_id)
-                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.text()}',
+                                           VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{orig_lot.strip()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
@@ -2981,8 +2977,7 @@ class Ui_LoginWindow(object):
                         qc_ID = self.cursor.fetchone()[0]
 
                         # Save To quality_control_tbl2 DB
-
-                        if "-" in lotNumber_input.text():
+                        if "-" in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
                             if len(old_lot_list) == len(new_lot_list):
                                 pass
                             else:
@@ -3007,7 +3002,7 @@ class Ui_LoginWindow(object):
                                                         product_code, qc_type, formula_id)
                                                         VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
                                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                                         '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
+                                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
 
                                                         """)
                                 self.conn.commit()
@@ -3025,10 +3020,11 @@ class Ui_LoginWindow(object):
 
                             orig_lot = result[0][0]
 
+
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
                                     product_code, qc_type, formula_id)
-                                    VALUES('{qc_ID}, {lotNumber_input.text().strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                    VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}')
                                                 """)
@@ -3040,7 +3036,6 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     print(e)
-                    print("3046")
                     QMessageBox.critical(self.body_widget, "ERROR", "test")
                     self.conn.rollback()
 
@@ -3067,103 +3062,106 @@ class Ui_LoginWindow(object):
             def correction_auto_input():
 
                 self.cursor.execute(f"""
-                SELECT product_code, customer, evaluated_by FROM quality_control
-                WHERE original_lot = '{correction_input.text()}'
-                
+                SELECT product_code, customer, evaluated_by, formula_id FROM quality_control
+                WHERE lot_number = '{correction_input.text()}'
                 
                 """)
                 result = self.cursor.fetchone()
                 if result == None:
                     print("no result")
+                    QMessageBox.information(self.qc_widget, "", "NO RESULT")
                 else:
-                    customers_box.setText(result[1])
+                    print(result)
+                    customers_box.setCurrentText(result[1])
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
+                    formulaID_input.setText(str(result[3]))
 
             def autofill():
 
                 lotNumber_input.setText(lotNumber_input.text().upper())
 
-                self.cursor.execute(f"""
-                SELECT t_fid as formula_id, t_prodcode, t_customer  
-                FROM production_merge
-                WHERE t_lotnum = '{lotNumber_input.text()}' AND t_deleted = 'false'              
-                
-                """)
-                result = self.cursor.fetchone()
-                if result != None:
-                    customers_box.setText(result[2])
-                    productCode_dropdown.setCurrentText(result[1])
-                    formulaID_input.setText(str(result[0]))
+                if qcType_dropdown.currentText() == "NEW":
+                    self.cursor.execute(f"""
+                                    SELECT t_fid as formula_id, t_prodcode, t_customer  
+                                    FROM production_merge
+                                    WHERE t_lotnum = '{lotNumber_input.text()}' AND t_deleted = 'false'              
 
-                else:
-                    # For lot numbers in between the original lots
-                    try:
-                        if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
-                            lot_number = lotNumber_input.text().strip()
-                            code = re.findall(r'[A-Z]+', lot_number)[0]
-                            num1 = re.findall(r'(\d+)', lot_number)[0]
-                            num2 = re.findall(r'(\d+)', lot_number)[1]
+                                    """)
+                    result = self.cursor.fetchone()
+                    if result != None:
+                        customers_box.setCurrentText(result[2])
+                        productCode_dropdown.setCurrentText(result[1])
+                        formulaID_input.setText(str(result[0]))
 
-                            self.cursor.execute(f"""
-                                SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
-                                        (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
-                                           CASE 
-                                               WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
-                                               WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
-                                               ELSE NULL
-                                           END AS range2
-                                    FROM public.production_merge
-                                    WHERE t_lotnum LIKE '%-%' 
-                                      AND t_lotnum ~* '\d{code}$'
-                                      AND t_deleted = 'false'
-                                      
-                                    ORDER BY t_prodid::INTEGER DESC
-                                    )
-                                    WHERE {num1} >= range1 AND {num2} <= range2
-                                                                        """)
-                            result = self.cursor.fetchone()
-                            customers_box.setText(result[1])
-                            productCode_dropdown.setCurrentText(result[2])
-                            formulaID_input.setText(str(result[3]))
+                    else:
+                        # For lot numbers in between the original lots
+                        try:
+                            if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
+                                lot_number = lotNumber_input.text().strip()
+                                code = re.findall(r'[A-Z]+', lot_number)[0]
+                                num1 = re.findall(r'(\d+)', lot_number)[0]
+                                num2 = re.findall(r'(\d+)', lot_number)[1]
 
+                                self.cursor.execute(f"""
+                                                    SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
+                                                            (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
+                                                               CASE 
+                                                                   WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                                                                   WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
+                                                                   ELSE NULL
+                                                               END AS range2
+                                                        FROM public.production_merge
+                                                        WHERE t_lotnum LIKE '%-%' 
+                                                          AND t_lotnum ~* '\d{code}$'
+                                                          AND t_deleted = 'false'
 
-
-                        else:
-
-                            lot_number = lotNumber_input.text().strip()
-                            code = re.findall(r'[A-Z]+', lot_number)[0]
-                            num1 = int(lot_number[:4])
-
-                            self.cursor.execute(f"""
-                                                SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
-                                                        (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
-                                                           CASE 
-                                                               WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
-                                                               ELSE NULL
-                                                           END AS range2
-                                                    FROM public.production_merge
-                                                    WHERE t_lotnum LIKE '%-%' 
-                                                      AND t_lotnum LIKE '%{code}%' 
-                                                      AND t_deleted = false
-                                                    ORDER BY t_prodid::INTEGER DESC
-                                                    )
-                                                    WHERE {num1} >= range1 AND {num1} <= range2
-                                                """)
-
-                            result = self.cursor.fetchone()
-                            if result:
+                                                        ORDER BY t_prodid::INTEGER DESC
+                                                        )
+                                                        WHERE {num1} >= range1 AND {num2} <= range2
+                                                                                            """)
+                                result = self.cursor.fetchone()
+                                customers_box.setCurrentText(result[1])
                                 productCode_dropdown.setCurrentText(result[2])
                                 formulaID_input.setText(str(result[3]))
-                                customers_box.setText(result[1])
+
                             else:
-                                QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
-                                return
 
-                    except TypeError:
-                        QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
-                        return
+                                lot_number = lotNumber_input.text().strip()
+                                code = re.findall(r'[A-Z]+', lot_number)[0]
+                                num1 = int(lot_number[:4])
 
+                                self.cursor.execute(f"""
+                                                                    SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
+                                                                            (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
+                                                                               CASE 
+                                                                                   WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                                                                                   ELSE NULL
+                                                                               END AS range2
+                                                                        FROM public.production_merge
+                                                                        WHERE t_lotnum LIKE '%-%' 
+                                                                          AND t_lotnum LIKE '%{code}%' 
+                                                                          AND t_deleted = false
+                                                                        ORDER BY t_prodid::INTEGER DESC
+                                                                        )
+                                                                        WHERE {num1} >= range1 AND {num1} <= range2
+                                                                    """)
+
+                                result = self.cursor.fetchone()
+                                if result:
+                                    productCode_dropdown.setCurrentText(result[2])
+                                    formulaID_input.setText(str(result[3]))
+                                    customers_box.setCurrentText(result[1])
+                                else:
+                                    QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
+                                    return
+
+                        except TypeError:
+                            QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
+                            return
+
+                else:
+                    pass
 
 
             def clear_field():
@@ -3347,11 +3345,19 @@ class Ui_LoginWindow(object):
             qcControl_input.setEnabled(False)
             qcControl_input.setFixedWidth(296)
 
-            customers_box = QtWidgets.QLineEdit()
+            customers_box = QtWidgets.QComboBox()
             customers_box.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             customers_box.setFixedHeight(25)
             customers_box.setFixedWidth(296)
-            customers_box.setEnabled(False)
+            # Add Customer List
+            self.cursor.execute("""
+            SELECT customers FROM customer
+            ORDER BY customers
+            
+            """)
+            result = self.cursor.fetchall()
+            for customer in result:
+                customers_box.addItem(customer[0])
 
             productCode_dropdown = QtWidgets.QComboBox()
             productCode_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow; ")
@@ -3658,8 +3664,6 @@ class Ui_LoginWindow(object):
             self.cursor.executemany(insert_query, data)
             self.conn.commit()
 
-
-
             # get the data from the Database
             self.cursor.execute("""
             SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
@@ -3801,9 +3805,9 @@ class Ui_LoginWindow(object):
         def show_dashboards():
 
             def get_data():
-
                 # This is for the Other Graphs that cant make it in the First Six
                 def change_graph():
+
                     if graph5_selections.currentText() == 'Supervisor':
                         self.cursor.execute(f"""
                                                 SELECT supervisor, COUNT(supervisor)
@@ -3946,7 +3950,6 @@ class Ui_LoginWindow(object):
                         self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
 
                         self.canvas.draw()
-
 
 
                 date1 = dateFrom_widget.currentIndex()+1
@@ -4289,6 +4292,14 @@ class Ui_LoginWindow(object):
                 graph5_selections.currentIndexChanged.connect(change_graph)
                 graph5_selections.show()
 
+                import_button = QPushButton(self.body_widget)
+                import_button.setGeometry(850, 35, 100, 25)
+                import_button.setText("IMPORT")
+                import_button.setStyleSheet("border: none; background-color: rgb(227, 227, 227)")
+                import_button.setCursor(Qt.PointingHandCursor)
+                import_button.clicked.connect(save_to_excel)
+                import_button.show()
+
 
 
             self.qc_widget.deleteLater()
@@ -4394,6 +4405,12 @@ class Ui_LoginWindow(object):
             dateTo_widget.activated.connect(get_data)
             dateTo_widget.show()
 
+        def save_to_excel():
+
+            pass
+
+
+
         def show_items():
             try:
                 # Querying the selected item in the database
@@ -4478,7 +4495,7 @@ class Ui_LoginWindow(object):
                 WHERE lot_number = '{lot_input.text()}'
                 """)
                 result = self.cursor.fetchone()
-                print(result)
+
 
                 if result != None:
                     self.cursor.execute(f"""
@@ -4489,7 +4506,7 @@ class Ui_LoginWindow(object):
                     
                     """)
                     result = self.cursor.fetchall()[0]
-                    print(result)
+
                     # Set the Text
                     origin_lot.setText(result[0])
                     product_code_input.setText(result[2])
@@ -4930,6 +4947,7 @@ class Ui_LoginWindow(object):
 
                 self.conn.commit()
                 self.update_qc_widget.close()
+                self.quality_control()
                 QMessageBox.information(self.qc_widget, "Success", "Update Successful")
 
             selected = self.qc_table.selectedItems()
