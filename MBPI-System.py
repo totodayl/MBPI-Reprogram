@@ -2843,6 +2843,7 @@ class Ui_LoginWindow(object):
                         start_lot = re.findall(r'\d+', lotNumber_input.text())[0]
                         end_lot = re.findall(r'\d+', lotNumber_input.text())[1]
                         string_code = re.findall(r'[a-zA-Z]+', lotNumber_input.text())[0]
+                        print(start_lot, end_lot)
 
                         for i in range(int(start_lot), int(end_lot) + 1):
                             while len(str(i)) != 4:
@@ -2859,12 +2860,14 @@ class Ui_LoginWindow(object):
             def get_old_lotNumbers():
 
                 try:
-                    if '-' in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
-                        start_lot = correction_input.text().split("-")[0][:4]
-                        end_lot = correction_input.text().split("-")[1][:4]
-                        string_code = correction_input.text().split("-")[0][4:6]
 
+                    if '-' in correction_input.text() and correction_input.text()[-1] != ')':
+                        start_lot = re.findall(r'\d+', correction_input.text())[0]
+                        end_lot = re.findall(r'\d+', correction_input.text())[1]
+                        string_code = re.findall('[a-zA-Z]+', correction_input.text())[0]
+                        print(start_lot, end_lot, string_code)
                         for i in range(int(start_lot), int(end_lot) + 1):
+                            print(str(i) + string_code)
                             old_lot_list.append(str(i) + string_code)
                 except Exception as e:
                     print(e)
@@ -2934,10 +2937,10 @@ class Ui_LoginWindow(object):
                         else:
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
-                                    product_code, qc_type, formula_id)
+                                    product_code, qc_type, formula_id, date_endorsed)
                                     VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', '{qcType_dropdown.currentText()}', 
-                                    '{formulaID_input.text()}')    """)
+                                    '{formulaID_input.text()}', '{time_endorsed_input.text()}')    """)
                             self.conn.commit()
                             clear_entries()
 
@@ -2981,12 +2984,14 @@ class Ui_LoginWindow(object):
                             if len(old_lot_list) == len(new_lot_list):
                                 pass
                             else:
+                                print(old_lot_list, new_lot_list)
                                 QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
                                                         "ERROR",
                                                         "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
                                 return
 
                             for i in range(len(old_lot_list)):
+                                print(old_lot_list)
                                 print("Run " + str(i))
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
@@ -2995,6 +3000,7 @@ class Ui_LoginWindow(object):
                                 """)
 
                                 result = self.cursor.fetchall()
+                                print(result)
                                 orig_lot = result[0][0]
 
                                 self.cursor.execute(f"""
@@ -3089,6 +3095,7 @@ class Ui_LoginWindow(object):
 
                                     """)
                     result = self.cursor.fetchone()
+                    print(result)
                     if result != None:
                         customers_box.setCurrentText(result[2])
                         productCode_dropdown.setCurrentText(result[1])
