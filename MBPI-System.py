@@ -1,5 +1,8 @@
 import os
-from openpyxl import load_workbook
+import matplotlib
+from openpyxl import load_workbook, Workbook
+from openpyxl.styles import Font
+from openpyxl.styles import Alignment
 import json
 import calendar
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -9,7 +12,6 @@ from datetime import timedelta, datetime, time, date
 import holidays as hd
 import numpy as np
 import re
-import time as tm
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
@@ -219,8 +221,7 @@ class Ui_LoginWindow(object):
             total_input = selected[29]
 
             def exportToExcel():
-                from openpyxl.styles import Font
-                from openpyxl.styles import Alignment
+
 
                 process_id = selected[0]
 
@@ -2860,7 +2861,6 @@ class Ui_LoginWindow(object):
             def get_old_lotNumbers():
 
                 try:
-
                     if '-' in correction_input.text() and correction_input.text()[-1] != ')':
                         start_lot = re.findall(r'\d+', correction_input.text())[0]
                         end_lot = re.findall(r'\d+', correction_input.text())[1]
@@ -2872,7 +2872,6 @@ class Ui_LoginWindow(object):
                     print(e)
 
             def saveBtn_clicked():
-
                 def clear_entries():
                     lotNumber_input.clear()
                     productCode_dropdown.setCurrentIndex(0)
@@ -2981,35 +2980,63 @@ class Ui_LoginWindow(object):
                         # Save To quality_control_tbl2 DB
                         if "-" in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
                             if len(old_lot_list) == len(new_lot_list):
-                                pass
+                                for i in range(len(old_lot_list)):
+
+                                    self.cursor.execute(f"""
+                                    SELECT original_lot FROM quality_control_tbl2
+                                    WHERE lot_number = '{old_lot_list[i]}'
+
+                                    """)
+
+                                    result = self.cursor.fetchall()
+                                    print(result)
+                                    orig_lot = result[0][0]
+
+                                    self.cursor.execute(f"""
+                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                        product_code, qc_type, formula_id, date_endorsed)
+                                        VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                                            """)
+                                    self.conn.commit()
+
+                            elif len(new_lot_list) > len(old_lot_list): # IF NEW LOT IS HAVE MORE LOT THAN THE CORRECTED LOT
+
+                                while len(old_lot_list) != len(new_lot_list):
+                                    old_lot_list.append(old_lot_list[-1])
+
+                                print(new_lot_list)
+                                print(old_lot_list)
+
+                                for i in range(len(new_lot_list)):
+
+                                    self.cursor.execute(f"""
+                                    SELECT original_lot FROM quality_control_tbl2
+                                    WHERE lot_number = '{old_lot_list[i]}'
+
+                                    """)
+
+                                    result = self.cursor.fetchall()
+                                    orig_lot = result[0][0]
+
+                                    self.cursor.execute(f"""
+                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                        product_code, qc_type, formula_id, date_endorsed)
+                                        VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                                            """)
+                                    self.conn.commit()
+
                             else:
-                                print(old_lot_list, new_lot_list)
+
                                 QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
                                                         "ERROR",
                                                         "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
                                 return
 
-                            for i in range(len(old_lot_list)):
-                                print(old_lot_list)
-                                print("Run " + str(i))
-                                self.cursor.execute(f"""
-                                SELECT original_lot FROM quality_control_tbl2
-                                WHERE lot_number = '{old_lot_list[i]}'
 
-                                """)
-
-                                result = self.cursor.fetchall()
-                                print(result)
-                                orig_lot = result[0][0]
-
-                                self.cursor.execute(f"""
-                                    INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type, formula_id, date_endorsed)
-                                    VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
-                                    '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
-                                                        """)
-                                self.conn.commit()
                             clear_entries()
 
                         else:
@@ -3044,10 +3071,11 @@ class Ui_LoginWindow(object):
                     self.conn.rollback()
 
             def correction_enabled():
+                print('test')
                 if qcType_dropdown.currentText() == "CORRECTION":
                     updatedBy_input.setEnabled(True)
                     correction_input.setEnabled(True)
-
+                    print('test')
                     updatedBy_input.setStyleSheet(
                         "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
                     correction_input.setStyleSheet(
@@ -3075,7 +3103,6 @@ class Ui_LoginWindow(object):
                     print("no result")
                     QMessageBox.information(self.qc_widget, "", "NO RESULT")
                 else:
-                    print(result)
                     customers_box.setCurrentText(result[1])
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
@@ -3093,7 +3120,6 @@ class Ui_LoginWindow(object):
 
                                     """)
                     result = self.cursor.fetchone()
-                    print(result)
                     if result != None:
                         customers_box.setCurrentText(result[2])
                         productCode_dropdown.setCurrentText(result[1])
@@ -3540,6 +3566,8 @@ class Ui_LoginWindow(object):
 
             widget1.show()
 
+            print("end")
+
         def show_qc_data():
             self.qc_widget.deleteLater()
 
@@ -3809,8 +3837,13 @@ class Ui_LoginWindow(object):
 
         def show_dashboards():
 
+
+
+
             def get_data():
                 # This is for the Other Graphs that cant make it in the First Six
+
+                matplotlib.use('Qt5Agg')
                 def change_graph():
 
                     if graph5_selections.currentText() == 'Supervisor':
@@ -3962,6 +3995,7 @@ class Ui_LoginWindow(object):
 
                 # Get the last day of Month
                 ph_holiday = hd.country_holidays('PH')
+                # Query For Getting the MIN AND MAX Date of original lot
                 self.cursor.execute(f"""
                             SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
                             FROM qc_num_days  
@@ -4008,6 +4042,7 @@ class Ui_LoginWindow(object):
                 self.cursor.executemany(insert_query, data)
                 self.conn.commit()
 
+
                 # Query For Getting the AVERAGE qc_days PER PRODUCT_CODE
                 self.cursor.execute(f"""
                  SELECT product_code,
@@ -4018,7 +4053,7 @@ class Ui_LoginWindow(object):
          SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
             quality_control_tbl2.original_lot
            FROM quality_control_tbl2
-		   WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+		    WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
           GROUP BY quality_control_tbl2.original_lot
           
         )
@@ -4039,6 +4074,7 @@ class Ui_LoginWindow(object):
   ORDER BY avg_qcdays DESC;
                 
                 """)
+
                 layout = QHBoxLayout(self.body_widget)
 
                 self.figure = plt.figure(figsize=(2, 2), dpi=60)
@@ -4127,6 +4163,9 @@ class Ui_LoginWindow(object):
                             failToPass[product_code.strip()] += 1
                             failed_firstrun[product_code.strip()] += 1
 
+                print("failed first RUn: ", failed_firstrun)
+                print(failToPass)
+
                 # Get the Total Product Code runs from data x to date y
                 self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) AS total_quantity
@@ -4214,6 +4253,8 @@ class Ui_LoginWindow(object):
                 # Getting the Percentage of Each Product Codes Failed in First Run
                 for key, value in failed_firstrun.items():
                     failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
+
+                print(failed_firstrun)
 
                 # Visual 4
 
@@ -4412,9 +4453,161 @@ class Ui_LoginWindow(object):
 
         def save_to_excel():
 
-            pass
+
+            self.cursor.execute(f"""
+                             SELECT product_code,
+                round(avg(days_float), 4) AS avg_qcdays
+               FROM ( SELECT t1.product_code,
+                        EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0 AS days_float
+                       FROM ( WITH aggregated_materials AS (
+                     SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
+                        quality_control_tbl2.original_lot
+                       FROM quality_control_tbl2
+            		   
+                      GROUP BY quality_control_tbl2.original_lot
+
+                    )
+             SELECT q.id AS qc_id,
+                q.lot_number,
+                q.evaluation_date,
+                q.original_lot,
+                q.status,
+                q.product_code,
+                a.qc_days,
+                q.qc_type
+
+               FROM aggregated_materials a
+                 JOIN quality_control_tbl2 q ON a.original_lot::text = q.original_lot::text) t1
+                         JOIN qc_dayoff t2 ON t1.original_lot::text = t2.original_lot::text
+                      GROUP BY t1.product_code, (EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0)) subquery
+              GROUP BY product_code
+              ORDER BY avg_qcdays DESC;
+
+                            """)
+            result = self.cursor.fetchall()
+
+            wb = Workbook()
+            ws1 = wb.active
+            center_Alignment = Alignment(horizontal='center', vertical='center')
+            ws1.column_dimensions['B'].width = 20
+            ws1.column_dimensions['A'].width = 20
+            ws1['A1'].alignment = center_Alignment
+            ws1['B1'].alignment = center_Alignment
+            ws1['A1'] = "Product Code"
+            ws1['B1'] = "Average QC Days"
+
+            for i in range(len(result)):
+                ws1[f"A{2 + i}"] = result[i][0]
+                ws1[f"B{2 + i}"] = result[i][1]
+                ws1[f"A{2 + i}"].alignment = center_Alignment
+                ws1[f"B{2 + i}"].alignment = center_Alignment
 
 
+            # Create a new Worksheet
+            ws2 = wb.create_sheet("Most Changing")
+
+            self.cursor.execute(f"""
+                                        WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
+                        FROM (SELECT * FROM quality_control_tbl2))
+                        SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
+                        FROM numbered_row			
+                                        """)
+
+
+            result = self.cursor.fetchall()
+            # Error Handling
+            if len(result) == 0:
+                print("NO DATA")
+                return
+
+            df = pd.DataFrame(result)
+            df.columns = ["original_lot", "status", "product_code", "row_number"]
+            passToFail = {}
+            failToPass = {}
+            failed_firstrun = {}
+
+            # Getting the number of Lot Number with Passed Status and then become Failed Later
+            for index, row in df.iterrows():
+                original_lot = row['original_lot']
+                status = row['status']
+                product_code = row['product_code']
+                row_number = row['row_number']
+                if status == "Passed" and row_number == 1:
+                    try:
+                        if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
+                            if product_code not in passToFail.keys():
+                                passToFail[product_code.strip()] = 1
+                            else:
+                                passToFail[product_code.strip()] += 1
+                    except Exception as e:
+                        print(e)
+                elif status == "Failed" and row_number == 1:
+                    if product_code not in failToPass.keys():
+                        failToPass[product_code.strip()] = 1
+                        failed_firstrun[product_code.strip()] = 1
+                    else:
+                        failToPass[product_code.strip()] += 1
+                        failed_firstrun[product_code.strip()] += 1
+
+            print(failToPass)
+
+
+            # Get the Total Product Code runs from data x to date y
+            self.cursor.execute(f"""
+                            SELECT product_code, COUNT(*) AS total_quantity
+                        FROM (SELECT DISTINCT ON (product_code, original_lot) *
+                        FROM quality_control_tbl2
+                        ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
+                        GROUP BY product_code
+                        ORDER BY product_code
+
+                            """)
+            result = self.cursor.fetchall()
+
+            total_productCodes = {}
+            for i in result:
+                total_productCodes[i[0].strip()] = i[1]
+
+            total_changeProductCodes = {}
+
+            # get the percentage of each product code From PASS TO FAIL AND FAIL TO PASS
+            for key, value in passToFail.items():
+                passToFail[key] = passToFail[key] / total_productCodes[key]
+
+            for key, value in failToPass.items():
+                failToPass[key] = failToPass[key] / total_productCodes[key]
+
+            # Combine the codes to see the most change
+            for key in total_productCodes.keys():
+                if key in passToFail.keys():
+                    total_changeProductCodes[key] = passToFail[key]
+                if key in failToPass.keys():
+                    if key in total_changeProductCodes.keys():
+                        total_changeProductCodes[key] += failToPass[key]
+                    else:
+                        total_changeProductCodes[key] = failToPass[key]
+
+            # Sort the total_changeProductCodes
+            total_changeProductCodes = sorted(total_changeProductCodes.items(), key=lambda x: x[1], reverse=True)
+
+            total_changeProductCodes = dict(total_changeProductCodes)
+
+            print(total_changeProductCodes)
+
+
+
+
+            # Open QFileDialog
+            filename, _ = QFileDialog.getSaveFileName(self.qc_widget, "Save File",
+                                                      r"C:\Users\Administrator\Desktop",
+                                                      "Excel Files (*.xlsx)", options=QFileDialog.Options())
+
+            if filename:
+                if not filename.lower().endswith('.xlsx'):
+                    filename += '.xlsx'
+
+                wb.save(filename)
+                QMessageBox.information(self.qc_widget, "Export Success", "File Successfully Exported!")
 
         def show_items():
             try:
