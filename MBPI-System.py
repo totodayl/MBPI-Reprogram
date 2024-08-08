@@ -2960,12 +2960,12 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
-                                           evaluated_on, encoded_on, time_endorsed, qc_type, updated_by, updated_on, formula_id)
+                                           evaluated_on, encoded_on, time_endorsed, qc_type, updated_on, formula_id)
                                            VALUES('{lotNumber_input.text().strip()}', '{productCode_dropdown.currentText().strip()}', '{customers_box.currentText()}',
                                            '{result_dropdown.currentText()}', '{remarks_box.toPlainText()}', '{actionTake_box.toPlainText()}',
                                            '{orig_lot.strip()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           ' {time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', 
-                                          '{updatedBy_input.currentText()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                            '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                           '{formulaID_input.text()}')
 
                                        """)
