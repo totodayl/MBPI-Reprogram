@@ -3866,9 +3866,6 @@ class Ui_LoginWindow(object):
 
         def show_dashboards():
 
-
-
-
             def get_data():
                 # This is for the Other Graphs that cant make it in the First Six
 
@@ -3899,6 +3896,7 @@ class Ui_LoginWindow(object):
                         self.graph5.set_xticklabels(x, rotation=30)
                         self.graph5.set_title("Highest AVG Returns By Supervisor", fontsize=15)
                         self.canvas.draw()
+
                     elif graph5_selections.currentText() == 'Operator':
 
                         self.cursor.execute(f"""
@@ -4283,7 +4281,32 @@ class Ui_LoginWindow(object):
                 for key, value in failed_firstrun.items():
                     failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
 
-                print(failed_firstrun)
+                # Visual 3
+                self.cursor.execute(f"""
+                    SELECT product_code , COUNT(*) FROM public.quality_control_tbl2
+                    WHERE qc_type = 'NEW' AND status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
+                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                    GROUP BY product_code
+                    ORDER BY count
+                
+                """)
+
+                result = self.cursor.fetchall()
+                x = []
+                y = []
+
+                for item in result:
+                    x.append(item[0])
+                    y.append(item[1])
+
+                print(x,y)
+
+                self.graph3.bar(x, y)
+                self.graph3.set_xticklabels(x, rotation=30)
+                self.graph3.set_yticks(np.arange(0, 110, 10))
+                self.graph3.set_ylim(0, 110)
+                self.graph3.set_title("Failed First Run", fontsize=15)
+
 
                 # Visual 4
 
