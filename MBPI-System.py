@@ -3029,6 +3029,35 @@ class Ui_LoginWindow(object):
                                                             """)
                                     self.conn.commit()
 
+
+                            elif len(new_lot_list) < len(old_lot_list): # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
+
+                                while len(new_lot_list) != len(old_lot_list):
+                                    new_lot_list.append(new_lot_list[-1])
+
+                                print(new_lot_list)
+                                print(old_lot_list)
+
+                                for i in range(len(new_lot_list)):
+
+                                    self.cursor.execute(f"""
+                                    SELECT original_lot FROM quality_control_tbl2
+                                    WHERE lot_number = '{old_lot_list[i]}'
+
+                                    """)
+
+                                    result = self.cursor.fetchall()
+                                    orig_lot = result[0][0]
+
+                                    self.cursor.execute(f"""
+                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
+                                        product_code, qc_type, formula_id, date_endorsed)
+                                        VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
+                                        '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                                            """)
+                                    self.conn.commit()
+
                             else:
 
                                 QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
