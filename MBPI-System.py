@@ -2895,7 +2895,6 @@ class Ui_LoginWindow(object):
                 def clear_entries():
                     lotNumber_input.clear()
                     productCode_dropdown.setCurrentIndex(0)
-                    customers_box.clear()
                     formulaID_input.clear()
                     evaluatedBy_dropdown.setCurrentIndex(0)
                     result_dropdown.setCurrentIndex(0)
@@ -4285,6 +4284,7 @@ class Ui_LoginWindow(object):
                     '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
                     GROUP BY product_code
                     ORDER BY count
+                    LIMIT 5
                 
                 """)
 
