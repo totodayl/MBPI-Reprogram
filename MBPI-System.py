@@ -3211,7 +3211,7 @@ class Ui_LoginWindow(object):
                                     QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                                     return
 
-                        except TypeError:
+                        except:
                             QMessageBox.critical(self.qc_widget, "Not Found", "LOT Number Does not Exist!")
                             return
 
@@ -4137,8 +4137,8 @@ class Ui_LoginWindow(object):
                 y = y[:5]
                 self.graph1.bar(x, y)
                 self.graph1.set_xticklabels(x, rotation=30)
-                self.graph1.set_ylim(0, 110)
-                self.graph1.set_yticks(np.arange(0, 110, 10))
+                self.graph1.set_ylim(0, 35)
+                self.graph1.set_yticks(np.arange(0, 35, 5))
 
                 self.graph1.set_title("Highest AVG QC days", fontsize=15)
 
@@ -5263,7 +5263,13 @@ class Ui_LoginWindow(object):
                 UPDATE quality_control 
                 SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
                 evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}',
-                remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp
+                remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp,
+				status_changed = 
+				    CASE 
+                        WHEN (SELECT status FROM quality_control WHERE lot_number = '{lot_number}') != '{test_result_dropdown.currentText()}'
+                        THEN true
+                        else false
+                        END
                 WHERE lot_number = '{lot_number}'
                 
                 """)
@@ -5301,7 +5307,7 @@ class Ui_LoginWindow(object):
             status = result[4]
             remarks = result[5].strip()
             date_evaluated = result[9]
-            formula_id = result[-1]
+            formula_id = result[-2]
 
             if selected:
                 self.update_qc_widget = QWidget()
