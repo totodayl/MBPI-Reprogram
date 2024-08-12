@@ -4160,17 +4160,31 @@ class Ui_LoginWindow(object):
                 for i in result:
                     total_productCodes[i[0].strip()] = i[1]
 
-                total_changeProductCodes = {}
+
+                self.cursor.execute("""
+                SELECT product_code, COUNT(*)
+                FROM quality_control
+                WHERE status_changed = true
+                GROUP BY product_code
+                ORDER BY COUNT(*) DESC
+                LIMIT 5
+                
+                """)
+
+                result = self.cursor.fetchall()
+
+                prodouctCodeList = []
+                prodouctCodeCount = []
+                for items in result:
+                    prodouctCodeList.append(items[0])
+                    prodouctCodeCount.append(items[1])
 
 
-                self.graph2.bar(x_axis, y1_axis)
-                self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
-                self.graph2.set_yticks(np.arange(0, 110, 10))
-                self.graph2.set_ylim(0, 110)
-                self.graph2.set_xticklabels(x_axis, rotation=30)
+                self.graph2.bar(prodouctCodeList, prodouctCodeCount)
+                self.graph2.set_yticks(np.arange(0, prodouctCodeCount[0] + 20, 5))
+                self.graph2.set_ylim(0, prodouctCodeCount[0] + 20)
+                self.graph2.set_xticklabels(prodouctCodeList, rotation=30)
                 self.graph2.set_title("Most Change", fontsize = 15)
-                self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
-
 
 
                 # Visual 3
@@ -4193,7 +4207,6 @@ class Ui_LoginWindow(object):
                 for item in result:
                     x.append(item[0])
                     y.append(item[1])
-
 
                 self.graph3.bar(x, y)
                 self.graph3.set_xticklabels(x, rotation=30)
