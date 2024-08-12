@@ -4143,52 +4143,6 @@ class Ui_LoginWindow(object):
                 self.graph1.set_title("Highest AVG QC days", fontsize=15)
 
 
-
-
-                # Getting the Pass to Fail And Fail TO pass QC
-                self.cursor.execute(f"""
-                            WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
-            FROM (SELECT * FROM quality_control_tbl2 WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'))
-            SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
-            FROM numbered_row			
-                            """)
-
-                result = self.cursor.fetchall()
-                # Error Handling
-                if len(result) == 0:
-                    print("NO DATA")
-                    return
-
-                df = pd.DataFrame(result)
-                df.columns = ["original_lot", "status", "product_code", "row_number"]
-                passToFail = {}
-                failToPass = {}
-                failed_firstrun = {}
-
-                # Getting the number of Lot Number with Passed Status and then become Failed Later
-                for index, row in df.iterrows():
-                    original_lot = row['original_lot']
-                    status = row['status']
-                    product_code = row['product_code']
-                    row_number = row['row_number']
-                    if status == "Passed" and row_number == 1:
-                        try:
-                            if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
-                                if product_code not in passToFail.keys():
-                                    passToFail[product_code.strip()] = 1
-                                else:
-                                    passToFail[product_code.strip()] += 1
-                        except Exception as e:
-                            print(e)
-                    elif status == "Failed" and row_number == 1:
-                        if product_code not in failToPass.keys():
-                            failToPass[product_code.strip()] = 1
-                            failed_firstrun[product_code.strip()] = 1
-                        else:
-                            failToPass[product_code.strip()] += 1
-                            failed_firstrun[product_code.strip()] += 1
-
-
                 # Get the Total Product Code runs from data x to date y
                 self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) AS total_quantity
@@ -4207,63 +4161,7 @@ class Ui_LoginWindow(object):
                     total_productCodes[i[0].strip()] = i[1]
 
                 total_changeProductCodes = {}
-                # get the percentage of each product code From PASS TO FAIL AND FAIL TO PASS
-                for key,value in passToFail.items():
-                    passToFail[key] = passToFail[key] / total_productCodes[key]
 
-                for key, value in failToPass.items():
-                    failToPass[key] = failToPass[key] / total_productCodes[key]
-
-                # Combine the codes to see the most change
-                for key in total_productCodes.keys():
-                    if key in passToFail.keys():
-                        total_changeProductCodes[key] = passToFail[key]
-                    if key in failToPass.keys():
-                        if key in total_changeProductCodes.keys():
-                            total_changeProductCodes[key] += failToPass[key]
-                        else:
-                            total_changeProductCodes[key] = failToPass[key]
-
-                # Sort the total_changeProductCodes
-                total_changeProductCodes = sorted(total_changeProductCodes.items(), key=lambda x:x[1], reverse=True)
-
-                total_changeProductCodes = dict(total_changeProductCodes)
-
-                # Graph2
-                x = []
-                y1 = []
-                y2 = []
-
-                for key in total_changeProductCodes.keys():
-                    try:
-                        y1.append(passToFail[key])
-                    except:
-                        y1.append(0)
-                    try:
-                        y2.append(failToPass[key])
-                    except:
-                        y2.append(0)
-                    x.append(key)
-
-                for i in range(len(x)):
-                    y1[i] = y1[i] * 100
-                    y2[i] = y2[i] * 100
-
-                std_ProductCodesTotal = {}
-                for key, value in total_productCodes.items():
-                    if total_productCodes[key] >= 5:
-                        std_ProductCodesTotal[key] = value
-                    else:
-                        pass
-
-                x_axis = []
-                y1_axis = []
-                y2_axis = []
-                for i in range(len(x)):
-                    if x[i] in std_ProductCodesTotal.keys():
-                        x_axis.append(x[i])
-                        y1_axis.append(y1[i])
-                        y2_axis.append(y2[i])
 
                 self.graph2.bar(x_axis, y1_axis)
                 self.graph2.bar(x_axis, y2_axis, bottom=y1_axis)
@@ -4273,11 +4171,11 @@ class Ui_LoginWindow(object):
                 self.graph2.set_title("Most Change", fontsize = 15)
                 self.graph2.legend(["Pass to Fail", "Fail to pass"], loc = "upper right")
 
-                # Getting the Percentage of Each Product Codes Failed in First Run
-                for key, value in failed_firstrun.items():
-                    failed_firstrun[key] = failed_firstrun[key] / total_productCodes[key]
+
 
                 # Visual 3
+
+                # Query For Getting the Failed First Run
                 self.cursor.execute(f"""
                     SELECT product_code , COUNT(*) FROM public.quality_control_tbl2
                     WHERE qc_type = 'NEW' AND status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
