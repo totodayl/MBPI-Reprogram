@@ -1876,8 +1876,9 @@ class Ui_LoginWindow(object):
 
                     QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL",
                                             f"Successfully Updated \n Form No. {selected[0]}")
-                    print("query successful")
+
                     self.conn.commit()
+                    self.production() # Refreshes the Table
                     self.entry_widget.close()
                 except Exception as e:
                     print("Insert Failed")
@@ -3869,15 +3870,15 @@ class Ui_LoginWindow(object):
 
                     if graph5_selections.currentText() == 'Supervisor':
                         self.cursor.execute(f"""
-                                                SELECT supervisor, COUNT(supervisor)
-                                                FROM
-                                                (SELECT t1.lot_number, t2.operator, t2.supervisor
-                                                FROM returns t1
-                                                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                                                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
-                                                GROUP BY supervisor
+                            SELECT supervisor, COUNT(supervisor)
+                            FROM
+                            (SELECT t1.lot_number, t2.operator, t2.supervisor
+                            FROM returns t1
+                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                            WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                            GROUP BY supervisor
 
-                                                                                """)
+                                             """)
                         result = self.cursor.fetchall()
                         x = []
                         y = []
@@ -4181,8 +4182,13 @@ class Ui_LoginWindow(object):
 
 
                 self.graph2.bar(prodouctCodeList, prodouctCodeCount)
-                self.graph2.set_yticks(np.arange(0, prodouctCodeCount[0] + 20, 5))
-                self.graph2.set_ylim(0, prodouctCodeCount[0] + 20)
+                try:
+                    self.graph2.set_yticks(np.arange(0, prodouctCodeCount[0] + 20, 5))
+                    self.graph2.set_ylim(0, prodouctCodeCount[0] + 20)
+                except IndexError:
+                    self.graph2.set_yticks(np.arange(0, 50, 5))
+                    self.graph2.set_ylim(0, 50)
+
                 self.graph2.set_xticklabels(prodouctCodeList, rotation=30)
                 self.graph2.set_title("Most Change", fontsize = 15)
 
@@ -4464,123 +4470,36 @@ class Ui_LoginWindow(object):
             # Create a new Worksheet
             ws2 = wb.create_sheet("Most Changing")
 
-            self.cursor.execute(f"""
-                WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
-                FROM (SELECT * FROM quality_control_tbl2 WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'))
-                SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
-                FROM numbered_row			
-                                """)
 
+            self.cursor.execute("""
+            SELECT product_code, COUNT(*)
+            FROM quality_control
+            WHERE status_changed = true
+            GROUP BY product_code
+            ORDER BY COUNT(*) DESC
+            
+            """)
 
-            result = self.cursor.fetchall()
-            # Error Handling
-            if len(result) == 0:
-                print("NO DATA")
-                return
+            status_changed = self.cursor.fetchall()
 
-            df = pd.DataFrame(result)
-            df.columns = ["original_lot", "status", "product_code", "row_number"]
-            passToFail = {}
-            failToPass = {}
-            failed_firstrun = {}
-
-            # Getting the number of Lot Number with Passed Status and then become Failed Later
-            for index, row in df.iterrows():
-                original_lot = row['original_lot']
-                status = row['status']
-                product_code = row['product_code']
-                row_number = row['row_number']
-                if status == "Passed" and row_number == 1:
-                    try:
-                        if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
-                            if product_code not in passToFail.keys():
-                                passToFail[product_code.strip()] = 1
-                            else:
-                                passToFail[product_code.strip()] += 1
-                    except Exception as e:
-                        print(e)
-                elif status == "Failed" and row_number == 1:
-                    if product_code not in failToPass.keys():
-                        failToPass[product_code.strip()] = 1
-                        failed_firstrun[product_code.strip()] = 1
-                    else:
-                        failToPass[product_code.strip()] += 1
-                        failed_firstrun[product_code.strip()] += 1
 
             # For Failt To Pass
-            ws2["A1"] = "Fail To Pass"
-            ws2['B1'] = "Count"
+            ws2["A1"] = "Product Code"
+            ws2['B1'] = "Decision Changed"
             ws2['A1'].alignment = center_Alignment
             ws2['B1'].alignment = center_Alignment
 
-            ws2.column_dimensions['B'].width = 10
+            ws2.column_dimensions['B'].width = 15
             ws2.column_dimensions['A'].width = 15
 
             cell_pointer = 2
-            for key, value in failToPass.items():
-                ws2[f"A{cell_pointer}"] = key
-                ws2[f"B{cell_pointer}"] = value
+            for items in status_changed:
+                ws2[f"A{cell_pointer}"] = items[0]
+                ws2[f"B{cell_pointer}"] = items[1]
                 ws2[f"A{cell_pointer}"].alignment = center_Alignment
                 ws2[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
-            # For Pass To Fail
-            ws2["D1"] = "Pass To Fail"
-            ws2['E1'] = "Count"
-            ws2['D1'].alignment = center_Alignment
-            ws2['E1'].alignment = center_Alignment
-
-            ws2.column_dimensions['D'].width = 15
-            ws2.column_dimensions['E'].width = 10
-
-            cell_pointer = 2
-            for key, value in passToFail.items():
-                ws2[f"D1{cell_pointer}"] = key
-                ws2[f"E1{cell_pointer}"] = value
-                ws2[f"D1{cell_pointer}"].alignment = center_Alignment
-                ws2[f"E1{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-
-            # Get the Total Product Code runs from data x to date y
-            self.cursor.execute(f"""
-                            SELECT product_code, COUNT(*) AS total_quantity
-                        FROM (SELECT DISTINCT ON (product_code, original_lot) *
-                        FROM quality_control_tbl2
-                        ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
-                        GROUP BY product_code
-                        ORDER BY product_code
-
-                            """)
-            result = self.cursor.fetchall()
-
-            total_productCodes = {}
-            for i in result:
-                total_productCodes[i[0].strip()] = i[1]
-
-            total_changeProductCodes = {}
-
-            # get the percentage of each product code From PASS TO FAIL AND FAIL TO PASS
-            for key, value in passToFail.items():
-                passToFail[key] = passToFail[key] / total_productCodes[key]
-
-            for key, value in failToPass.items():
-                failToPass[key] = failToPass[key] / total_productCodes[key]
-
-            # Combine the codes to see the most change
-            for key in total_productCodes.keys():
-                if key in passToFail.keys():
-                    total_changeProductCodes[key] = passToFail[key]
-                if key in failToPass.keys():
-                    if key in total_changeProductCodes.keys():
-                        total_changeProductCodes[key] += failToPass[key]
-                    else:
-                        total_changeProductCodes[key] = failToPass[key]
-
-            # Sort the total_changeProductCodes
-            total_changeProductCodes = sorted(total_changeProductCodes.items(), key=lambda x: x[1], reverse=True)
-
-            total_changeProductCodes = dict(total_changeProductCodes)
 
             # Worksheet 3
             ws3 = wb.create_sheet("Failed First Run")
@@ -4625,7 +4544,7 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
 
             ws4["A1"] = "Product Code"
-            ws4['B1'] = "Count"
+            ws4['B1'] = "RETURNS"
             ws4['A1'].alignment = center_Alignment
             ws4['B1'].alignment = center_Alignment
 
@@ -4634,10 +4553,185 @@ class Ui_LoginWindow(object):
 
             cell_pointer = 2
             for item in result:
-                ws3[f"A{cell_pointer}"] = item[0]
-                ws3[f"B{cell_pointer}"] = item[1]
-                ws3[f"A{cell_pointer}"].alignment = center_Alignment
-                ws3[f"B{cell_pointer}"].alignment = center_Alignment
+                ws4[f"A{cell_pointer}"] = item[0]
+                ws4[f"B{cell_pointer}"] = item[1]
+                ws4[f"A{cell_pointer}"].alignment = center_Alignment
+                ws4[f"B{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            # Returns By Formula ID
+            self.cursor.execute(f"""
+            SELECT product_code, formula_id, COUNT(*)
+            FROM returns
+            WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            GROUP BY product_code, formula_id
+            ORDER BY product_code
+            
+            """)
+            result = self.cursor.fetchall()
+
+            ws4["E1"] = "Product Code"
+            ws4['F1'] = "Formula ID"
+            ws4['G1'] = "RETURNS"
+            ws4['E1'].alignment = center_Alignment
+            ws4['F1'].alignment = center_Alignment
+            ws4['G1'].alignment = center_Alignment
+
+            ws4.column_dimensions['F'].width = 13
+            ws4.column_dimensions['E'].width = 15
+            ws4.column_dimensions['G'].width = 10
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"E{cell_pointer}"] = item[0]
+                ws4[f"F{cell_pointer}"] = item[1]
+                ws4[f"G{cell_pointer}"] = item[2]
+                ws4[f"E{cell_pointer}"].alignment = center_Alignment
+                ws4[f"F{cell_pointer}"].alignment = center_Alignment
+                ws4[f"G{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            # Returns BY QC Analyst
+            self.cursor.execute(f"""
+            SELECT evaluated_by, COUNT(evaluated_by)
+                    FROM (SELECT t1.*, t2.evaluated_by
+                    FROM returns t1
+                    JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
+                    WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                    GROUP BY evaluated_by
+            
+            """)
+
+            result = self.cursor.fetchall()
+
+            ws4["J1"] = "QC Analyst"
+            ws4['K1'] = "Returns"
+            ws4['J1'].alignment = center_Alignment
+            ws4['K1'].alignment = center_Alignment
+
+            ws4.column_dimensions['J'].width = 15
+            ws4.column_dimensions['K'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"J{cell_pointer}"] = item[0]
+                ws4[f"K{cell_pointer}"] = item[1]
+                ws4[f"J{cell_pointer}"].alignment = center_Alignment
+                ws4[f"K{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+
+
+            self.cursor.execute(f"""
+                SELECT machine, COUNT(machine)
+                FROM
+                (SELECT t1.lot_number, t2.machine
+                FROM returns t1
+                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                GROUP BY machine
+                                """)
+
+            result = self.cursor.fetchall()
+
+            ws4["N1"] = "Machine"
+            ws4['O1'] = "RETURNS"
+            ws4['N1'].alignment = center_Alignment
+            ws4['O1'].alignment = center_Alignment
+
+            ws4.column_dimensions['N'].width = 15
+            ws4.column_dimensions['O'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"N{cell_pointer}"] = item[0]
+                ws4[f"O{cell_pointer}"] = item[1]
+                ws4[f"N{cell_pointer}"].alignment = center_Alignment
+                ws4[f"O{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            self.cursor.execute(f"""
+                SELECT product_code, SUM(quantity) as total_kg
+                FROM returns
+                WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY product_code
+                ORDER BY total_kg
+                                    """)
+
+            result = self.cursor.fetchall()
+
+            ws4["R1"] = "Product Code"
+            ws4['S1'] = "RETURNS(kg)"
+            ws4['R1'].alignment = center_Alignment
+            ws4['S1'].alignment = center_Alignment
+
+            ws4.column_dimensions['R'].width = 15
+            ws4.column_dimensions['S'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"R{cell_pointer}"] = item[0]
+                ws4[f"S{cell_pointer}"] = item[1]
+                ws4[f"R{cell_pointer}"].alignment = center_Alignment
+                ws4[f"S{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+
+            self.cursor.execute(f"""
+                SELECT supervisor, COUNT(supervisor)
+                FROM
+                (SELECT t1.lot_number, t2.operator, t2.supervisor
+                FROM returns t1
+                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                GROUP BY supervisor
+
+                                """)
+            result = self.cursor.fetchall()
+
+            ws4["V1"] = "Supervisor"
+            ws4['W1'] = "RETURNS"
+            ws4['V1'].alignment = center_Alignment
+            ws4['W1'].alignment = center_Alignment
+
+            ws4.column_dimensions['V'].width = 15
+            ws4.column_dimensions['W'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"V{cell_pointer}"] = item[0]
+                ws4[f"W{cell_pointer}"] = item[1]
+                ws4[f"V{cell_pointer}"].alignment = center_Alignment
+                ws4[f"W{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+
+            self.cursor.execute(f"""
+                SELECT operator, COUNT(operator)
+                FROM
+                (SELECT t1.lot_number, t2.operator, t2.supervisor
+                FROM returns t1
+                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                GROUP BY operator
+
+                                """)
+            result = self.cursor.fetchall()
+
+            ws4["Z1"] = "Operator"
+            ws4['AA1'] = "RETURNS"
+            ws4['Z1'].alignment = center_Alignment
+            ws4['AA1'].alignment = center_Alignment
+
+            ws4.column_dimensions['Z'].width = 15
+            ws4.column_dimensions['AA'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"Z{cell_pointer}"] = item[0]
+                ws4[f"AA{cell_pointer}"] = item[1]
+                ws4[f"Z{cell_pointer}"].alignment = center_Alignment
+                ws4[f"AA{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
 
@@ -4731,7 +4825,7 @@ class Ui_LoginWindow(object):
 
                 except Exception as e:
                     self.conn.rollback()
-                    print(e)
+                    QMessageBox.critical(self.qc_widget, "Insert Error", str(e))
 
             def autofill():
 
