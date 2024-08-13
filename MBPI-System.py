@@ -1859,7 +1859,6 @@ class Ui_LoginWindow(object):
                 outputs = str(outputs).replace("[", "").replace("]", "")
 
                 try:
-
                     self.cursor.execute(f"""
                                 UPDATE extruder
                                 SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
@@ -2897,7 +2896,6 @@ class Ui_LoginWindow(object):
                     lotNumber_input.clear()
                     productCode_dropdown.setCurrentIndex(0)
                     formulaID_input.clear()
-                    evaluatedBy_dropdown.setCurrentIndex(0)
                     result_dropdown.setCurrentIndex(0)
                     remarks_box.clear()
 
@@ -3095,23 +3093,16 @@ class Ui_LoginWindow(object):
 
             def correction_enabled():
                 if qcType_dropdown.currentText() == "CORRECTION":
-                    updatedBy_input.setEnabled(True)
                     correction_input.setEnabled(True)
-
-                    updatedBy_input.setStyleSheet(
-                        "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
                     correction_input.setStyleSheet(
                         "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
                 else:
-                    updatedBy_input.setEnabled(False)
-                    correction_input.setEnabled(False)
 
+                    correction_input.setEnabled(False)
                     correction_input.setStyleSheet(
                         "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
-                    updatedBy_input.setStyleSheet(
-                        "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
                     correction_input.clear()
-                    updatedBy_input.clear()
+
 
             def correction_auto_input():
 
@@ -3379,12 +3370,6 @@ class Ui_LoginWindow(object):
             result_label.setFont(font)
             result_label.setStyleSheet("border: none;")
 
-            updatedBy_label = QLabel()
-            updatedBy_label.setText("UPDATED BY")
-            updatedBy_label.setFixedWidth(110)
-            updatedBy_label.setFixedHeight(20)
-            updatedBy_label.setFont(font)
-            updatedBy_label.setStyleSheet("border: none;")
 
             # Right Side Widgets
             qcType_dropdown = QtWidgets.QComboBox()
@@ -3487,17 +3472,6 @@ class Ui_LoginWindow(object):
             correction_label.setFont(font)
             correction_label.setStyleSheet("border: none;")
 
-            updatedBy_input = QComboBox()
-            updatedBy_input.setStyleSheet(
-                "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
-            updatedBy_input.setFixedHeight(25)
-            updatedBy_input.setEnabled(False)
-            updatedBy_input.setFixedWidth(296)
-            updatedBy_input.addItem("")
-            updatedBy_input.addItem("Linzy Jam")
-            updatedBy_input.addItem("Ana")
-            updatedBy_input.addItem("Jinky")
-            updatedBy_input.addItem("Chelsea")
 
             correction_input = QLineEdit()
             correction_input.setStyleSheet("background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
@@ -3586,7 +3560,7 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(date_started_label, date_started_input)
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
-            topFormLayout.addRow(updatedBy_label, updatedBy_input)
+
 
 
             widget1.show()
