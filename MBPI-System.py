@@ -2961,6 +2961,16 @@ class Ui_LoginWindow(object):
                             clear_entries()
 
                         QMessageBox.information(self.body_widget.setStyleSheet("border: none;"), "Query Success", "QC Entry Added")
+
+                        self.cursor.execute("""
+                        SELECT MAX(id) FROM quality_control
+                        
+                        """)
+                        # Update the QC ID
+                        current_id = self.cursor.fetchone()[0]
+                        qcControl_input.setText(current_id)
+                        qcControl_input.show()
+
                         new_lot_list.clear()
                         old_lot_list.clear()
 
@@ -3027,8 +3037,7 @@ class Ui_LoginWindow(object):
                             while len(old_lot_list) != len(new_lot_list):
                                 old_lot_list.append(old_lot_list[-1])
 
-                            print(new_lot_list)
-                            print(old_lot_list)
+
 
                             for i in range(len(new_lot_list)):
                                 self.cursor.execute(f"""
@@ -3210,7 +3219,6 @@ class Ui_LoginWindow(object):
                 else:
                     pass
 
-
             def clear_field():
                 evaluation_entry()
 
@@ -3381,9 +3389,21 @@ class Ui_LoginWindow(object):
             qcType_dropdown.currentTextChanged.connect(correction_enabled)
 
             qcControl_input = QtWidgets.QLineEdit()
-            qcControl_input.setStyleSheet("background-color: rgb(238, 238, 238); border: 1px solid rgb(171, 173, 179);")
+            qcControl_input.setStyleSheet("background-color: rgb(238, 238, 238); border: 1px solid rgb(171, 173, 179); color: rgb(0, 128, 192);")
             qcControl_input.setFixedHeight(35)
             qcControl_input.setEnabled(False)
+            qcControl_input.setFont(QtGui.QFont('Arial Black', 20))
+            self.cursor.execute("""
+            SELECT MAX(id) FROM quality_control
+            
+            """)
+            current_id = self.cursor.fetchone()
+
+            if current_id:
+                qcControl_input.setText(str(current_id[0] + 1))
+            else:
+                qcControl_input.setText("0")
+
             qcControl_input.setFixedWidth(296)
 
             customers_box = QtWidgets.QComboBox()
@@ -4277,6 +4297,31 @@ class Ui_LoginWindow(object):
                 graph5_selections.currentIndexChanged.connect(change_graph)
                 graph5_selections.show()
 
+                self.cursor.execute(f"""
+                    SELECT t_matcode, SUM(t_wt) as total_weight FROM tbl_prod02
+                    WHERE t_deleted = false AND t_proddate BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                    GROUP BY t_matcode
+                    ORDER BY total_weight DESC
+                    LIMIT 5;
+                
+                    """)
+
+                result = self.cursor.fetchall()
+                x = []
+                y = []
+
+                for items in result:
+                    x.append(items[0])
+                    y.append(items[1] / 1000)
+
+                self.graph6.bar(x,y)
+                self.graph6.set_ylabel('Tonnes', fontsize = 15)
+                self.graph6.set_xticklabels(x, rotation=30)
+                self.graph6.set_title("Highest Materials Used", fontsize=15)
+                self.graph6.set_position([0.672, 0.078, 0.228, 0.35])
+
+
+
                 import_button = QPushButton(self.body_widget)
                 import_button.setGeometry(850, 35, 100, 25)
                 import_button.setText("IMPORT")
@@ -4709,7 +4754,33 @@ class Ui_LoginWindow(object):
                 cell_pointer += 1
 
 
+            ws5 = wb.create_sheet('Total Mats Used')
 
+            self.cursor.execute(f"""
+            SELECT t_matcode, SUM(t_wt) as total_weight FROM tbl_prod02
+            WHERE t_deleted = false AND t_proddate BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            GROUP BY t_matcode
+            ORDER BY total_weight DESC
+            
+            """)
+            result = self.cursor.fetchall()
+
+
+            ws5["A1"] = "Product Code"
+            ws5['B1'] = "RETURNS"
+            ws5['A1'].alignment = center_Alignment
+            ws5['B1'].alignment = center_Alignment
+
+            ws5.column_dimensions['B'].width = 10
+            ws5.column_dimensions['A'].width = 15
+
+            cell_pointer = 2
+            for item in result:
+                ws5[f"A{cell_pointer}"] = item[0]
+                ws5[f"B{cell_pointer}"] = item[1]
+                ws5[f"A{cell_pointer}"].alignment = center_Alignment
+                ws5[f"B{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
 
 
             # Open QFileDialog
