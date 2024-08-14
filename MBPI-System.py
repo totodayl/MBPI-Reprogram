@@ -164,6 +164,7 @@ class Ui_LoginWindow(object):
                         border-bottom-left-radius: 10px; 
                         background-color: rgb(125,125,125);
                         """)
+        self.warehouse_btn.clicked.connect(self.warehouse)
         self.warehouse_btn.show()
 
         self.warehouse_icon = ClickableLabel(self.warehouse_btn)
@@ -5867,7 +5868,244 @@ class Ui_LoginWindow(object):
         self.qc_table.show()
 
 
+    def warehouse(self):
+
+        def add_entry():
+
+            self.widget = QWidget()
+            self.widget.setGeometry(0, 0, 400, 500)
+            self.widget.setFixedSize(400, 500)
+            self.widget.show()
+
+            form_layout_widget = QWidget(self.widget)
+            form_layout_widget.setGeometry(0, 0, 400, 400)
+            form_layout_widget.show()
+
+            label_font = QtGui.QFont("Arial", 11)
+
+            id_number_label = QLabel()
+            id_number_label.setFont(label_font)
+            id_number_label.setText("Control ID")
+            id_number_label.setFixedWidth(150)
+            id_number_label.setFixedHeight(35)
+
+            id_number_box = QLineEdit()
+            id_number_box.setFixedHeight(35)
+            id_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+            id_number_box.setEnabled(False)
+
+            production_date_label = QLabel()
+            production_date_label.setFont(label_font)
+            production_date_label.setText('PROD DATE')
+            production_date_label.setFixedWidth(150)
+
+            production_date_box = QDateEdit()
+            production_date_box.setFixedHeight(25)
+            production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+            category_label = QLabel()
+            category_label.setFont(label_font)
+            category_label.setText('Category')
+            category_label.setFixedWidth(150)
+
+            category_box = QComboBox()
+            category_box.addItem('INCOMING')
+            category_box.setFixedHeight(25)
+            category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+            lot_number_label = QLabel()
+            lot_number_label.setText('LOT Number')
+            lot_number_label.setFixedWidth(150)
+            lot_number_label.setFont(label_font)
+
+            lot_number_box = QLineEdit()
+            lot_number_box.setFixedHeight(25)
+            lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+            excess_label = QLabel()
+            excess_label.setText('EXCESS')
+            excess_label.setFixedWidth(150)
+            excess_label.setFont(label_font)
+
+            excess_box = QLineEdit()
+            excess_box.setFixedHeight(25)
+            excess_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+            
+            quantity_label = QLabel()
+            quantity_label.setText('Quantity')
+            quantity_label.setFont(label_font)
+            quantity_label.setFixedWidth(150)
+            
+            quantity_box = QLineEdit()
+            quantity_box.setFixedHeight(25)
+            quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+            product_code_label = QLabel()
+            product_code_label.setText('Product Code')
+            product_code_label.setFixedWidth(150)
+            product_code_label.setFont(label_font)
+
+            product_code_box = QComboBox()
+            product_code_box.setFixedHeight(25)
+            product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+            product_color_label = QLabel()
+            product_color_label.setText('Color')
+            product_color_label.setFont(label_font)
+            product_color_label.setFixedWidth(150)
+
+            product_color_box = QLineEdit()
+            product_color_box.setFixedHeight(25)
+            product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+
+            layout = QFormLayout(form_layout_widget)
+            layout.addRow(id_number_label, id_number_box)
+            layout.addRow(lot_number_label, lot_number_box)
+            layout.addRow(production_date_label, production_date_box)
+            layout.addRow(product_code_label, product_code_box)
+            layout.addRow(product_color_label, product_color_box)
+            layout.addRow(category_label, category_box)
+            layout.addRow(quantity_label, quantity_box)
+            layout.addRow(excess_label, excess_box)
+
+            layout.setVerticalSpacing(10)
+
+
+
+
+
+
+
+        self.warehouse_widget = QWidget(self.main_widget)
+        self.warehouse_widget.setGeometry(0, 0, 991, 751)
+        self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.warehouse_widget.show()
+
+        self.warehouse_tabs = QtWidgets.QWidget(self.warehouse_widget)
+        self.warehouse_tabs.setGeometry(0, 0, 991, 30)
+        self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160)')
+        self.warehouse_tabs.show()
+
+        fg_incoming_btn = QPushButton(self.warehouse_tabs)
+        fg_incoming_btn.setGeometry(0, 0, 150, 30)
+        fg_incoming_btn.setText("FG INCOMING")
+        fg_incoming_btn.setCursor(Qt.PointingHandCursor)
+        fg_incoming_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
+        fg_incoming_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+        fg_incoming_btn.show()
+
+        fg_outgoing_btn = QPushButton(self.warehouse_tabs)
+        fg_outgoing_btn.setGeometry(150, 0, 150, 30)
+        fg_outgoing_btn.setText("FG OUTGOING")
+        fg_outgoing_btn.setCursor(Qt.PointingHandCursor)
+        fg_outgoing_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
+        fg_outgoing_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+        fg_outgoing_btn.show()
+
+        add_entry_btn = QPushButton(self.warehouse_tabs)
+        add_entry_btn.setGeometry(300, 0, 150, 30)
+        add_entry_btn.setText('ADD ENTRY')
+        add_entry_btn.setCursor(Qt.PointingHandCursor)
+        add_entry_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
+        add_entry_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+        add_entry_btn.show()
+
+
+        self.status_border = QWidget(self.warehouse_widget)
+        self.status_border.setGeometry(0, 30, 991, 35)
+        self.status_border.setStyleSheet('border-bottom: 1 px solid rgb(160, 160, 160)')
+
+        self.status_border.show()
+
+        control_num_lbl = QLabel(self.status_border)
+        control_num_lbl.setGeometry(3, 12, 100, 10)
+        control_num_lbl.setText('Control Number:')
+        control_num_lbl.show()
+
+        control_num_val = QLabel(self.status_border)
+        control_num_val.setGeometry(105, 0, 120, 35)
+        control_num_val.setFont(QtGui.QFont('Arial Black', 15))
+        control_num_val.setStyleSheet('color: rgb(0, 128, 192)')
+        control_num_val.show()
+
+        code_label = QLabel(self.status_border)
+        code_label.setGeometry(260, 0, 40, 35)
+        code_label.setFont(QtGui.QFont('Arial', 8))
+        code_label.setText('CODE:')
+        code_label.show()
+
+        code_value = QLabel(self.status_border)
+        code_value.setGeometry(300, 0, 150, 35)
+        code_value.setFont(QtGui.QFont('Arial Black', 15))
+        code_value.setStyleSheet('color: rgb(0, 128, 192)')
+        code_value.show()
+
+        lot_number_label = QLabel(self.status_border)
+        lot_number_label.setGeometry(490, 0, 50, 35)
+        lot_number_label.setText('LOT NO :')
+        lot_number_label.setFont(QtGui.QFont('Arial', 8))
+        lot_number_label.show()
+
+        lot_number_val = QLabel(self.status_border)
+        lot_number_val.setGeometry(540, 0, 180, 35)
+        lot_number_val.setStyleSheet('color: rgb(0, 128, 192)')
+        lot_number_val.setFont(QtGui.QFont('Arial Black', 15))
+        lot_number_val.show()
+
+        category_label = QLabel(self.status_border)
+        category_label.setGeometry(735, 0, 50, 35)
+        category_label.setFont(QtGui.QFont('Arial', 8))
+        category_label.setText('Category:')
+        category_label.show()
+
+        category_value = QLabel(self.status_border)
+        category_value.setGeometry(790, 0, 170, 35)
+        category_value.setFont(QtGui.QFont('Arial Black', 15))
+        category_value.setStyleSheet('color: rgb(0, 128, 192)')
+        category_value.show()
+
+        table_widget = QTableWidget(self.warehouse_widget)
+        table_widget.setGeometry(0, 65, 991, 616)
+        table_widget.show()
+
+        bottom_button_widget = QWidget(self.warehouse_widget)
+        bottom_button_widget.setGeometry(0, 681, 991, 43)
+        bottom_button_widget.setStyleSheet('border-bottom: 1px solid rgb(0, 128, 192)')
+        bottom_button_widget.show()
+
+        #Buttons
+        add_btn = QPushButton(bottom_button_widget)
+        add_btn.setGeometry(650, 18, 60, 25)
+        add_btn.setText('ADD')
+        add_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245)')
+        add_btn.setCursor(Qt.PointingHandCursor)
+        add_btn.clicked.connect(add_entry)
+        add_btn.show()
+
+        update_btn = QPushButton(bottom_button_widget)
+        update_btn.setGeometry(715, 18, 60, 25)
+        update_btn.setText('UPDATE')
+        update_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+        update_btn.setCursor(Qt.PointingHandCursor)
+        update_btn.show()
+
+        view_btn = QPushButton(bottom_button_widget)
+        view_btn.setGeometry(780, 18, 60, 25)
+        view_btn.setText('VIEW')
+        view_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+        view_btn.setCursor(Qt.PointingHandCursor)
+        view_btn.show()
+
+        delete_btn = QPushButton(bottom_button_widget)
+        delete_btn.setGeometry(845, 18, 60, 25)
+        delete_btn.setText('DELETE')
+        delete_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+        delete_btn.setCursor(Qt.PointingHandCursor)
+        delete_btn.show()
+
 if __name__ == "__main__":
+
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
