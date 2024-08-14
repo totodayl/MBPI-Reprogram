@@ -126,6 +126,7 @@ class Ui_LoginWindow(object):
         self.production_icon.setPixmap(QtGui.QIcon('setting.png').pixmap(30, 30))  # Set icon
         self.production_icon.setScaledContents(True)  # Scale icon to fit the label
         self.production_icon.setCursor(Qt.PointingHandCursor)
+        self.production_icon.clicked.connect(self.production)
         self.production_icon.show()
 
         self.qualityControl_btn = QtWidgets.QPushButton(self.login_window)
@@ -144,6 +145,7 @@ class Ui_LoginWindow(object):
         self.qc_icon.setPixmap(QtGui.QIcon('qc.png').pixmap(30, 30))  # Set icon
         self.qc_icon.setScaledContents(True)  # Scale icon to fit the label
         self.qc_icon.setCursor(Qt.PointingHandCursor)
+        self.qc_icon.clicked.connect(self.quality_control)
         self.qc_icon.show()
 
         self.qualityControl_lbl = QtWidgets.QLabel(self.qualityControl_btn)
@@ -153,6 +155,30 @@ class Ui_LoginWindow(object):
         self.qualityControl_lbl.setStyleSheet("color: blue;")
         self.qualityControl_lbl.setCursor(Qt.PointingHandCursor)
         self.qualityControl_lbl.show()
+
+        self.warehouse_btn = QtWidgets.QPushButton(self.login_window)
+        self.warehouse_btn.setGeometry(30, 320, 180, 40)
+        self.warehouse_btn.setCursor(Qt.PointingHandCursor)
+        self.warehouse_btn.setStyleSheet("""
+                        border-top-left-radius: 10px; 
+                        border-bottom-left-radius: 10px; 
+                        background-color: rgb(125,125,125);
+                        """)
+        self.warehouse_btn.show()
+
+        self.warehouse_icon = ClickableLabel(self.warehouse_btn)
+        self.warehouse_icon.setGeometry(10, 3, 30, 30)
+        self.warehouse_icon.setPixmap(QtGui.QIcon('warehouse.png').pixmap(30, 30))
+        self.warehouse_icon.setScaledContents(True)  # Scale icon to fit the label
+        self.warehouse_icon.setCursor(Qt.PointingHandCursor)
+        self.warehouse_icon.show()
+
+        self.warehouse_lbl = QLabel(self.warehouse_btn)
+        self.warehouse_lbl.setGeometry(50, 5, 120, 30)
+        self.warehouse_lbl.setText("Warehouse")
+        self.warehouse_lbl.setFont(QtGui.QFont("Arial", 12))
+        self.warehouse_lbl.setStyleSheet("color: blue;")
+        self.warehouse_lbl.show()
 
         self.logo = QLabel(self.login_window)
         self.logo.setGeometry(23, 10, 170, 121)
