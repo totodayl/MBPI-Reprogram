@@ -2728,7 +2728,7 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
             column_names = ['id', 'lot_number', 'product_code', 'customer', 'status', 'remarks', 'action',
                             'original_lot', 'evaluated_by', 'evaluated_on', 'encoded_on', 'updated_by',
-                            'updated_on', 'time_endorsed', 'edited', 'qc_type', 'formula_id']
+                            'updated_on', 'time_endorsed', 'edited', 'qc_type', 'formula_id', 'status_changed']
 
             try:
 
@@ -4767,7 +4767,7 @@ class Ui_LoginWindow(object):
 
 
             ws5["A1"] = "Product Code"
-            ws5['B1'] = "RETURNS"
+            ws5['B1'] = "Kilograms"
             ws5['A1'].alignment = center_Alignment
             ws5['B1'].alignment = center_Alignment
 
