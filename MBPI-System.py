@@ -5872,6 +5872,111 @@ class Ui_LoginWindow(object):
 
         def add_entry():
 
+            def autofill():
+                #Set to Capital Letter
+                lot_number_box.setText(lot_number_box.text().upper())
+
+                self.cursor.execute(f"""
+                SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
+                FROM tbl_prod01
+                WHERE t_lotnum = '{lot_number_box.text()}' AND t_deleted = false
+                
+                """)
+                result = self.cursor.fetchone()
+
+                if result:
+                    customer_box.setText(result[1])
+                    product_color_box.setText(result[3])
+                    product_code_box.setText(result[2])
+
+                    if '-' in product_code_box.text():
+                        category_box.setCurrentText('DRYCOLOR')
+                    else:
+                        category_box.setCurrentText('MASTERBATCH')
+                    return
+
+                else:
+                    pass
+
+                # for lot numbers that have cuts
+                if '-' in lot_number_box.text() and lot_number_box.text()[-1] != ')':
+                    num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
+                    num2 = re.findall(r'\d{4}', lot_number_box.text().strip())[1]
+                    code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
+
+                    self.cursor.execute(f"""
+                        SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
+                        FROM
+                        (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
+                        CASE 
+                        WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                        WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
+                        ELSE NULL
+                        END AS range2
+                        FROM tbl_prod01
+                        WHERE t_lotnum LIKE '%-%' 
+                        AND t_deleted = false
+                        AND t_lotnum ~* '\d{code_type}$'
+                        ORDER BY t_prodid::INTEGER DESC)
+                        WHERE {num1} >= range1 AND {num2} <= range2
+
+                                    """)
+                    result = self.cursor.fetchone()
+
+                    print(result)
+
+                    if result:
+                        customer_box.setText(result[1])
+                        product_color_box.setText(result[3])
+                        product_code_box.setText(result[2])
+
+                        if '-' in product_code_box.text():
+                            category_box.setCurrentText('DRYCOLOR')
+                        else:
+                            category_box.setCurrentText('MASTERBATCH')
+                        quantity_box.setFocus()
+
+                    else:
+                        pass
+
+                else:
+                    num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
+                    code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
+
+                    self.cursor.execute(f"""
+                        SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
+                        FROM
+                        (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
+                        CASE 
+                        WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                        WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
+                        ELSE NULL
+                        END AS range2
+                        FROM tbl_prod01
+                        WHERE t_lotnum LIKE '%-%' 
+                        AND t_deleted = false
+                        AND t_lotnum ~* '\d{code_type}$'
+                        ORDER BY t_prodid::INTEGER DESC)
+                        WHERE {num1} >= range1 AND {num1} <= range2
+
+                                                        """)
+                    result = self.cursor.fetchone()
+                    print(result)
+
+
+            def save_entry():
+
+                self.cursor.execute(f"""
+                INSERT INTO fg_incoming(customer, product_code, date, lot_number, quantity, category, color)
+                VALUES('{customer_box.text()}', '{product_code_box.text()}', '{production_date_box.text()}',
+                '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}', '{product_color_box.text()}')
+                
+                
+                """)
+                self.conn.commit()
+                QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+
+
             self.widget = QWidget()
             self.widget.setGeometry(0, 0, 400, 500)
             self.widget.setFixedSize(400, 500)
@@ -5900,8 +6005,22 @@ class Ui_LoginWindow(object):
             production_date_label.setFixedWidth(150)
 
             production_date_box = QDateEdit()
-            production_date_box.setFixedHeight(25)
+            production_date_box.setFixedHeight(30)
             production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+            production_date_box.setDisplayFormat('MM-dd-yyyy')
+
+            customer_label = QLabel()
+            customer_label.setFont(label_font)
+            customer_label.setText('Customer')
+            customer_label.setFixedWidth(150)
+
+            customer_box = QLineEdit()
+            customer_box.setFixedHeight(30)
+            customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+            customer_box.setEnabled(False)
+
+
+
 
             category_label = QLabel()
             category_label.setFont(label_font)
@@ -5909,8 +6028,9 @@ class Ui_LoginWindow(object):
             category_label.setFixedWidth(150)
 
             category_box = QComboBox()
-            category_box.addItem('INCOMING')
-            category_box.setFixedHeight(25)
+            category_box.addItem('MASTERBATCH')
+            category_box.addItem('DRYCOLOR')
+            category_box.setFixedHeight(30)
             category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
             lot_number_label = QLabel()
@@ -5919,16 +6039,17 @@ class Ui_LoginWindow(object):
             lot_number_label.setFont(label_font)
 
             lot_number_box = QLineEdit()
-            lot_number_box.setFixedHeight(25)
+            lot_number_box.setFixedHeight(30)
             lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+            lot_number_box.editingFinished.connect(autofill)
 
             excess_label = QLabel()
-            excess_label.setText('EXCESS')
+            excess_label.setText('Excess')
             excess_label.setFixedWidth(150)
             excess_label.setFont(label_font)
 
             excess_box = QLineEdit()
-            excess_box.setFixedHeight(25)
+            excess_box.setFixedHeight(30)
             excess_box.setStyleSheet('background-color: rgb(255, 255, 17)')
             
             quantity_label = QLabel()
@@ -5937,7 +6058,7 @@ class Ui_LoginWindow(object):
             quantity_label.setFixedWidth(150)
             
             quantity_box = QLineEdit()
-            quantity_box.setFixedHeight(25)
+            quantity_box.setFixedHeight(30)
             quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
             product_code_label = QLabel()
@@ -5945,8 +6066,8 @@ class Ui_LoginWindow(object):
             product_code_label.setFixedWidth(150)
             product_code_label.setFont(label_font)
 
-            product_code_box = QComboBox()
-            product_code_box.setFixedHeight(25)
+            product_code_box = QLineEdit()
+            product_code_box.setFixedHeight(30)
             product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
             product_color_label = QLabel()
@@ -5955,24 +6076,44 @@ class Ui_LoginWindow(object):
             product_color_label.setFixedWidth(150)
 
             product_color_box = QLineEdit()
-            product_color_box.setFixedHeight(25)
+            product_color_box.setFixedHeight(30)
             product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
 
             layout = QFormLayout(form_layout_widget)
             layout.addRow(id_number_label, id_number_box)
             layout.addRow(lot_number_label, lot_number_box)
+            layout.addRow(customer_label, customer_box)
             layout.addRow(production_date_label, production_date_box)
             layout.addRow(product_code_label, product_code_box)
             layout.addRow(product_color_label, product_color_box)
             layout.addRow(category_label, category_box)
             layout.addRow(quantity_label, quantity_box)
-            layout.addRow(excess_label, excess_box)
+
 
             layout.setVerticalSpacing(10)
 
+            lot_number_box.setFocus()
 
+            save_btn = QPushButton(self.widget)
+            save_btn.setGeometry(100, 450, 60, 30)
+            save_btn.setText('SAVE')
+            save_btn.clicked.connect(save_entry)
+            save_btn.show()
 
+            cancel_btn = QPushButton(self.widget)
+            cancel_btn.setGeometry(230, 450, 60, 30)
+            cancel_btn.setText('CANCEL')
+            cancel_btn.show()
+
+        def show_selected():
+
+            selected = [i.text() for i in table_widget.selectedItems()]
+
+            control_num_val.setText(selected[0])
+            lot_number_val.setText(selected[1])
+            code_value.setText(selected[4])
+            category_value.setText(selected[7])
 
 
 
@@ -6067,6 +6208,55 @@ class Ui_LoginWindow(object):
 
         table_widget = QTableWidget(self.warehouse_widget)
         table_widget.setGeometry(0, 65, 991, 616)
+        table_widget.setColumnCount(8)
+        table_widget.verticalHeader().setVisible(False)
+        table_widget.setHorizontalHeaderLabels(["control_id", "lot_number", "date", "customer", "product_code", "color", "quantity", "category"])
+
+        table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        table_widget.itemSelectionChanged.connect(show_selected)
+
+
+
+        self.cursor.execute("""
+        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+        FROM fg_incoming
+        
+        """)
+        table_widget.setColumnWidth(0, 90)
+        table_widget.setColumnWidth(1, 120)
+        table_widget.setColumnWidth(2, 100)
+        table_widget.setColumnWidth(3, 270)
+        table_widget.setColumnWidth(4, 100)
+        table_widget.setColumnWidth(5, 100)
+        table_widget.setColumnWidth(6, 90)
+        # table_widget.setColumnWidth(0, 50)
+        # table_widget.setColumnWidth(0, 50)
+
+
+
+
+        result = self.cursor.fetchall()
+        # customer = result[1]
+        # product_code = result[2]
+        # date = result[3]
+        # lot_number = result[4]
+        # quantity = result[5]
+        # category = result[6]
+        # color = result[8]
+
+        table_widget.setRowCount(len(result))
+
+        for row in result:
+            for column in range(len(row)):
+                item = QTableWidgetItem(str(row[column]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                table_widget.setItem(result.index(row), column, item)
+
+
+
+
+
         table_widget.show()
 
         bottom_button_widget = QWidget(self.warehouse_widget)
