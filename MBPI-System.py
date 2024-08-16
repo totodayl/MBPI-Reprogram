@@ -6288,6 +6288,77 @@ class Ui_LoginWindow(object):
             code_value.setText(selected[4])
             category_value.setText(selected[7])
 
+        def fg_filter():
+
+            if masterbatch_checkbox.isChecked() == True and drycolor_checkbox.isChecked() == False:
+
+                self.cursor.execute("""
+                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                FROM fg_incoming
+                WHERE deleted = false AND category = 'MASTERBATCH'
+                ORDER BY control_id DESC
+                
+                """)
+
+                result = self.cursor.fetchall()
+
+                table_widget.clear()
+                table_widget.setHorizontalHeaderLabels(
+                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        table_widget.setItem(result.index(row), column, item)
+
+
+            elif masterbatch_checkbox.isChecked() == False and drycolor_checkbox.isChecked() == True:
+                self.cursor.execute("""
+                                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                                FROM fg_incoming
+                                WHERE deleted = false AND category = 'DRYCOLOR'
+                                ORDER BY control_id DESC
+
+                                """)
+
+                result = self.cursor.fetchall()
+
+                table_widget.clear()
+                table_widget.setHorizontalHeaderLabels(
+                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        table_widget.setItem(result.index(row), column, item)
+
+            else:
+                self.cursor.execute("""
+                                                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                                                FROM fg_incoming
+                                                WHERE deleted = false 
+                                                ORDER BY control_id DESC
+
+                                                """)
+
+                result = self.cursor.fetchall()
+
+                table_widget.clear()
+                table_widget.setHorizontalHeaderLabels(
+                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        table_widget.setItem(result.index(row), column, item)
+
+
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
         self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -6341,6 +6412,7 @@ class Ui_LoginWindow(object):
 
         masterbatch_checkbox = QCheckBox(self.warehouse_widget)
         masterbatch_checkbox.move(5, 70)
+        masterbatch_checkbox.stateChanged.connect(fg_filter)
         masterbatch_checkbox.show()
 
         mb_checkbox_label = QLabel(self.warehouse_widget)
@@ -6350,6 +6422,7 @@ class Ui_LoginWindow(object):
 
         drycolor_checkbox = QCheckBox(self.warehouse_widget)
         drycolor_checkbox.move(110, 70)
+        drycolor_checkbox.stateChanged.connect(fg_filter)
         drycolor_checkbox.show()
 
         dc_checkbox_label = QLabel(self.warehouse_widget)
@@ -6435,6 +6508,7 @@ class Ui_LoginWindow(object):
         self.cursor.execute("""
         SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
         FROM fg_incoming
+        WHERE deleted = false
         ORDER BY control_id DESC
         
         """)
