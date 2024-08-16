@@ -2071,11 +2071,10 @@ class Ui_LoginWindow(object):
 
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
-            customer_input.setEnabled(False)
             customer_input.setAlignment(Qt.AlignCenter)
             customer_input.setStyleSheet("background-color: white; border: 1px solid black")
             customer_input.setText(result[4])
-            customer_input.setEnabled(False)
+            customer_input.setEnabled(True)
 
             orderedQuantity_input = QtWidgets.QLineEdit()
             orderedQuantity_input.setAlignment(Qt.AlignCenter)
