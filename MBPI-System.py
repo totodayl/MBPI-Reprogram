@@ -6281,12 +6281,16 @@ class Ui_LoginWindow(object):
 
         def show_selected():
 
-            selected = [i.text() for i in table_widget.selectedItems()]
+            try:
+                selected = [i.text() for i in table_widget.selectedItems()]
 
-            control_num_val.setText(selected[0])
-            lot_number_val.setText(selected[1])
-            code_value.setText(selected[4])
-            category_value.setText(selected[7])
+                control_num_val.setText(selected[0])
+                lot_number_val.setText(selected[1])
+                code_value.setText(selected[4])
+                category_value.setText(selected[7])
+            except IndexError:
+                QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Item Selected.')
+
 
         def fg_filter():
 
