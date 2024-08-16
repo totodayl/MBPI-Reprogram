@@ -5978,8 +5978,9 @@ class Ui_LoginWindow(object):
 
 
             self.widget = QWidget()
-            self.widget.setGeometry(0, 0, 400, 500)
+            self.widget.setGeometry(780, 305, 400, 500)
             self.widget.setFixedSize(400, 500)
+            self.widget.setWindowModality(Qt.ApplicationModal)
             self.widget.show()
 
             form_layout_widget = QWidget(self.widget)
@@ -6104,6 +6105,7 @@ class Ui_LoginWindow(object):
             cancel_btn = QPushButton(self.widget)
             cancel_btn.setGeometry(230, 450, 60, 30)
             cancel_btn.setText('CANCEL')
+            cancel_btn.clicked.connect(lambda: self.widget.close())
             cancel_btn.show()
 
         def update_entry():
@@ -6128,16 +6130,20 @@ class Ui_LoginWindow(object):
                                             """)
 
                         self.conn.commit()
+                        QMessageBox.information(self.widget, 'SUCCESS', 'Update Successful!')
+                        self.widget.close()
+                        self.warehouse()
+
                     except Exception as e:
                         self.conn.rollback()
                         QMessageBox.critical(self.widget, 'ERROR', str(e))
 
 
-
                 self.widget = QWidget()
-                self.widget.setGeometry(0, 0, 400, 500)
+                self.widget.setGeometry(780, 305, 400, 500)
                 self.widget.setFixedSize(400, 500)
                 self.widget.setWindowTitle('UPDATE ENTRY')
+                self.widget.setWindowModality(Qt.ApplicationModal)
                 self.widget.show()
 
                 form_layout_widget = QWidget(self.widget)
@@ -6264,6 +6270,7 @@ class Ui_LoginWindow(object):
                 cancel_btn = QPushButton(self.widget)
                 cancel_btn.setGeometry(230, 450, 60, 30)
                 cancel_btn.setText('CANCEL')
+                cancel_btn.clicked.connect(lambda: self.widget.close())
                 cancel_btn.show()
 
 
@@ -6280,9 +6287,6 @@ class Ui_LoginWindow(object):
             lot_number_val.setText(selected[1])
             code_value.setText(selected[4])
             category_value.setText(selected[7])
-
-
-
 
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
@@ -6318,16 +6322,47 @@ class Ui_LoginWindow(object):
         add_entry_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
         add_entry_btn.show()
 
-
         self.status_border = QWidget(self.warehouse_widget)
         self.status_border.setGeometry(0, 30, 991, 35)
-        self.status_border.setStyleSheet('border-bottom: 1 px solid rgb(160, 160, 160)')
-
+        self.status_border.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160)')
         self.status_border.show()
+
+        search_box = QLineEdit(self.warehouse_widget)
+        search_box.setGeometry(760, 70, 150, 25)
+        search_box.setStyleSheet('border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);')
+        search_box.setPlaceholderText('Lot Number')
+        search_box.show()
+
+        search_button = QPushButton(self.warehouse_widget)
+        search_button.setGeometry(915, 70, 70, 25)
+        search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
+        search_button.setText('Search')
+        search_button.show()
+
+        masterbatch_checkbox = QCheckBox(self.warehouse_widget)
+        masterbatch_checkbox.move(5, 70)
+        masterbatch_checkbox.show()
+
+        mb_checkbox_label = QLabel(self.warehouse_widget)
+        mb_checkbox_label.setGeometry(22, 70, 85, 10)
+        mb_checkbox_label.setText('MASTERBATCH')
+        mb_checkbox_label.show()
+
+        drycolor_checkbox = QCheckBox(self.warehouse_widget)
+        drycolor_checkbox.move(110, 70)
+        drycolor_checkbox.show()
+
+        dc_checkbox_label = QLabel(self.warehouse_widget)
+        dc_checkbox_label.setGeometry(125, 70, 85, 10)
+        dc_checkbox_label.setText("DRYCOLOR")
+        dc_checkbox_label.show()
+
+
 
         control_num_lbl = QLabel(self.status_border)
         control_num_lbl.setGeometry(3, 12, 100, 10)
         control_num_lbl.setText('Control Number:')
+        control_num_lbl.setStyleSheet('border: none')
         control_num_lbl.show()
 
         control_num_val = QLabel(self.status_border)
@@ -6373,10 +6408,10 @@ class Ui_LoginWindow(object):
         category_value.show()
 
         table_widget = QTableWidget(self.warehouse_widget)
-        table_widget.setGeometry(0, 65, 991, 616)
+        table_widget.setGeometry(0, 125, 991, 556)
         table_widget.setColumnCount(8)
         table_widget.verticalHeader().setVisible(False)
-        table_widget.setHorizontalHeaderLabels(["control_id", "lot_number", "date", "customer", "product_code", "color", "quantity", "category"])
+        table_widget.setHorizontalHeaderLabels(["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
 
         table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -6387,6 +6422,7 @@ class Ui_LoginWindow(object):
         self.cursor.execute("""
         SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
         FROM fg_incoming
+        ORDER BY control_id DESC
         
         """)
         table_widget.setColumnWidth(0, 90)
@@ -6417,6 +6453,7 @@ class Ui_LoginWindow(object):
             for column in range(len(row)):
                 item = QTableWidgetItem(str(row[column]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                item.setTextAlignment(Qt.AlignCenter)
                 table_widget.setItem(result.index(row), column, item)
 
 
