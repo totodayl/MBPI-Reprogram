@@ -5940,28 +5940,40 @@ class Ui_LoginWindow(object):
                         pass
 
                 else:
-                    num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
-                    code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
+                    try:
+                        print('test')
+                        num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
+                        code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
 
-                    self.cursor.execute(f"""
-                        SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
-                        FROM
-                        (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
-                        CASE 
-                        WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
-                        WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
-                        ELSE NULL
-                        END AS range2
-                        FROM tbl_prod01
-                        WHERE t_lotnum LIKE '%-%' 
-                        AND t_deleted = false
-                        AND t_lotnum ~* '\d{code_type}$'
-                        ORDER BY t_prodid::INTEGER DESC)
-                        WHERE {num1} >= range1 AND {num1} <= range2
+                        self.cursor.execute(f"""
+                                                SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
+                                                FROM
+                                                (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
+                                                CASE 
+                                                WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                                                WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
+                                                ELSE NULL
+                                                END AS range2
+                                                FROM tbl_prod01
+                                                WHERE t_lotnum LIKE '%-%' 
+                                                AND t_deleted = false
+                                                AND t_lotnum ~* '\d{code_type}$'
+                                                ORDER BY t_prodid::INTEGER DESC)
+                                                WHERE {num1} >= range1 AND {num1} <= range2
 
-                                                        """)
-                    result = self.cursor.fetchone()
-                    print(result)
+                                            """)
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            customer_box.setText(result[1])
+                            product_color_box.setText(result[3])
+                            product_code_box.setText(result[2])
+                        else:
+                            pass
+
+                    except:
+                        QMessageBox.critical(self.widget, 'ERROR', 'LOT NUMBER not Found!')
+
 
 
             def save_entry():
@@ -6362,6 +6374,50 @@ class Ui_LoginWindow(object):
                         item.setTextAlignment(Qt.AlignCenter)
                         table_widget.setItem(result.index(row), column, item)
 
+        def search():
+
+            lot_num = search_box.text()
+
+            self.cursor.execute(f"""
+            SELECT control_id, lot_number, date, customer, product_code, color, quantity, category
+            FROM fg_incoming 
+            WHERE lot_number ILIKE '%{lot_num}%' AND deleted = false
+            
+            """)
+
+            result = self.cursor.fetchall()
+            print(result)
+
+            table_widget.clear()
+            table_widget.setHorizontalHeaderLabels(
+                ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+
+            for row in result:
+                for column in range(len(row)):
+                    item = QTableWidgetItem(str(row[column]))
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    item.setTextAlignment(Qt.AlignCenter)
+                    table_widget.setItem(result.index(row), column, item)
+
+        def delete_incoming():
+            selected = table_widget.selectedItems()
+
+            if selected:
+                self.cursor.execute(f"""
+                UPDATE fg_incoming
+                SET deleted = true
+                WHERE control_id = {selected[0].text()}
+                
+                """)
+
+                self.conn.commit()
+                QMessageBox.information(self.warehouse_widget, 'Deleted', 'Data successfuly deleted!')
+                self.warehouse() # Refreshes the Table.
+
+            else:
+                print("no selected")
+
+
 
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
@@ -6412,6 +6468,7 @@ class Ui_LoginWindow(object):
         search_button.setGeometry(915, 70, 70, 25)
         search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
         search_button.setText('Search')
+        search_button.clicked.connect(search)
         search_button.show()
 
         masterbatch_checkbox = QCheckBox(self.warehouse_widget)
@@ -6507,8 +6564,6 @@ class Ui_LoginWindow(object):
         table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         table_widget.itemSelectionChanged.connect(show_selected)
 
-
-
         self.cursor.execute("""
         SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
         FROM fg_incoming
@@ -6516,7 +6571,6 @@ class Ui_LoginWindow(object):
         ORDER BY control_id DESC
         
         """)
-
 
 
         table_widget.setColumnWidth(0, 90)
@@ -6542,7 +6596,6 @@ class Ui_LoginWindow(object):
 
 
 
-
         result = self.cursor.fetchall()
         # customer = result[1]
         # product_code = result[2]
@@ -6560,9 +6613,6 @@ class Ui_LoginWindow(object):
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 item.setTextAlignment(Qt.AlignCenter)
                 table_widget.setItem(result.index(row), column, item)
-
-
-
 
 
         table_widget.show()
@@ -6589,18 +6639,20 @@ class Ui_LoginWindow(object):
         update_btn.clicked.connect(update_entry)
         update_btn.show()
 
-        view_btn = QPushButton(bottom_button_widget)
-        view_btn.setGeometry(780, 18, 60, 25)
-        view_btn.setText('VIEW')
-        view_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
-        view_btn.setCursor(Qt.PointingHandCursor)
-        view_btn.show()
+        refresh_btn = QPushButton(bottom_button_widget)
+        refresh_btn.setGeometry(780, 18, 60, 25)
+        refresh_btn.setText('REFRESH')
+        refresh_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+        refresh_btn.setCursor(Qt.PointingHandCursor)
+        refresh_btn.clicked.connect(lambda: self.warehouse())
+        refresh_btn.show()
 
         delete_btn = QPushButton(bottom_button_widget)
         delete_btn.setGeometry(845, 18, 60, 25)
         delete_btn.setText('DELETE')
         delete_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
         delete_btn.setCursor(Qt.PointingHandCursor)
+        delete_btn.clicked.connect(delete_incoming)
         delete_btn.show()
 
 if __name__ == "__main__":
