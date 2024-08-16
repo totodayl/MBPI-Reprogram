@@ -1574,6 +1574,7 @@ class Ui_LoginWindow(object):
             product_output_input.setText("0.0")
             product_output_input.setAlignment(Qt.AlignCenter)
             product_output_input.setStyleSheet("background-color: white; border: 1px solid black")
+            product_output_input.textChanged.connect(loss_auto)
 
             self.formulaID_input = QtWidgets.QLineEdit()
             self.formulaID_input.setAlignment(Qt.AlignCenter)
@@ -6357,6 +6358,19 @@ class Ui_LoginWindow(object):
         dc_checkbox_label.setText("DRYCOLOR")
         dc_checkbox_label.show()
 
+        title_label = QLabel(self.warehouse_widget)
+        title_label.setGeometry(290, 80, 300, 40)
+        title_label.setStyleSheet('color : rgb(41, 181, 255)')
+        title_label.setFont(QtGui.QFont('Segoe UI Black', 20))
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setText("FG Incoming")
+        title_label.show()
+
+        title_icon = QLabel(self.warehouse_widget)
+        title_icon.setGeometry(550, 80, 40, 40)
+        title_icon.setPixmap(QtGui.QIcon('delivery_icon.png').pixmap(40, 40))
+        title_icon.show()
+
 
 
         control_num_lbl = QLabel(self.status_border)
@@ -6425,6 +6439,9 @@ class Ui_LoginWindow(object):
         ORDER BY control_id DESC
         
         """)
+
+
+
         table_widget.setColumnWidth(0, 90)
         table_widget.setColumnWidth(1, 120)
         table_widget.setColumnWidth(2, 100)
@@ -6432,6 +6449,17 @@ class Ui_LoginWindow(object):
         table_widget.setColumnWidth(4, 100)
         table_widget.setColumnWidth(5, 100)
         table_widget.setColumnWidth(6, 90)
+
+        table_widget.horizontalHeader().setStyleSheet("""
+                            QHeaderView::section{
+                                font-weight: bold;
+                                background-color: rgb(41, 181, 255);
+                                color: black;
+                                font-size: 18;
+                            }
+                        """)
+
+
         # table_widget.setColumnWidth(0, 50)
         # table_widget.setColumnWidth(0, 50)
 
