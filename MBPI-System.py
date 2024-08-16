@@ -2424,8 +2424,8 @@ class Ui_LoginWindow(object):
 
             if self.machine_combo.currentText() != "-":
                 queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
-            # if self.company_combo.currentText() != "-":
-            #     queryConList.append(f"customer = '{self.company_combo.currentText().replace("'", "''")}'")
+            if self.company_combo.currentText() != "-":
+                queryConList.append(f"customer = '{self.company_combo.currentText()}'")
             if self.formula_combo.currentText() != "":
                 queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
             if self.productCode_combo.currentText() != "":
