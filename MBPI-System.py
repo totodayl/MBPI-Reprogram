@@ -5521,7 +5521,7 @@ class Ui_LoginWindow(object):
         self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
         self.qc_table.setGeometry(0, 90, 991, 350)
         self.qc_table.setColumnCount(7)
-        self.qc_table.setRowCount(30)
+
 
         # Set Column Width
         self.qc_table.setColumnWidth(0, 80)
@@ -5559,6 +5559,8 @@ class Ui_LoginWindow(object):
         """)
 
         result = self.cursor.fetchall()
+
+        self.qc_table.setRowCount(len(result))
 
         # Populate the table
         for i in range(len(result)):
@@ -6112,6 +6114,7 @@ class Ui_LoginWindow(object):
             save_btn.setGeometry(100, 450, 60, 30)
             save_btn.setText('SAVE')
             save_btn.clicked.connect(save_entry)
+            save_btn.setShortcut('Return')
             save_btn.show()
 
             cancel_btn = QPushButton(self.widget)
@@ -6418,7 +6421,6 @@ class Ui_LoginWindow(object):
                 print("no selected")
 
 
-
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
         self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -6469,6 +6471,7 @@ class Ui_LoginWindow(object):
         search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
         search_button.setText('Search')
         search_button.clicked.connect(search)
+        search_button.setShortcut('Return')
         search_button.show()
 
         masterbatch_checkbox = QCheckBox(self.warehouse_widget)
@@ -6653,8 +6656,8 @@ class Ui_LoginWindow(object):
         delete_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
         delete_btn.setCursor(Qt.PointingHandCursor)
         delete_btn.clicked.connect(delete_incoming)
+        delete_btn.setShortcut('Delete')
         delete_btn.show()
-
 if __name__ == "__main__":
 
     import sys
