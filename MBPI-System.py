@@ -902,7 +902,7 @@ class Ui_LoginWindow(object):
                                         formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                                         loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                                         rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
-                                        remarks, lot_number) 
+                                        remarks, lot_number, resin_quantity) 
                                         VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
@@ -911,7 +911,7 @@ class Ui_LoginWindow(object):
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
-                                         ARRAY[{self.lot_numberList}]::VARCHAR[])
+                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()})
 
                                                 """)
                         print("query successful")
@@ -1667,8 +1667,6 @@ class Ui_LoginWindow(object):
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.textChanged.connect(loss_auto)
-
-
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
             self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
