@@ -1420,7 +1420,6 @@ class Ui_LoginWindow(object):
                     operator_input.clear()
                     supervisor_input.clear()
                     order_number_input.clear()
-                    resin_input.clear()
                     purging_input.clear()
                     product_input.clear()
                     time_table.clearContents()
@@ -1649,6 +1648,15 @@ class Ui_LoginWindow(object):
             resin_input.activated.connect(autofill_temperature)
             resin_input.setStyleSheet("background-color: white; border: 1px solid black")
 
+            resin_quantity = QLineEdit()
+            resin_quantity.setFixedHeight(25)
+            resin_quantity.setAlignment(Qt.AlignCenter)
+            resin_quantity.setStyleSheet("background-color: white; border: 1px solid black")
+
+            resin_quantity_label = QLabel()
+            resin_quantity_label.setFont(font)
+            resin_quantity_label.setText('Resin Qty(kg)')
+
             purging_input = QtWidgets.QLineEdit()
             purging_input.setFixedHeight(25)
             purging_input.setAlignment(Qt.AlignCenter)
@@ -1659,6 +1667,8 @@ class Ui_LoginWindow(object):
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.textChanged.connect(loss_auto)
+
+
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
             self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
@@ -1689,6 +1699,7 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(screwConf_label, screwConf_input)
             self.right_vbox.addRow(purging_label, purging_input)
             self.right_vbox.addRow(resin_label, resin_input)
+            self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
             self.right_vbox.addRow(operator_label, operator_input)
@@ -2503,6 +2514,9 @@ class Ui_LoginWindow(object):
             main_time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             material_table.setHorizontalHeaderLabels(["Materials", "Quantity(kg)"])
             lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
+
+            main_time_table.setRowCount(len(t_start))
+
 
             # Populating Time Table
             for i in range(len(t_start)):
@@ -5339,7 +5353,7 @@ class Ui_LoginWindow(object):
                 self.cursor.execute(f"""
                 UPDATE quality_control 
                 SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
-                evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}',
+                evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}', 
                 remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp,
 				status_changed = 
 				    CASE 
@@ -6389,7 +6403,6 @@ class Ui_LoginWindow(object):
             """)
 
             result = self.cursor.fetchall()
-            print(result)
 
             table_widget.clear()
             table_widget.setHorizontalHeaderLabels(
@@ -6418,7 +6431,8 @@ class Ui_LoginWindow(object):
                 self.warehouse() # Refreshes the Table.
 
             else:
-                print("no selected")
+                QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Seleceted Item!')
+
 
 
         self.warehouse_widget = QWidget(self.main_widget)
