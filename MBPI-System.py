@@ -1,5 +1,6 @@
 import os
 import matplotlib
+import pandas
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font
 from openpyxl.styles import Alignment
@@ -248,7 +249,6 @@ class Ui_LoginWindow(object):
             total_input = selected[29]
 
             def exportToExcel():
-
 
                 process_id = selected[0]
 
@@ -841,8 +841,6 @@ class Ui_LoginWindow(object):
                     except Exception as e:
                         print(e)
 
-
-
                     hours = str(int(total_time.total_seconds() // 3600))
                     minutes = str((int(total_time.total_seconds() % 3600) // 60))
                     seconds = str(int(total_time.total_seconds() % 60))
@@ -872,7 +870,6 @@ class Ui_LoginWindow(object):
                         purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
                         purge_duration = purge_end - purge_start
-
 
                     except:
 
@@ -935,7 +932,6 @@ class Ui_LoginWindow(object):
                     self.table3.deleteLater()
 
                 except:
-
                     pass
 
                 def show_table():
@@ -990,10 +986,9 @@ class Ui_LoginWindow(object):
                     item = [i.text() for i in item]
 
                     self.cursor.execute(f"""
-                                                                SELECT * FROM production_merge
-                                                                WHERE t_prodid = '{item[0]}' 
-
-                                                                """)
+                        SELECT * FROM production_merge
+                        WHERE t_prodid = '{item[0]}' 
+                           """)
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -1377,7 +1372,6 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
-
                 elif machine_input.currentText() == 'MC #8':
 
                     temperature_table.clear()
@@ -1397,7 +1391,6 @@ class Ui_LoginWindow(object):
                     for i in range(len(temp)):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
-
 
             def clear_inputs():
                 try:
@@ -1827,8 +1820,6 @@ class Ui_LoginWindow(object):
                 outputs = [i for i in outputs if i is not None]
                 outputs = [i.text() for i in outputs]
 
-
-
                 total_time = timedelta()
 
                 try:
@@ -1848,7 +1839,6 @@ class Ui_LoginWindow(object):
 
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
-
 
                 # Getting the Data for temperature
                 temperature = []
@@ -2076,7 +2066,6 @@ class Ui_LoginWindow(object):
             machine_input.addItem("MC #8")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setCurrentText(result[1])
-
 
             customer_input = QtWidgets.QLineEdit()
             customer_input.setFixedHeight(25)
@@ -2422,7 +2411,6 @@ class Ui_LoginWindow(object):
                     wb.save(filename)
                     QMessageBox.information(self.production_widget, "Export Success", "File Successfully Exported!")
 
-
             except Exception as e:
                 print(e)
                 QMessageBox.information(self.production_widget, "ERROR", "No Selected Items")
@@ -2507,14 +2495,12 @@ class Ui_LoginWindow(object):
             materials = result[0][3]
             lotNumber = result[0][4]
 
-
             # Set the Header Labels again
             main_time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             material_table.setHorizontalHeaderLabels(["Materials", "Quantity(kg)"])
             lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
 
             main_time_table.setRowCount(len(t_start))
-
 
             # Populating Time Table
             for i in range(len(t_start)):
@@ -2531,8 +2517,6 @@ class Ui_LoginWindow(object):
                 main_time_table.setItem(i, 1, item2)
                 main_time_table.setItem(i, 2, item3)
 
-
-
             if len(materials) > material_table.rowCount():
                 material_table.setRowCount(len(materials))
 
@@ -2544,19 +2528,54 @@ class Ui_LoginWindow(object):
                 material_table.setItem(list(materials.keys()).index(i), 0, key)
                 material_table.setItem(list(materials.keys()).index(i), 1, value)
 
-
             for i in range(len(lotNumber)):
                 item = QTableWidgetItem(str(lotNumber[i]))
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 lotNumber_table.setItem(i, 0, item)
 
+        def import_statistics():
 
+            self.cursor.execute(f"""
+                SELECT machine, product_code, ROUND(AVG(output_per_hour), 4) AS average_output_per_hour,
+                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(output_percent), 4) AS ave_yield
+                FROM public.extruder
+                WHERE time_start[1]::DATE BETWEEN '{date1.text()}' AND '{date2.text()}'
+                
+                GROUP BY machine, product_code
+                    
+            
+            """)
+
+            result = self.cursor.fetchall()
+            df = pandas.DataFrame(result)
+
+            print(df)
+
+            column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield"]
+
+            try:
+
+                filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
+                                                                 'Excel Files (*.xlsx)',options=QtWidgets.QFileDialog.Options())
+
+                if filename:
+                    # Ensuring the file name ends with .xlsx
+                    if not filename.lower().endswith('.xlsx'):
+                        filename += '.xlsx'
+
+                    # Print or use the file name
+                    df.to_excel(excel_writer=filename, index=False,
+                                header=column_names)
+                    QMessageBox.information(self.production_widget, "File Imported", "Successfully Imported Data")
+            except PermissionError:
+                QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
+                                                                         "Someone is using blank.xlsx")
 
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
         self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
         self.production_widget.show()
-        
+
         self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
@@ -2672,6 +2691,26 @@ class Ui_LoginWindow(object):
         self.productCode_combo.setEditable(True)
         self.productCode_combo.show()
 
+        date1 = QDateEdit(self.production_widget)
+        date1.setGeometry(50, 710, 100, 25)
+        date1.setDate(date.today())
+        date1.setDisplayFormat('yyyy-MM-dd')
+        date1.show()
+
+        date2 = QDateEdit(self.production_widget)
+        date2.setGeometry(170, 710, 100, 25)
+        date2.setDate(date.today())
+        date2.setDisplayFormat('yyyy-MM-dd')
+        date2.show()
+
+        statsButtonImport = ClickableLabel(self.production_widget)
+        statsButtonImport.setGeometry(290, 713, 20, 20)
+        statsButtonImport.setPixmap(QtGui.QIcon('export.png').pixmap(20,20))
+        statsButtonImport.setCursor(Qt.PointingHandCursor)
+        statsButtonImport.setToolTip('Get Statistics')
+        statsButtonImport.clicked.connect(import_statistics)
+        statsButtonImport.show()
+
         self.view_btn = QtWidgets.QPushButton(self.production_widget)
         self.view_btn.setGeometry(600, 700, 80, 30)
         self.view_btn.setText("View")
@@ -2773,7 +2812,6 @@ class Ui_LoginWindow(object):
 
                 filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.qc_widget, "Save File", r"C:\Users\Administrator\Documents",
                                                                  'Excel Files (*.xlsx)',options=QtWidgets.QFileDialog.Options())
-
 
                 if filename:
                     # Ensuring the file name ends with .xlsx
@@ -2928,8 +2966,6 @@ class Ui_LoginWindow(object):
                 else:
                     old_lot_list.append(correction_input.text().strip())
 
-
-
             def saveBtn_clicked():
                 def clear_entries():
                     lotNumber_input.clear()
@@ -2958,7 +2994,6 @@ class Ui_LoginWindow(object):
                         if result:
                             QMessageBox.information(self.qc_widget, "Data Exist", "Data is already Entered.")
                             return
-
 
                         self.cursor.execute(f"""
                                            INSERT INTO quality_control
@@ -3027,7 +3062,6 @@ class Ui_LoginWindow(object):
                         except:
                             orig_lot = correction_input.text().strip()
 
-
                         self.cursor.execute(f"""
                                        INSERT INTO quality_control
                                            (lot_number, product_code, customer, status, remarks, action, original_lot, evaluated_by,
@@ -3047,7 +3081,6 @@ class Ui_LoginWindow(object):
 
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
                         qc_ID = self.cursor.fetchone()[0]
-
 
                         # Save To quality_control_tbl2 DB
                         if len(old_lot_list) == len(new_lot_list):
@@ -3076,8 +3109,6 @@ class Ui_LoginWindow(object):
                             while len(old_lot_list) != len(new_lot_list):
                                 old_lot_list.append(old_lot_list[-1])
 
-
-
                             for i in range(len(new_lot_list)):
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
@@ -3096,7 +3127,6 @@ class Ui_LoginWindow(object):
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
                                 self.conn.commit()
-
 
                         elif len(new_lot_list) < len(
                                 old_lot_list):  # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
@@ -3417,7 +3447,6 @@ class Ui_LoginWindow(object):
             result_label.setFont(font)
             result_label.setStyleSheet("border: none;")
 
-
             # Right Side Widgets
             qcType_dropdown = QtWidgets.QComboBox()
             qcType_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
@@ -3531,7 +3560,6 @@ class Ui_LoginWindow(object):
             correction_label.setFont(font)
             correction_label.setStyleSheet("border: none;")
 
-
             correction_input = QLineEdit()
             correction_input.setStyleSheet("background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
             correction_input.setFixedHeight(25)
@@ -3551,7 +3579,6 @@ class Ui_LoginWindow(object):
             formulaID_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             formulaID_input.setFixedHeight(25)
             formulaID_input.setFixedWidth(296)
-
 
             actionTaken_label = QLabel(self.body_widget)
             actionTaken_label.setGeometry(0, 525, 100, 25)
@@ -3620,11 +3647,7 @@ class Ui_LoginWindow(object):
             topFormLayout.addRow(time_endorsed_label, time_endorsed_input)
             topFormLayout.addRow(result_label, result_dropdown)
 
-
-
             widget1.show()
-
-
 
         def show_qc_data():
             self.qc_widget.deleteLater()
@@ -3737,7 +3760,6 @@ class Ui_LoginWindow(object):
                 dayoff.append(no_operation)
                 original_lot.append(prod_code)
 
-
             data = [(x, y) for x, y in zip(original_lot, dayoff)]
 
             # DELETE THE TABLE TO CLEAR THE CONTENT FOR UPDATE
@@ -3771,7 +3793,6 @@ class Ui_LoginWindow(object):
             qc_data_table.setRowCount(len(result))
             qc_data_table.setColumnCount(7)
 
-
             for i in range(len(result)):
                 if result[i][4] == "Failed":
                     for j in range(len(result[i])):
@@ -3796,7 +3817,6 @@ class Ui_LoginWindow(object):
             qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
                                                      "PRODUCT CODE", "QC DAYS"])
             qc_data_table.show()
-
 
             self.cursor.execute("""
             WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
@@ -3840,10 +3860,8 @@ class Ui_LoginWindow(object):
                     else:
                         firstTry_failed[product_code] += 1
 
-
             passToFail_x = []
             passToFail_y = []
-
 
             # Query For Getting the total Amount of original_lot per Product Code
             self.cursor.execute("""
@@ -3975,8 +3993,6 @@ class Ui_LoginWindow(object):
                             x.append(i)
                             y.append(j)
 
-
-
                         self.graph5.clear()
                         self.graph5.bar(x, y)
                         self.graph5.set_yticks(np.arange(0, 110, 10))
@@ -3984,7 +4000,6 @@ class Ui_LoginWindow(object):
                         self.graph5.set_xticklabels(x, rotation=30)
                         self.graph5.set_title("Highest Returns By QC Analyst", fontsize=15)
                         self.graph5.set_position([0.4, 0.08, 0.228, 0.35])
-
 
                         self.canvas.draw()
 
@@ -4176,7 +4191,6 @@ class Ui_LoginWindow(object):
 
                 self.graph1.set_title("Highest AVG QC days", fontsize=15)
 
-
                 # Get the Total Product Code runs from data x to date y
                 self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) AS total_quantity
@@ -4193,7 +4207,6 @@ class Ui_LoginWindow(object):
                 total_productCodes = {}
                 for i in result:
                     total_productCodes[i[0].strip()] = i[1]
-
 
                 self.cursor.execute("""
                 SELECT product_code, COUNT(*)
@@ -4213,7 +4226,6 @@ class Ui_LoginWindow(object):
                     prodouctCodeList.append(items[0])
                     prodouctCodeCount.append(items[1])
 
-
                 self.graph2.bar(prodouctCodeList, prodouctCodeCount)
                 try:
                     self.graph2.set_yticks(np.arange(0, prodouctCodeCount[0] + 20, 5))
@@ -4224,7 +4236,6 @@ class Ui_LoginWindow(object):
 
                 self.graph2.set_xticklabels(prodouctCodeList, rotation=30)
                 self.graph2.set_title("Most Change", fontsize = 15)
-
 
                 # Visual 3
 
@@ -4253,7 +4264,6 @@ class Ui_LoginWindow(object):
                 self.graph3.set_ylim(0, 110)
                 self.graph3.set_title("Failed First Run", fontsize=15)
 
-
                 # Visual 4
 
                 self.cursor.execute(f"""
@@ -4265,9 +4275,7 @@ class Ui_LoginWindow(object):
                 """)
 
                 result = self.cursor.fetchall()
-
                 productCodeReturns = {}
-
 
                 for i, j in result:
                     productCodeReturns[i] = j
@@ -4293,7 +4301,6 @@ class Ui_LoginWindow(object):
                 self.graph4.set_title("Highest Return Percentage", fontsize=15)
                 self.graph4.set_position([0.125, 0.08, 0.228, 0.35])
 
-
                 # Getting the data For Visualization 5
 
                 # Getting the Data for how many times an operator have a Returned product
@@ -4316,7 +4323,6 @@ class Ui_LoginWindow(object):
 
                 # Set Page for Graph 5
                 graph5_page = 1
-
 
                 self.graph5.bar(x, y)
                 self.graph5.set_yticks(np.arange(0, 110, 10))
@@ -4359,8 +4365,6 @@ class Ui_LoginWindow(object):
                 self.graph6.set_title("Highest Materials Used", fontsize=15)
                 self.graph6.set_position([0.672, 0.078, 0.228, 0.35])
 
-
-
                 import_button = QPushButton(self.body_widget)
                 import_button.setGeometry(850, 35, 100, 25)
                 import_button.setText("IMPORT")
@@ -4368,8 +4372,6 @@ class Ui_LoginWindow(object):
                 import_button.setCursor(Qt.PointingHandCursor)
                 import_button.clicked.connect(lambda: save_to_excel(date1, date2))
                 import_button.show()
-
-
 
             self.qc_widget.deleteLater()
 
@@ -4528,7 +4530,6 @@ class Ui_LoginWindow(object):
             # Create a new Worksheet
             ws2 = wb.create_sheet("Most Changing")
 
-
             self.cursor.execute("""
             SELECT product_code, COUNT(*)
             FROM quality_control
@@ -4539,7 +4540,6 @@ class Ui_LoginWindow(object):
             """)
 
             status_changed = self.cursor.fetchall()
-
 
             # For Failt To Pass
             ws2["A1"] = "Product Code"
@@ -4557,7 +4557,6 @@ class Ui_LoginWindow(object):
                 ws2[f"A{cell_pointer}"].alignment = center_Alignment
                 ws2[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
-
 
             # Worksheet 3
             ws3 = wb.create_sheet("Failed First Run")
@@ -4677,8 +4676,6 @@ class Ui_LoginWindow(object):
                 ws4[f"J{cell_pointer}"].alignment = center_Alignment
                 ws4[f"K{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
-
-
 
             self.cursor.execute(f"""
                 SELECT machine, COUNT(machine)
@@ -4804,7 +4801,6 @@ class Ui_LoginWindow(object):
             """)
             result = self.cursor.fetchall()
 
-
             ws5["A1"] = "Product Code"
             ws5['B1'] = "Kilograms"
             ws5['A1'].alignment = center_Alignment
@@ -4820,7 +4816,6 @@ class Ui_LoginWindow(object):
                 ws5[f"A{cell_pointer}"].alignment = center_Alignment
                 ws5[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
-
 
             # Open QFileDialog
             filename, _ = QFileDialog.getSaveFileName(self.qc_widget, "Save File",
@@ -4918,7 +4913,6 @@ class Ui_LoginWindow(object):
                 WHERE lot_number = '{lot_input.text()}'
                 """)
                 result = self.cursor.fetchone()
-
 
                 if result != None:
                     self.cursor.execute(f"""
@@ -5056,13 +5050,10 @@ class Ui_LoginWindow(object):
 
                     returns_table.show()
 
-
             def clear_entry():
                 lot_input.clear()
                 quantity_input.clear()
                 remarks_input.clear()
-
-
 
             self.qc_widget.deleteLater()
 
@@ -5344,7 +5335,6 @@ class Ui_LoginWindow(object):
 
             clear_button.show()
 
-
         def update_entry():
             def save_update():
                 # Update quality_control table
@@ -5515,7 +5505,6 @@ class Ui_LoginWindow(object):
             else:
                 QMessageBox.information(self.qc_widget, "No Selected", "No Item Selected")
 
-
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
         self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
@@ -5533,7 +5522,6 @@ class Ui_LoginWindow(object):
         self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
         self.qc_table.setGeometry(0, 90, 991, 350)
         self.qc_table.setColumnCount(7)
-
 
         # Set Column Width
         self.qc_table.setColumnWidth(0, 80)
@@ -5696,11 +5684,9 @@ class Ui_LoginWindow(object):
         rightSide_widget.setGeometry(595, 0, 130, 114)
         rightSide_widget.show()
 
-
         label_font = QtGui.QFont("Segoe UI", 11)
 
         # Create Vertical Box layout
-
         leftVBox1_layout = QVBoxLayout(leftSide1_widget)
         leftVBox2_layout = QVBoxLayout(leftSide2_widget)
         rightVBo1_layout = QVBoxLayout(rightSide_widget)
@@ -5737,7 +5723,6 @@ class Ui_LoginWindow(object):
         evaluatedBy_selected = QLabel()
         evaluatedDate_selected = QLabel()
         encodedDate_selected = QLabel()
-
 
         # Right Side Labels
         updatedBy_label = QLabel()
@@ -5881,13 +5866,12 @@ class Ui_LoginWindow(object):
         self.qc_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.qc_table.show()
 
-
     def warehouse(self):
 
         def add_entry():
 
             def autofill():
-                #Set to Capital Letter
+                # Set to Capital Letter
                 lot_number_box.setText(lot_number_box.text().upper())
 
                 self.cursor.execute(f"""
@@ -6002,7 +5986,6 @@ class Ui_LoginWindow(object):
                 self.conn.commit()
                 QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
 
-
             self.widget = QWidget()
             self.widget.setGeometry(780, 305, 400, 500)
             self.widget.setFixedSize(400, 500)
@@ -6046,9 +6029,6 @@ class Ui_LoginWindow(object):
             customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
             customer_box.setEnabled(False)
 
-
-
-
             category_label = QLabel()
             category_label.setFont(label_font)
             category_label.setText('Category')
@@ -6078,12 +6058,12 @@ class Ui_LoginWindow(object):
             excess_box = QLineEdit()
             excess_box.setFixedHeight(30)
             excess_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-            
+
             quantity_label = QLabel()
             quantity_label.setText('Quantity')
             quantity_label.setFont(label_font)
             quantity_label.setFixedWidth(150)
-            
+
             quantity_box = QLineEdit()
             quantity_box.setFixedHeight(30)
             quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
@@ -6106,7 +6086,6 @@ class Ui_LoginWindow(object):
             product_color_box.setFixedHeight(30)
             product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
-
             layout = QFormLayout(form_layout_widget)
             layout.addRow(id_number_label, id_number_box)
             layout.addRow(lot_number_label, lot_number_box)
@@ -6116,7 +6095,6 @@ class Ui_LoginWindow(object):
             layout.addRow(product_color_label, product_color_box)
             layout.addRow(category_label, category_box)
             layout.addRow(quantity_label, quantity_box)
-
 
             layout.setVerticalSpacing(10)
 
@@ -6141,7 +6119,6 @@ class Ui_LoginWindow(object):
 
             if selected:
                 selected = [i.text() for i in selected]
-
 
                 def update_btn_clicked():
 
@@ -6300,11 +6277,8 @@ class Ui_LoginWindow(object):
                 cancel_btn.clicked.connect(lambda: self.widget.close())
                 cancel_btn.show()
 
-
-
             else:
                 QMessageBox.critical(self.warehouse_widget, 'ERROR', 'No Selected Item!')
-
 
         def show_selected():
 
@@ -6317,7 +6291,6 @@ class Ui_LoginWindow(object):
                 category_value.setText(selected[7])
             except IndexError:
                 QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Item Selected.')
-
 
         def fg_filter():
 
@@ -6431,8 +6404,6 @@ class Ui_LoginWindow(object):
             else:
                 QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Seleceted Item!')
 
-
-
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
         self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -6520,7 +6491,6 @@ class Ui_LoginWindow(object):
         title_icon.show()
 
 
-
         control_num_lbl = QLabel(self.status_border)
         control_num_lbl.setGeometry(3, 12, 100, 10)
         control_num_lbl.setText('Control Number:')
@@ -6597,28 +6567,15 @@ class Ui_LoginWindow(object):
         table_widget.setColumnWidth(6, 90)
 
         table_widget.horizontalHeader().setStyleSheet("""
-                            QHeaderView::section{
-                                font-weight: bold;
-                                background-color: rgb(41, 181, 255);
-                                color: black;
-                                font-size: 18;
-                            }
+            QHeaderView::section{
+                font-weight: bold;
+                background-color: rgb(41, 181, 255);
+                color: black;
+                font-size: 18;
+            }
                         """)
 
-
-        # table_widget.setColumnWidth(0, 50)
-        # table_widget.setColumnWidth(0, 50)
-
-
-
         result = self.cursor.fetchall()
-        # customer = result[1]
-        # product_code = result[2]
-        # date = result[3]
-        # lot_number = result[4]
-        # quantity = result[5]
-        # category = result[6]
-        # color = result[8]
 
         table_widget.setRowCount(len(result))
 
