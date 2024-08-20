@@ -3058,7 +3058,7 @@ class Ui_LoginWindow(object):
                             if result == None:
                                 orig_lot = correction_input.text().strip()
                             else:
-                                orig_lot = result[0][0]
+                                orig_lot = result[0]
                         except:
                             orig_lot = correction_input.text().strip()
 
@@ -3198,6 +3198,7 @@ class Ui_LoginWindow(object):
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
                     formulaID_input.setText(str(result[3]))
+                    print(result[3])
 
             def autofill():
 
