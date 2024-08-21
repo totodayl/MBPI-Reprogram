@@ -899,16 +899,16 @@ class Ui_LoginWindow(object):
                                         formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                                         loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                                         rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
-                                        remarks, lot_number, resin_quantity) 
+                                        remarks, lot_number, resin_quantity, encoded_on) 
                                         VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                                         '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
                                          '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
-                                         '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.text()}', '{supervisor_input.text()}',
+                                         '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.currentText()}', '{supervisor_input.currentText()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
-                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()})
+                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()}, '{date.today()}')
 
                                                 """)
                         print("query successful")
@@ -1614,15 +1614,21 @@ class Ui_LoginWindow(object):
             purgeEnd_input.setStyleSheet("background-color: white; border: 1px solid black")
             purgeEnd_input.setText("00:00")
 
-            operator_input = QtWidgets.QLineEdit()
+            operator_input = QtWidgets.QComboBox()
             operator_input.setFixedHeight(25)
-            operator_input.setAlignment(Qt.AlignCenter)
             operator_input.setStyleSheet("background-color: white; border: 1px solid black")
+            operator_input.addItem('Arnel Rosario')
+            operator_input.addItem('Edsel Mangarin')
+            operator_input.addItem('Arjie Galgo')
+            operator_input.addItem('Aldrin Villacrusis')
+            operator_input.addItem('Joel Miras')
+            operator_input.setEditable(True)
 
-            supervisor_input = QtWidgets.QLineEdit()
+            supervisor_input = QtWidgets.QComboBox()
             supervisor_input.setFixedHeight(25)
-            supervisor_input.setAlignment(Qt.AlignCenter)
             supervisor_input.setStyleSheet("background-color: white; border: 1px solid black")
+            supervisor_input.addItem('Julius Fundano')
+            supervisor_input.setEditable(True)
 
             order_number_input = QtWidgets.QLineEdit()
             order_number_input.setFixedHeight(25)
@@ -2543,18 +2549,15 @@ class Ui_LoginWindow(object):
                 
                 GROUP BY machine, product_code
                     
-            
+
             """)
 
             result = self.cursor.fetchall()
             df = pandas.DataFrame(result)
 
-            print(df)
-
             column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield"]
 
             try:
-
                 filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
                                                                  'Excel Files (*.xlsx)',options=QtWidgets.QFileDialog.Options())
 
@@ -2585,8 +2588,6 @@ class Ui_LoginWindow(object):
         SELECT column_name FROM information_schema.columns
         WHERE TABLE_NAME = 'extruder';
         """)
-        # column_names = self.cursor.fetchall()
-        # column_names = [i[0] for i in column_names]
 
         column_names = ["process_id", "machine", "customer", "qty_order", "total_output", "formula_id", "product_code",
                         "total time(hr)"]
@@ -2758,8 +2759,8 @@ class Ui_LoginWindow(object):
         material_table.setColumnCount(2)
         material_table.setRowCount(13)
         material_table.setHorizontalHeaderLabels(["Material", "Value(Kg)"])
-        material_table.setColumnWidth(0, 130)
-        material_table.setColumnWidth(1, 90)
+        material_table.setColumnWidth(0, 120)
+        material_table.setColumnWidth(1, 100)
         material_table.show()
 
         lotNumber_table = QtWidgets.QTableWidget(self.production_widget)
@@ -2941,7 +2942,6 @@ class Ui_LoginWindow(object):
                 old_lot_list.clear()
 
                 correction = correction_input.text().strip()
-                print(correction)
                 if ',' in correction:
                     correction = correction.split(',')
                     for i in correction:
@@ -3105,7 +3105,6 @@ class Ui_LoginWindow(object):
 
                         elif len(new_lot_list) > len(
                                 old_lot_list):  # IF NEW LOT IS HAVE MORE LOT THAN THE CORRECTED LOT
-                            print("case2")
                             while len(old_lot_list) != len(new_lot_list):
                                 old_lot_list.append(old_lot_list[-1])
 
@@ -3130,8 +3129,7 @@ class Ui_LoginWindow(object):
 
                         elif len(new_lot_list) < len(
                                 old_lot_list):  # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
-                            print("case3")
-                            print(new_lot_list)
+
                             while len(new_lot_list) != len(old_lot_list):
                                 new_lot_list.append(new_lot_list[-1])
 
@@ -3175,12 +3173,10 @@ class Ui_LoginWindow(object):
                     correction_input.setStyleSheet(
                         "background-color: rgb(255, 255, 0); border: 1px solid rgb(171, 173, 179);")
                 else:
-
                     correction_input.setEnabled(False)
                     correction_input.setStyleSheet(
                         "background-color: rgb(240, 240, 240); border: 1px solid rgb(171, 173, 179);")
                     correction_input.clear()
-
 
             def correction_auto_input():
 
@@ -3198,7 +3194,7 @@ class Ui_LoginWindow(object):
                     productCode_dropdown.setCurrentText(result[0])
                     evaluatedBy_dropdown.setCurrentText(result[2])
                     formulaID_input.setText(str(result[3]))
-                    print(result[3])
+
 
             def autofill():
 
@@ -5922,8 +5918,6 @@ class Ui_LoginWindow(object):
                                     """)
                     result = self.cursor.fetchone()
 
-                    print(result)
-
                     if result:
                         customer_box.setText(result[1])
                         product_color_box.setText(result[3])
@@ -5940,7 +5934,6 @@ class Ui_LoginWindow(object):
 
                 else:
                     try:
-                        print('test')
                         num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
                         code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
 
