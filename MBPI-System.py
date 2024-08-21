@@ -1893,18 +1893,18 @@ class Ui_LoginWindow(object):
 
                 try:
                     self.cursor.execute(f"""
-                                UPDATE extruder
-                                SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
-                                temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
-                                feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
-                                screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
-                                purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
-                                time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
-                                output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
-                                output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()}
-                                WHERE process_id = {selected[0]};
-                                ;      
-                                """)
+                        UPDATE extruder
+                        SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
+                        temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
+                        feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
+                        screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
+                        purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
+                        time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
+                        output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
+                        output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()}
+                        WHERE process_id = {selected[0]};
+        
+                        """)
 
                     QMessageBox.information(self.entry_widget, "UPDATE SUCCESSFUL",
                                             f"Successfully Updated \n Form No. {selected[0]}")
@@ -5063,6 +5063,148 @@ class Ui_LoginWindow(object):
                 quantity_input.clear()
                 remarks_input.clear()
 
+            def update_returns():
+
+                def save_button_clicked():
+                    self.cursor.execute(f"""
+                                    UPDATE returns
+                                    SET lot_number = '{lot_input.text()}', quantity = {quantity_input.text()}, product_code = '{product_code_input.text()}',
+                                    customer = '{customer_input.text()}', remarks = '{remarks_input.toPlainText()}', return_date = '{date_return.text()}',
+                                    edited = true, last_edited = '{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+                                    WHERE lot_number = '{items[0]}'
+
+                                    """)
+                    self.conn.commit()
+
+                items = [item.text() for item in returns_table.selectedItems()]
+
+                print(items)
+
+                self.edit_returns_widget = QWidget()
+                self.edit_returns_widget.setGeometry(300, 100, 340, 500)
+                self.edit_returns_widget.setWindowTitle('Edit')
+                self.edit_returns_widget.show()
+
+                widget1 = QWidget(self.edit_returns_widget)
+                widget1.setGeometry(0, 0, 340, 450)
+                widget1.show()
+
+                form_layout = QFormLayout(widget1)
+                form_layout.setVerticalSpacing(20)
+
+                # Set Font
+                font = QtGui.QFont("Arial", 9)
+
+                lot_label = QLabel()
+                lot_label.setText("LOT NUMBER")
+                lot_label.setFont(font)
+
+                lot_input = QLineEdit()
+                lot_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+                lot_input.setAlignment(Qt.AlignCenter)
+                lot_input.setFixedHeight(25)
+                lot_input.setText(items[0])
+
+                quantity_label = QLabel()
+                quantity_label.setText("QUANTITY")
+                quantity_label.setFont(font)
+
+                quantity_input = QLineEdit()
+                quantity_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+                quantity_input.setAlignment(Qt.AlignCenter)
+                quantity_input.setFixedHeight(25)
+                quantity_input.setText(items[1])
+
+                product_code_label = QLabel()
+                product_code_label.setText("PRODUCT CODE")
+                product_code_label.setFont(font)
+
+                product_code_input = QLineEdit()
+                product_code_input.setStyleSheet("background-color: rgb(240, 240, 240)")
+                product_code_input.setAlignment(Qt.AlignCenter)
+                product_code_input.setFixedHeight(25)
+                product_code_input.setText(items[2])
+
+                formulaID_label = QLabel()
+                formulaID_label.setText("FORMULA ID")
+                formulaID_label.setFont(font)
+
+                formulaID_input = QLineEdit()
+                formulaID_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+                formulaID_input.setAlignment(Qt.AlignCenter)
+                formulaID_input.setFixedHeight(25)
+                formulaID_input.setEnabled(False)
+                formulaID_input.setText(items[4])
+
+                customer_label = QLabel()
+                customer_label.setText("CUSTOMER")
+                customer_label.setFont(font)
+
+                customer_input = QLineEdit()
+                customer_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+                customer_input.setFixedHeight(25)
+                customer_input.setText(items[3])
+                customer_input.setAlignment(Qt.AlignCenter)
+
+                remarks_label = QLabel()
+                remarks_label.setText("REMARKS")
+                remarks_label.setFont(font)
+                remarks_label.setAlignment(Qt.AlignRight)
+
+                remarks_input = QTextEdit()
+                remarks_input.setFont(font)
+                remarks_input.setFixedHeight(100)
+                remarks_input.setText(items[7])
+
+                date_label = QLabel()
+                date_label.setText("RETURN DATE")
+                date_label.setFont(font)
+                date_label.setAlignment(Qt.AlignRight)
+
+                date_return = QDateEdit()
+                date_return.setStyleSheet("background-color: rgb(255, 255, 0)")
+                date_return.setFont(font)
+                date_return.setFixedHeight(25)
+                date_return.setDate(datetime.strptime(items[6], '%Y-%m-%d'))
+                date_return.setDisplayFormat("MM-dd-yyyy")
+
+
+                origin_lot_label = QLabel()
+                origin_lot_label.setText("ORIGIN LOT")
+                origin_lot_label.setFont(font)
+                origin_lot_label.setAlignment(Qt.AlignRight)
+
+                origin_lot = QLineEdit()
+                origin_lot.setStyleSheet("background-color: rgb(255, 255, 0)")
+                origin_lot.setFixedHeight(25)
+                origin_lot.setEnabled(False)
+                origin_lot.setText(items[5])
+                origin_lot.setAlignment(Qt.AlignCenter)
+
+                form_layout.addRow(lot_label, lot_input)
+                form_layout.addRow(quantity_label, quantity_input)
+                form_layout.addRow(product_code_label, product_code_input)
+                form_layout.addRow(formulaID_label, formulaID_input)
+                form_layout.addRow(customer_label, customer_input)
+                form_layout.addRow(origin_lot_label, origin_lot)
+                form_layout.addRow(date_label, date_return)
+                form_layout.addRow(remarks_label, remarks_input)
+
+                save_button = QPushButton(self.edit_returns_widget)
+                save_button.setGeometry(90, 455, 60, 25)
+                save_button.setText('SAVE')
+                save_button.clicked.connect(save_button_clicked)
+                save_button.show()
+
+                cancel_button = QPushButton(self.edit_returns_widget)
+                cancel_button.setGeometry(190, 455, 60, 25)
+                cancel_button.setText('CANCEL')
+                cancel_button.clicked.connect(lambda : self.edit_returns_widget.close())
+                cancel_button.show()
+
+
+
+
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -5316,6 +5458,9 @@ class Ui_LoginWindow(object):
                 }  
             
             """)
+            returns_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            returns_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
             show_table()
             returns_table.show()
 
@@ -5339,6 +5484,7 @@ class Ui_LoginWindow(object):
             edit_button.setGeometry(250, 680, 60, 25)
             edit_button.setText("Edit")
             edit_button.setStyleSheet("background-color: rgb(150, 147, 147);")
+            edit_button.clicked.connect(update_returns)
             edit_button.show()
 
             clear_button.show()
