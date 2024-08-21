@@ -1901,7 +1901,7 @@ class Ui_LoginWindow(object):
                                 purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                                 time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                                 output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
-                                output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}
+                                output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()}
                                 WHERE process_id = {selected[0]};
                                 ;      
                                 """)
@@ -2186,6 +2186,16 @@ class Ui_LoginWindow(object):
             resin_input.setStyleSheet("background-color: white; border: 1px solid black")
             resin_input.setCurrentText(result[15])
 
+            resin_quantity = QLineEdit()
+            resin_quantity.setFixedHeight(25)
+            resin_quantity.setAlignment(Qt.AlignCenter)
+            resin_quantity.setStyleSheet("background-color: white; border: 1px solid black")
+            resin_quantity.setText(str(result[33]))
+
+            resin_quantity_label = QLabel()
+            resin_quantity_label.setFont(font)
+            resin_quantity_label.setText('Resin Qty(kg)')
+
             purging_input = QtWidgets.QLineEdit()
             purging_input.setFixedHeight(25)
             purging_input.setAlignment(Qt.AlignCenter)
@@ -2229,6 +2239,7 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(screwConf_label, screwConf_input)
             self.right_vbox.addRow(purging_label, purging_input)
             self.right_vbox.addRow(resin_label, resin_input)
+            self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
             self.right_vbox.addRow(operator_label, operator_input)
