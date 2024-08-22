@@ -6444,7 +6444,6 @@ class Ui_LoginWindow(object):
 
             def fg_filter():
 
-                print('test')
 
                 if masterbatch_checkbox.isChecked() == True and drycolor_checkbox.isChecked() == False:
 
@@ -6555,6 +6554,40 @@ class Ui_LoginWindow(object):
 
                 else:
                     QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Seleceted Item!')
+
+            def export_to_excel():
+
+                self.cursor.execute("""
+                SELECT * FROM fg_incoming
+                ORDER BY control_id
+                
+                """)
+                result = self.cursor.fetchall()
+
+                df = pandas.DataFrame(result)
+                print(df.columns)
+
+                column_names = ['Control ID', 'Customer', 'Product Code', 'Date', 'Lot Number', 'Quantity', 'category', 'deleted', 'Color']
+
+                try:
+                    filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.warehouse_widget, "Save File",
+                                                                        r"C:\Users\Administrator\Documents",
+                                                                        'Excel Files (*.xlsx)',
+                                                                        options=QtWidgets.QFileDialog.Options())
+
+                    if filename:
+                        # Ensuring the file name ends with .xlsx
+                        if not filename.lower().endswith('.xlsx'):
+                            filename += '.xlsx'
+
+                        # Print or use the file name
+                        df.to_excel(excel_writer=filename, index=False,
+                                    header=column_names)
+                        QMessageBox.information(self.production_widget, "File Imported", "Successfully Imported Data")
+                except PermissionError:
+                    QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
+                                                                                     "Someone is using blank.xlsx")
+
 
 
 
@@ -6737,6 +6770,23 @@ class Ui_LoginWindow(object):
             bottom_button_widget.setGeometry(0, 681, 991, 43)
             bottom_button_widget.setStyleSheet('border-bottom: 1px solid rgb(0, 128, 192)')
             bottom_button_widget.show()
+
+            date1 = QDateEdit(bottom_button_widget)
+            date1.setGeometry(80, 18, 100, 25)
+            date1.show()
+
+            date2 = QDateEdit(bottom_button_widget)
+            date2.setGeometry(200, 18, 100, 25)
+            date2.show()
+
+            export_logo = ClickableLabel(bottom_button_widget)
+            export_logo.setGeometry(310, 18, 20, 20)
+            export_logo.setPixmap(QtGui.QIcon('export.png').pixmap(20,20))
+            export_logo.setStyleSheet('border: none')
+            export_logo.setCursor(Qt.PointingHandCursor)
+            export_logo.clicked.connect(export_to_excel)
+            export_logo.show()
+
 
             # Buttons
             add_btn = QPushButton(bottom_button_widget)
@@ -7450,7 +7500,6 @@ class Ui_LoginWindow(object):
                                 """)
 
             result = self.cursor.fetchall()
-            print(result)
             outgoing_table.setRowCount(len(result))
 
             for row in result:
