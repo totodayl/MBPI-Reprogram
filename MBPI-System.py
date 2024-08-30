@@ -1033,7 +1033,6 @@ class Ui_LoginWindow(object):
                     FROM production_merge
                     WHERE t_prodcode = '{product_code}' AND 
                     t_machine = '{machine_name}' AND t_fid = '{formula_id}';
-                    
                     """)
                     query_result = self.cursor.fetchall()
                     self.table.itemSelectionChanged.disconnect(show_table)
@@ -1095,8 +1094,7 @@ class Ui_LoginWindow(object):
                         self.cursor.execute("""
                                             SELECT t_prodid, t_lotnum
                                             FROM production_merge
-
-                                                                                """)
+                                            """)
                         result = self.cursor.fetchall()
                         self.table.setRowCount(len(result))
                         self.table.setColumnCount(2)
@@ -1539,7 +1537,9 @@ class Ui_LoginWindow(object):
             machine_input.addItem("MC #2")
             machine_input.addItem("MC #3")
             machine_input.addItem("MC #5")
+            machine_input.addItem("MC #6")
             machine_input.addItem("MC #8")
+            machine_input.addItem("MC #9")
             machine_input.activated.connect(autofill_temperature)
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -1644,6 +1644,7 @@ class Ui_LoginWindow(object):
             resin_input.addItem('PP')
             resin_input.addItem('PET')
             resin_input.addItem('GPPS')
+            resin_input.addItem('RUBBER')
             resin_input.activated.connect(autofill_temperature)
             resin_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -2070,7 +2071,9 @@ class Ui_LoginWindow(object):
             machine_input.addItem("MC #2")
             machine_input.addItem("MC #3")
             machine_input.addItem("MC #5")
+            machine_input.addItem("MC #6")
             machine_input.addItem("MC #8")
+            machine_input.addItem("MC #9")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setCurrentText(result[1])
 
@@ -2555,7 +2558,8 @@ class Ui_LoginWindow(object):
 
             self.cursor.execute(f"""
                 SELECT machine, product_code, ROUND(AVG(output_per_hour), 4) AS average_output_per_hour,
-                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(output_percent), 4) AS ave_yield
+                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(output_percent), 4) AS ave_yield,
+                ROUND(AVG(resin_quantity), 2) as average_cleaning_material
                 FROM public.extruder
                 WHERE time_start[1]::DATE BETWEEN '{date1.text()}' AND '{date2.text()}'
                 
@@ -2565,9 +2569,10 @@ class Ui_LoginWindow(object):
             """)
 
             result = self.cursor.fetchall()
+            print(result)
             df = pandas.DataFrame(result)
 
-            column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield"]
+            column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield", "Average_cleaning_material_used"]
 
             try:
                 filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
@@ -3262,8 +3267,6 @@ class Ui_LoginWindow(object):
                                 code = re.findall(r'[a-zA-Z]+', lot_number)[0]
                                 num1 = int(lot_number[:4])
 
-
-
                                 self.cursor.execute(f"""
                                     SELECT t_lotnum, t_customer, t_prodcode, t_fid, range1, range2 FROM 
                                             (SELECT t_lotnum, t_customer, t_prodcode, t_fid, LEFT(t_lotnum, 4)::INTEGER AS range1,
@@ -3740,7 +3743,7 @@ class Ui_LoginWindow(object):
 
             ph_holiday = hd.country_holidays('PH')
             self.cursor.execute("""
-            SELECT original_lot, MIN(evaluation_date)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
+            SELECT original_lot, MIN(date_endorsed)::DATE as min_date, MAX(evaluation_date)::DATE as max_date
             FROM qc_num_days  
             GROUP BY original_lot
 
@@ -3937,7 +3940,6 @@ class Ui_LoginWindow(object):
                             JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
                             WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
                             GROUP BY supervisor
-
                                              """)
                         result = self.cursor.fetchall()
                         x = []
@@ -4486,7 +4488,9 @@ class Ui_LoginWindow(object):
             dateTo_widget.show()
 
         def save_to_excel(date1, date2):
+            show_qc_data()
 
+            # Query for getting the Average QC days
             self.cursor.execute(f"""
                              SELECT product_code,
                 round(avg(days_float), 4) AS avg_qcdays
@@ -4514,7 +4518,9 @@ class Ui_LoginWindow(object):
                          JOIN qc_dayoff t2 ON t1.original_lot::text = t2.original_lot::text
                       GROUP BY t1.product_code, (EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0)) subquery
               GROUP BY product_code
-              ORDER BY avg_qcdays DESC;
+              ORDER BY avg_qcdays DESC
+              LIMIT 20
+              ;
 
                             """)
             result = self.cursor.fetchall()
@@ -4525,6 +4531,9 @@ class Ui_LoginWindow(object):
             center_Alignment = Alignment(horizontal='center', vertical='center')
             ws1.column_dimensions['B'].width = 20
             ws1.column_dimensions['A'].width = 20
+
+            title_color = Font(color='FF0000')
+
             ws1['A1'].alignment = center_Alignment
             ws1['B1'].alignment = center_Alignment
             ws1['A1'] = "Product Code"
@@ -4536,9 +4545,63 @@ class Ui_LoginWindow(object):
                 ws1[f"A{2 + i}"].alignment = center_Alignment
                 ws1[f"B{2 + i}"].alignment = center_Alignment
 
+            # Product Code Highest QC Day Query
+            self.cursor.execute("""
+                SELECT  product_code, MAX((EXTRACT(DAY FROM qc_days) + 1) - dayoff) as qc_day
+                FROM qc_num_days a
+                JOIN qc_dayoff b ON a.original_lot = b.original_lot
+                GROUP BY product_code
+                ORDER BY qc_day DESC
+                LIMIT 20
+                                """)
+            result = self.cursor.fetchall()
+
+            ws1["D2"] = "Product Code"
+            ws1['E2'] = "Count"
+
+            cell_pointer = 3
+            for item in result:
+                ws1[f"D{cell_pointer}"] = item[0]
+                ws1[f"E{cell_pointer}"] = item[1]
+                ws1[f"D{cell_pointer}"].alignment = center_Alignment
+                ws1[f"E{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws1.column_dimensions['D'].width = 15
+            ws1.column_dimensions['E'].width = 10
+
+            ws1.merge_cells(start_row=1, start_column=4, end_row=1, end_column=5)
+            ws1['D1'] = "Product Code Highest QC Days"
+            ws1['D1'].alignment = center_Alignment
+            ws1['D1'].font = title_color
+
+            # Getting the Average QC days of all lot number, Sunday and Holidays are excluded.
+            self.cursor.execute("""
+                SELECT ROUND(avg(qc_day), 2)
+                FROM (SELECT  DISTINCT(a.original_lot), (EXTRACT(DAY FROM qc_days) + 1) - dayoff as qc_day from qc_num_days a
+                JOIN qc_dayoff b ON b.original_lot = a.original_lot
+                ORDER BY a.original_lot DESC)
+            
+            """)
+            result = self.cursor.fetchall()
+
+            ws1["G2"] = "AVG QC Days"
+
+            cell_pointer = 3
+            for item in result:
+                ws1[f"G{cell_pointer}"] = item[0]
+                ws1[f"G{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws1.column_dimensions['G'].width = 15
+
+
+
+
             # Create a new Worksheet
             ws2 = wb.create_sheet("Most Changing")
 
+            # Query For Getting the Count of Every Decision Changed.
             self.cursor.execute("""
             SELECT product_code, COUNT(*)
             FROM quality_control
@@ -4568,34 +4631,194 @@ class Ui_LoginWindow(object):
                 cell_pointer += 1
 
             # Worksheet 3
-            ws3 = wb.create_sheet("Failed First Run")
+            ws3 = wb.create_sheet("Failed")
 
             self.cursor.execute(f"""
-            SELECT product_code, COUNT(*)
+            SELECT product_code, COUNT(*) as failed_count
             FROM quality_control_tbl2
             WHERE status = 'Failed' AND qc_type = 'NEW' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
                     '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
             GROUP BY product_code
-            ORDER BY count
+            ORDER BY failed_count DESC
             
             """)
             result = self.cursor.fetchall()
 
-            ws3["A1"] = "Product Code"
-            ws3['B1'] = "Count"
-            ws3['A1'].alignment = center_Alignment
-            ws3['B1'].alignment = center_Alignment
+
+            ws3.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
+            ws3['A1'] = "Highest Failed First Run"
+            ws3['A1'].font = title_color
+
+            ws3["A2"] = "Product Code"
+            ws3['B2'] = "Count"
+            ws3['A2'].alignment = center_Alignment
+            ws3['B2'].alignment = center_Alignment
 
             ws3.column_dimensions['B'].width = 10
             ws3.column_dimensions['A'].width = 15
 
-            cell_pointer = 2
+            cell_pointer = 3
             for item in result:
                 ws3[f"A{cell_pointer}"] = item[0]
                 ws3[f"B{cell_pointer}"] = item[1]
                 ws3[f"A{cell_pointer}"].alignment = center_Alignment
                 ws3[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
+
+
+            self.cursor.execute(f"""
+                SELECT product_code, COUNT(*) as failed_count
+                FROM quality_control_tbl2
+                WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
+                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY product_code
+                ORDER BY failed_count ASC
+                LIMIT 20
+            
+            """)
+            result = self.cursor.fetchall()
+
+            ws3["D2"] = "Product Code"
+            ws3['E2'] = "Count"
+
+            cell_pointer = 3
+            for item in result:
+                ws3[f"D{cell_pointer}"] = item[0]
+                ws3[f"E{cell_pointer}"] = item[1]
+                ws3[f"D{cell_pointer}"].alignment = center_Alignment
+                ws3[f"E{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws3.column_dimensions['D'].width = 15
+            ws3.column_dimensions['E'].width = 10
+
+            ws3.merge_cells(start_row=1, start_column=4, end_row=1, end_column=5)
+            ws3['D1'] = "LOWEST Failed First Run"
+            ws3['D1'].alignment = center_Alignment
+            ws3['D1'].font = title_color
+
+            self.cursor.execute(f"""
+                SELECT product_code, COUNT(*) as failed_count
+                FROM quality_control_tbl2
+                WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
+                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY product_code
+                ORDER BY failed_count DESC
+            """)
+
+            result = self.cursor.fetchall()
+
+            ws3["G2"] = "Product Code"
+            ws3['H2'] = "Count"
+
+            cell_pointer = 3
+            for item in result:
+                ws3[f"G{cell_pointer}"] = item[0]
+                ws3[f"H{cell_pointer}"] = item[1]
+                ws3[f"G{cell_pointer}"].alignment = center_Alignment
+                ws3[f"H{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws3.column_dimensions['G'].width = 15
+            ws3.column_dimensions['H'].width = 10
+
+            ws3.merge_cells(start_row=1, start_column=7, end_row=1, end_column=8)
+            ws3['G1'] = "Highest Lot Failed"
+            ws3['G1'].alignment = center_Alignment
+            ws3['G1'].font = title_color
+
+            # -----------------------------------------
+            self.cursor.execute(f"""
+                            SELECT product_code, formula_id, COUNT(formula_id) FROM quality_control_tbl2
+                            WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
+                            '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                            GROUP BY product_code, formula_id
+                            ORDER BY count DESC, product_code 
+                        """)
+
+            result = self.cursor.fetchall()
+
+            ws3["J2"] = "Product Code"
+            ws3['K2'] = "FN"
+            ws3['L2'] = "Count"
+
+            cell_pointer = 3
+            for item in result:
+                ws3[f"J{cell_pointer}"] = item[0]
+                ws3[f"K{cell_pointer}"] = item[1]
+                ws3[f"L{cell_pointer}"] = item[2]
+                ws3[f"J{cell_pointer}"].alignment = center_Alignment
+                ws3[f"K{cell_pointer}"].alignment = center_Alignment
+                ws3[f"L{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws3.column_dimensions['J'].width = 15
+            ws3.column_dimensions['K'].width = 10
+
+            ws3.merge_cells(start_row=1, start_column=10, end_row=1, end_column=12)
+            ws3['J1'] = "FN per Product Code Fails"
+            ws3['J1'].alignment = center_Alignment
+            ws3['J1'].font = title_color
+
+
+            # Failed First Run by Operator
+            self.cursor.execute("""
+                SELECT operator, COUNT(*) FROM quality_control t1
+                JOIN extruder t2 ON t1.lot_number = ANY(t2.lot_number)
+                WHERE status = 'Failed' AND qc_type = 'NEW'
+                GROUP BY operator
+
+            """)
+
+            result = self.cursor.fetchall()
+
+            ws3["N2"] = "Operator"
+            ws3['O2'] = "Failed First Run"
+
+            cell_pointer = 3
+            for item in result:
+                ws3[f"N{cell_pointer}"] = item[0]
+                ws3[f"O{cell_pointer}"] = item[1]
+                ws3[f"N{cell_pointer}"].alignment = center_Alignment
+                ws3[f"O{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws3.column_dimensions['N'].width = 15
+            ws3.column_dimensions['O'].width = 15
+
+            ws3.merge_cells(start_row=1, start_column=14, end_row=1, end_column=15)
+            ws3['N1'] = "Failed First Run by Operators"
+            ws3['N1'].alignment = center_Alignment
+            ws3['N1'].font = title_color
+
+
+            self.cursor.execute("""
+                SELECT machine, COUNT(*) FROM quality_control t1
+                JOIN extruder t2 ON t1.lot_number = ANY(t2.lot_number)
+                WHERE status = 'Failed' AND qc_type = 'NEW'
+                GROUP BY machine
+                        
+            """)
+            result = self.cursor.fetchall()
+
+            ws3["Q2"] = "Machine"
+            ws3['R2'] = "Failed First Run"
+
+            cell_pointer = 3
+            for item in result:
+                ws3[f"Q{cell_pointer}"] = item[0]
+                ws3[f"R{cell_pointer}"] = item[1]
+                ws3[f"Q{cell_pointer}"].alignment = center_Alignment
+                ws3[f"R{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            ws3.column_dimensions['Q'].width = 15
+            ws3.column_dimensions['R'].width = 15
+
+            ws3.merge_cells(start_row=1, start_column=17, end_row=1, end_column=18)
+            ws3['Q1'] = "Failed First Run by Machine"
+            ws3['Q1'].alignment = center_Alignment
+            ws3['Q1'].font = title_color
 
             ws4 = wb.create_sheet("Returns")
 
@@ -4896,10 +5119,10 @@ class Ui_LoginWindow(object):
                     else:
                         self.cursor.execute(f"""
                                             INSERT INTO returns (lot_number, quantity, product_code, customer, formula_id,
-                                            remarks, return_date, origin_lot)
+                                            remarks, return_date, origin_lot, return_id)
                                             VALUES('{lot_input.text()}', '{quantity_input.text()}', '{product_code_input.text()}', 
                                             '{customer_input.text()}','{formulaID_input.text()}', '{remarks_input.toPlainText()}',
-                                            '{date_return.text()}', '{origin_lot.text()}')
+                                            '{date_return.text()}', '{origin_lot.text()}', {return_id_input.text()})
                                             """)
                         self.conn.commit()
                         # Clear the Widgets
@@ -4947,9 +5170,9 @@ class Ui_LoginWindow(object):
             def show_table():
 
                 self.cursor.execute("""
-                SELECT lot_number, quantity, product_code, customer, formula_id, origin_lot, return_date, remarks  
+                SELECT return_id, lot_number, quantity, product_code, customer, formula_id, origin_lot, return_date, remarks  
                 FROM returns
-                ORDER BY return_date DESC
+                ORDER BY return_id DESC
                 
                 """)
                 result = self.cursor.fetchall()
@@ -4964,12 +5187,12 @@ class Ui_LoginWindow(object):
             def search_table():
 
                 returns_table.clear()
-                returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+                returns_table.setHorizontalHeaderLabels(["Return ID","Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
                                                          "Origin Lot", "Return Date", "Remarks"])
 
                 self.cursor.execute(f"""
                 
-                SELECT lot_number, quantity, product_code, customer, formula_id, return_date, remarks  
+                SELECT return_id, lot_number, quantity, product_code, customer, formula_id, return_date, remarks  
                 FROM returns
                 WHERE lot_number ILIKE '%{search_bar.text()}%'
                 
@@ -5341,6 +5564,14 @@ class Ui_LoginWindow(object):
             # Set Font
             font = QtGui.QFont("Arial", 9)
 
+            return_id_label = QLabel()
+            return_id_label.setText('RETURN ID')
+            return_id_label.setFont(font)
+
+            return_id_input = QLineEdit()
+            return_id_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            return_id_input.setAlignment(Qt.AlignCenter)
+            return_id_input.setFixedHeight(25)
 
             lot_label = QLabel()
             lot_label.setText("LOT NUMBER")
@@ -5425,6 +5656,7 @@ class Ui_LoginWindow(object):
             origin_lot.setEnabled(False)
             origin_lot.setAlignment(Qt.AlignCenter)
 
+            form_layout.addRow(return_id_label, return_id_input)
             form_layout.addRow(lot_label,lot_input)
             form_layout.addRow(quantity_label, quantity_input)
             form_layout.addRow(product_code_label, product_code_input)
@@ -5438,16 +5670,17 @@ class Ui_LoginWindow(object):
 
             returns_table = QTableWidget(self.body_widget)
             returns_table.setGeometry(340, 60, 651, 600)
-            returns_table.setColumnCount(8)
+            returns_table.setColumnCount(9)
             returns_table.setRowCount(20)
             returns_table.verticalHeader().setVisible(False)
-            returns_table.setHorizontalHeaderLabels(["Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
+            returns_table.setHorizontalHeaderLabels(["Return ID", "Lot Number", "Quantity", "Product Code", "Customer", "Formula ID",
                                                      "Origin Lot", "Return Date", "Remarks"])
-            returns_table.setColumnWidth(0, 120)
-            returns_table.setColumnWidth(2, 120)
-            returns_table.setColumnWidth(3, 200)
-            returns_table.setColumnWidth(4, 115)
-            returns_table.setColumnWidth(5, 200)
+            returns_table.setColumnWidth(1, 120)
+            returns_table.setColumnWidth(3, 120)
+            returns_table.setColumnWidth(4, 200)
+            returns_table.setColumnWidth(5, 115)
+            returns_table.setColumnWidth(6, 200)
+
             returns_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
             returns_table.horizontalHeader().setStyleSheet("""
             QHeaderView::section{
