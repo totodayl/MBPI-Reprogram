@@ -2596,6 +2596,28 @@ class Ui_LoginWindow(object):
         self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
         self.production_widget.show()
 
+        buttons_widget = QWidget(self.production_widget)
+        buttons_widget.setGeometry(0, 0, 991, 30)
+        buttons_widget.setStyleSheet('background-color: gray')
+        buttons_widget.show()
+
+        # Extruder Tab Button
+        extruder_btn = QPushButton(buttons_widget)
+        extruder_btn.setGeometry(0, 0, 150, 30)
+        extruder_btn.setText('EXTRUDER')
+        extruder_btn.setFont(QtGui.QFont('Arial', 10))
+        extruder_btn.setCursor(Qt.PointingHandCursor)
+        extruder_btn.show()
+
+        compounding_btn = QPushButton(buttons_widget)
+        compounding_btn.setGeometry(150, 0, 150, 30)
+        compounding_btn.setText('COMPOUNDING')
+        compounding_btn.setFont(QtGui.QFont('Arial', 10))
+        compounding_btn.setCursor(Qt.PointingHandCursor)
+        compounding_btn.show()
+
+
+
         self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
@@ -6841,13 +6863,6 @@ class Ui_LoginWindow(object):
             fg_outgoing_btn.clicked.connect(fg_outgoing)
             fg_outgoing_btn.show()
 
-            add_entry_btn = QPushButton(self.warehouse_tabs)
-            add_entry_btn.setGeometry(300, 0, 150, 30)
-            add_entry_btn.setText('ADD ENTRY')
-            add_entry_btn.setCursor(Qt.PointingHandCursor)
-            add_entry_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
-            add_entry_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
-            add_entry_btn.show()
 
             self.status_border = QWidget(self.warehouse_widget)
             self.status_border.setGeometry(0, 30, 991, 35)
