@@ -2590,6 +2590,35 @@ class Ui_LoginWindow(object):
             except PermissionError:
                 QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
+        def compounding():
+            self.compounding_widget = QWidget(self.main_widget)
+            self.compounding_widget.setGeometry(0, 0, 991, 751)
+            self.compounding_widget.setStyleSheet("background-color: rgb(240,240,240);")
+            self.compounding_widget.show()
+
+            buttons_widget = QWidget(self.compounding_widget)
+            buttons_widget.setGeometry(0, 0, 991, 30)
+            buttons_widget.setStyleSheet('background-color: gray')
+            buttons_widget.show()
+
+            # Extruder Tab Button
+            extruder_btn = QPushButton(buttons_widget)
+            extruder_btn.setGeometry(0, 0, 150, 30)
+            extruder_btn.setText('EXTRUDER')
+            extruder_btn.setFont(QtGui.QFont('Arial', 10))
+            extruder_btn.setCursor(Qt.PointingHandCursor)
+            extruder_btn.clicked.connect(self.production)
+            extruder_btn.show()
+
+            compounding_btn = QPushButton(buttons_widget)
+            compounding_btn.setGeometry(150, 0, 150, 30)
+            compounding_btn.setText('COMPOUNDING')
+            compounding_btn.setFont(QtGui.QFont('Arial', 10))
+            compounding_btn.setStyleSheet('color: blue')
+            compounding_btn.setCursor(Qt.PointingHandCursor)
+            compounding_btn.clicked.connect(compounding)
+            compounding_btn.show()
+
 
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
@@ -2607,6 +2636,7 @@ class Ui_LoginWindow(object):
         extruder_btn.setText('EXTRUDER')
         extruder_btn.setFont(QtGui.QFont('Arial', 10))
         extruder_btn.setCursor(Qt.PointingHandCursor)
+        extruder_btn.clicked.connect(self.production)
         extruder_btn.show()
 
         compounding_btn = QPushButton(buttons_widget)
@@ -2614,6 +2644,7 @@ class Ui_LoginWindow(object):
         compounding_btn.setText('COMPOUNDING')
         compounding_btn.setFont(QtGui.QFont('Arial', 10))
         compounding_btn.setCursor(Qt.PointingHandCursor)
+        compounding_btn.clicked.connect(compounding)
         compounding_btn.show()
 
 
@@ -3081,11 +3112,13 @@ class Ui_LoginWindow(object):
                         """)
                         # Update the QC ID
                         current_id = self.cursor.fetchone()[0]
-                        qcControl_input.setText(current_id)
+                        qcControl_input.setText(str(current_id + 1))
                         qcControl_input.show()
 
                         new_lot_list.clear()
                         old_lot_list.clear()
+
+                        lotNumber_input.setFocus()
 
                     else:  # CORRECTION
                         # SAVE TO THE FIRST QC TABLE 1
@@ -3501,7 +3534,7 @@ class Ui_LoginWindow(object):
             """)
             current_id = self.cursor.fetchone()
 
-            if current_id:
+            if current_id[0] != None:
                 qcControl_input.setText(str(current_id[0] + 1))
             else:
                 qcControl_input.setText("0")
@@ -4522,7 +4555,7 @@ class Ui_LoginWindow(object):
                      SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
                         quality_control_tbl2.original_lot
                        FROM quality_control_tbl2
-            		   WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            		   WHERE evaluation_date::DATE BETWEEN '{date1}' AND '{date2}'
                       GROUP BY quality_control_tbl2.original_lot
 
                     )
@@ -4658,8 +4691,8 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
             SELECT product_code, COUNT(*) as failed_count
             FROM quality_control_tbl2
-            WHERE status = 'Failed' AND qc_type = 'NEW' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
-                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            WHERE status = 'Failed' AND qc_type = 'NEW' AND evaluation_date BETWEEN '{date1}' AND 
+                    '{date2}'
             GROUP BY product_code
             ORDER BY failed_count DESC
             
@@ -4691,8 +4724,8 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) as failed_count
                 FROM quality_control_tbl2
-                WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
-                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                WHERE status = 'Failed' AND evaluation_date BETWEEN '{date1}' AND 
+                    '{date2}'
                 GROUP BY product_code
                 ORDER BY failed_count ASC
                 LIMIT 20
@@ -4722,8 +4755,8 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) as failed_count
                 FROM quality_control_tbl2
-                WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
-                    '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                WHERE status = 'Failed' AND evaluation_date BETWEEN '{date1}' AND 
+                    '{date2}'
                 GROUP BY product_code
                 ORDER BY failed_count DESC
             """)
@@ -4752,8 +4785,8 @@ class Ui_LoginWindow(object):
             # -----------------------------------------
             self.cursor.execute(f"""
                             SELECT product_code, formula_id, COUNT(formula_id) FROM quality_control_tbl2
-                            WHERE status = 'Failed' AND evaluation_date BETWEEN '2024-{date1}-01' AND 
-                            '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                            WHERE status = 'Failed' AND evaluation_date BETWEEN '{date1}' AND 
+                            '{date2}'
                             GROUP BY product_code, formula_id
                             ORDER BY count DESC, product_code 
                         """)
@@ -4847,7 +4880,7 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
             SELECT product_code, COUNT(*) 
                 FROM returns
-				WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+				WHERE return_date BETWEEN '{date1}' AND '{date2}'
                 GROUP BY product_code				
 
             """)
@@ -4874,7 +4907,7 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
             SELECT product_code, formula_id, COUNT(*)
             FROM returns
-            WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            WHERE return_date BETWEEN '{date1}' AND '{date2}'
             GROUP BY product_code, formula_id
             ORDER BY product_code
             
@@ -4908,7 +4941,7 @@ class Ui_LoginWindow(object):
                     FROM (SELECT t1.*, t2.evaluated_by
                     FROM returns t1
                     JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
-                    WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                    WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
                     GROUP BY evaluated_by
             
             """)
@@ -4937,7 +4970,7 @@ class Ui_LoginWindow(object):
                 (SELECT t1.lot_number, t2.machine
                 FROM returns t1
                 JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
                 GROUP BY machine
                                 """)
 
@@ -4962,7 +4995,7 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
                 SELECT product_code, SUM(quantity) as total_kg
                 FROM returns
-                WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                WHERE return_date BETWEEN '{date1}' AND '{date2}'
                 GROUP BY product_code
                 ORDER BY total_kg
                                     """)
@@ -4992,7 +5025,7 @@ class Ui_LoginWindow(object):
                 (SELECT t1.lot_number, t2.operator, t2.supervisor
                 FROM returns t1
                 JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
                 GROUP BY supervisor
 
                                 """)
@@ -5021,7 +5054,7 @@ class Ui_LoginWindow(object):
                 (SELECT t1.lot_number, t2.operator, t2.supervisor
                 FROM returns t1
                 JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
+                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
                 GROUP BY operator
 
                                 """)
@@ -5048,7 +5081,7 @@ class Ui_LoginWindow(object):
 
             self.cursor.execute(f"""
             SELECT t_matcode, SUM(t_wt) as total_weight FROM tbl_prod02
-            WHERE t_deleted = false AND t_proddate BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+            WHERE t_deleted = false AND t_proddate BETWEEN '{date1}' AND '{date2}'
             GROUP BY t_matcode
             ORDER BY total_weight DESC
             
@@ -5750,6 +5783,7 @@ class Ui_LoginWindow(object):
                 UPDATE quality_control 
                 SET customer = '{customer_list.currentText()}', formula_id = '{formulaID_input.text()}',
                 evaluated_on = '{date_started.text()}', status = '{test_result_dropdown.currentText()}', 
+                time_endorsed = '{endorsed_date.text()}',
                 remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp,
 				status_changed = 
 				    CASE 
@@ -5767,7 +5801,7 @@ class Ui_LoginWindow(object):
                 self.cursor.execute(f"""
                 UPDATE quality_control_tbl2
                 SET status = '{test_result_dropdown.currentText()}', evaluation_date = '{date_started.text()}',
-                formula_id = '{formulaID_input.text()}'
+                formula_id = '{formulaID_input.text()}', date_endorsed = '{endorsed_date.text()}'
                 WHERE id = '{id}'
                 
                 """)
@@ -5795,6 +5829,8 @@ class Ui_LoginWindow(object):
             remarks = result[5].strip()
             date_evaluated = result[9]
             formula_id = result[-2]
+            endorsed_date_val = result[13]
+
 
             if selected:
                 self.update_qc_widget = QWidget()
@@ -5869,6 +5905,15 @@ class Ui_LoginWindow(object):
                 date_started.setFixedHeight(30)
                 date_started.setDateTime(date_evaluated)
 
+                date_endorsed_label = QLabel()
+                date_endorsed_label.setText("Date Endorsed")
+                date_endorsed_label.setFont(font)
+
+                endorsed_date = QDateTimeEdit()
+                endorsed_date.setDisplayFormat("MM-dd-yyyy HH:mm")
+                endorsed_date.setFixedHeight(30)
+                endorsed_date.setDateTime(endorsed_date_val)
+
                 test_result_label = QLabel()
                 test_result_label.setText("Test Result")
                 test_result_label.setFont(font)
@@ -5894,6 +5939,7 @@ class Ui_LoginWindow(object):
                 form_layout.addRow(productCode_label, productCode_input)
                 form_layout.addRow(formulaID_label, formulaID_input)
                 form_layout.addRow(date_started_label, date_started)
+                form_layout.addRow(date_endorsed_label, endorsed_date)
                 form_layout.addRow(test_result_label, test_result_dropdown)
                 form_layout.addRow(remarks_label, remarks_box)
 
@@ -6258,6 +6304,14 @@ class Ui_LoginWindow(object):
         export_btn.clicked.connect(exportBtn_clicked)
         export_btn.setToolTip("Export")
         export_btn.show()
+
+        get_statistics_btn = ClickableLabel(self.qc_widget)
+        get_statistics_btn.setGeometry(345, 703, 20, 20)
+        get_statistics_btn.setPixmap(QtGui.QIcon('statistics-icon.png').pixmap(20, 20))
+        get_statistics_btn.setCursor(Qt.PointingHandCursor)
+        get_statistics_btn.clicked.connect(lambda : save_to_excel(date1.text(), date2.text()))
+        get_statistics_btn.setToolTip("Export")
+        get_statistics_btn.show()
 
         update_btn = QtWidgets.QPushButton(self.qc_widget)
         update_btn.setGeometry(650, 703, 60, 25)
