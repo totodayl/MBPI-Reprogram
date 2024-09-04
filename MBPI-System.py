@@ -4614,9 +4614,10 @@ class Ui_LoginWindow(object):
             # Getting the Average QC days of all lot number, Sunday and Holidays are excluded.
             self.cursor.execute("""
                 SELECT ROUND(avg(qc_day), 2)
-                FROM (SELECT  DISTINCT(a.original_lot), (EXTRACT(DAY FROM qc_days) + 1) - dayoff as qc_day from qc_num_days a
-                JOIN qc_dayoff b ON b.original_lot = a.original_lot
-                ORDER BY a.original_lot DESC)
+                FROM (SELECT t1.original_lot, MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE) + 1 as qc_day
+                FROM quality_control_tbl2 t1
+                JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                GROUP BY t1.original_lot)
             
             """)
             result = self.cursor.fetchall()
