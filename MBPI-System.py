@@ -4547,35 +4547,16 @@ class Ui_LoginWindow(object):
 
             # Query for getting the Average QC days
             self.cursor.execute(f"""
-                             SELECT product_code,
-                round(avg(days_float), 4) AS avg_qcdays
-               FROM ( SELECT t1.product_code,
-                        EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0 AS days_float
-                       FROM ( WITH aggregated_materials AS (
-                     SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
-                        quality_control_tbl2.original_lot
-                       FROM quality_control_tbl2
-            		   WHERE evaluation_date::DATE BETWEEN '{date1}' AND '{date2}'
-                      GROUP BY quality_control_tbl2.original_lot
-
-                    )
-             SELECT q.id AS qc_id,
-                q.lot_number,
-                q.evaluation_date,
-                q.original_lot,
-                q.status,
-                q.product_code,
-                a.qc_days,
-                q.qc_type
-
-               FROM aggregated_materials a
-                 JOIN quality_control_tbl2 q ON a.original_lot::text = q.original_lot::text) t1
-                         JOIN qc_dayoff t2 ON t1.original_lot::text = t2.original_lot::text
-                      GROUP BY t1.product_code, (EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0)) subquery
-              GROUP BY product_code
-              ORDER BY avg_qcdays DESC
-              LIMIT 20
-              ;
+                               SELECT product_code, ROUND(AVG(dayoff), 2) as avg_dayoff
+                FROM(SELECT product_code, qc_day - dayoff AS dayoff
+                FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
+                FROM quality_control_tbl2 t1
+                JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                GROUP BY product_code, t1.original_lot, dayoff))
+                GROUP BY product_code
+                ORDER BY avg_dayoff DESC
+                LIMIT 20
+                              ;
 
                             """)
             result = self.cursor.fetchall()
