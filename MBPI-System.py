@@ -4800,10 +4800,20 @@ class Ui_LoginWindow(object):
 
             # Failed First Run by Operator
             self.cursor.execute("""
-                SELECT operator, COUNT(*) FROM quality_control t1
-                JOIN extruder t2 ON t1.lot_number = ANY(t2.lot_number)
-                WHERE status = 'Failed' AND qc_type = 'NEW'
-                GROUP BY operator
+                                WITH lot_range as (
+                SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
+                (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
+                
+                FROM quality_control
+                
+                )
+                
+                SELECT *, 
+                CASE 
+                    WHEN last_lot IS NULL THEN 1
+                    ELSE (last_lot - first_lot) + 1
+                    END AS lot_count
+                FROM lot_range	
 
             """)
 
@@ -5058,33 +5068,6 @@ class Ui_LoginWindow(object):
                 ws4[f"AA{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
-
-            ws5 = wb.create_sheet('Total Mats Used')
-
-            self.cursor.execute(f"""
-            SELECT t_matcode, SUM(t_wt) as total_weight FROM tbl_prod02
-            WHERE t_deleted = false AND t_proddate BETWEEN '{date1}' AND '{date2}'
-            GROUP BY t_matcode
-            ORDER BY total_weight DESC
-            
-            """)
-            result = self.cursor.fetchall()
-
-            ws5["A1"] = "Product Code"
-            ws5['B1'] = "Kilograms"
-            ws5['A1'].alignment = center_Alignment
-            ws5['B1'].alignment = center_Alignment
-
-            ws5.column_dimensions['B'].width = 10
-            ws5.column_dimensions['A'].width = 15
-
-            cell_pointer = 2
-            for item in result:
-                ws5[f"A{cell_pointer}"] = item[0]
-                ws5[f"B{cell_pointer}"] = item[1]
-                ws5[f"A{cell_pointer}"].alignment = center_Alignment
-                ws5[f"B{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
 
             # Open QFileDialog
             filename, _ = QFileDialog.getSaveFileName(self.qc_widget, "Save File",
