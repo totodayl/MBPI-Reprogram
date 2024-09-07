@@ -4728,8 +4728,8 @@ LIMIT 20
             ws2['A2'].alignment = center_Alignment
             ws2['B2'].alignment = center_Alignment
 
-            ws2.column_dimensions['A'].width = 15
-            ws2.column_dimensions['B'].width = 15
+            ws2.column_dimensions['A'].width = 17
+            ws2.column_dimensions['B'].width = 17
             ws2.column_dimensions['C'].width = 15
 
             cell_pointer = 3
@@ -4740,8 +4740,243 @@ LIMIT 20
                 ws2[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
+            ws4 = wb.create_sheet("3) CUSTOMER REJECT")
+
+            self.cursor.execute(f"""
+                        SELECT product_code, COUNT(*) 
+                            FROM returns
+            				WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                            GROUP BY product_code				
+                        """)
+
+            result = self.cursor.fetchall()
+
+            ws4.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
+
+            ws4['A1'] = "Highest Return Per Code"
+            ws4['A1'].font = title_color
+            ws4['A1'].alignment = center_Alignment
+
+            ws4["A2"] = "Product Code"
+            ws4['B2'] = "RETURNS"
+            ws4['A2'].alignment = center_Alignment
+            ws4['B2'].alignment = center_Alignment
+
+            ws4.column_dimensions['B'].width = 15
+            ws4.column_dimensions['A'].width = 15
+
+            cell_pointer = 3
+            for item in result:
+                ws4[f"A{cell_pointer}"] = item[0]
+                ws4[f"B{cell_pointer}"] = item[1]
+                ws4[f"A{cell_pointer}"].alignment = center_Alignment
+                ws4[f"B{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            # Returns By Formula ID
+            self.cursor.execute(f"""
+                        SELECT product_code, formula_id, COUNT(*)
+                        FROM returns
+                        WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                        GROUP BY product_code, formula_id
+                        ORDER BY product_code
+
+                        """)
+            result = self.cursor.fetchall()
+
+            ws4.merge_cells(start_row=1, start_column=4, end_row=1, end_column=6)
+            ws4['D1'] = "Highest Return Per (Code, FN)"
+            ws4['D1'].alignment = center_Alignment
+            ws4['D1'].font = title_color
+
+
+            ws4["D2"] = "Product Code"
+            ws4['E2'] = "Formula ID"
+            ws4['F2'] = "RETURNS"
+            ws4['D2'].alignment = center_Alignment
+            ws4['E2'].alignment = center_Alignment
+            ws4['F2'].alignment = center_Alignment
+
+            ws4.column_dimensions['D'].width = 13
+            ws4.column_dimensions['E'].width = 15
+            ws4.column_dimensions['F'].width = 10
+
+            cell_pointer = 3
+            for item in result:
+                ws4[f"D{cell_pointer}"] = item[0]
+                ws4[f"E{cell_pointer}"] = item[1]
+                ws4[f"F{cell_pointer}"] = item[2]
+                ws4[f"D{cell_pointer}"].alignment = center_Alignment
+                ws4[f"E{cell_pointer}"].alignment = center_Alignment
+                ws4[f"F{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            # Returns BY QC Analyst
+            self.cursor.execute(f"""
+                        SELECT evaluated_by, COUNT(evaluated_by)
+                                FROM (SELECT t1.*, t2.evaluated_by
+                                FROM returns t1
+                                JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
+                                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
+                                GROUP BY evaluated_by
+
+                        """)
+
+            result = self.cursor.fetchall()
+
+
+            ws4['K1'] = "QC Analyst Most Returns"
+            ws4.merge_cells(start_row=1, start_column=11, end_row=1, end_column=12)
+            ws4['K1'].alignment = center_Alignment
+            ws4['K1'].font = title_color
+
+            ws4["K2"] = "QC Analyst"
+            ws4['L2'] = "Returns"
+            ws4['K2'].alignment = center_Alignment
+            ws4['L2'].alignment = center_Alignment
+
+            ws4.column_dimensions['K'].width = 17
+            ws4.column_dimensions['L'].width = 15
+
+            cell_pointer = 3
+            for item in result:
+                ws4[f"K{cell_pointer}"] = item[0]
+                ws4[f"L{cell_pointer}"] = item[1]
+                ws4[f"K{cell_pointer}"].alignment = center_Alignment
+                ws4[f"L{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            self.cursor.execute(f"""
+                            SELECT machine, COUNT(machine)
+                            FROM
+                            (SELECT t1.lot_number, t2.machine
+                            FROM returns t1
+                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                            WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
+                            GROUP BY machine
+                                            """)
+
+            result = self.cursor.fetchall()
+
+            ws4.merge_cells(start_row=1, start_column=14, end_row=1, end_column=15)
+            ws4['N1'] = "Highest Return Per Machine"
+            ws4['N1'].alignment = center_Alignment
+            ws4['N1'].font = title_color
+
+
+            ws4["N2"] = "Machine"
+            ws4['O2'] = "RETURNS"
+            ws4['N2'].alignment = center_Alignment
+            ws4['O2'].alignment = center_Alignment
+
+            ws4.column_dimensions['N'].width = 15
+            ws4.column_dimensions['O'].width = 15
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"N{cell_pointer}"] = item[0]
+                ws4[f"O{cell_pointer}"] = item[1]
+                ws4[f"N{cell_pointer}"].alignment = center_Alignment
+                ws4[f"O{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            self.cursor.execute(f"""
+                            SELECT product_code, SUM(quantity) as total_kg
+                            FROM returns
+                            WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                            GROUP BY product_code
+                            ORDER BY total_kg
+                                                """)
+
+            result = self.cursor.fetchall()
+
+            ws4.merge_cells(start_row=1, start_column=8, end_row=1, end_column=9)
+            ws4['H1'] = "Highest Return(Kg) Per Code"
+            ws4['H1'].alignment = center_Alignment
+            ws4['H1'].font = title_color
+
+            ws4["H2"] = "Product Code"
+            ws4['I2'] = "RETURNS(kg)"
+            ws4['H2'].alignment = center_Alignment
+            ws4['I2'].alignment = center_Alignment
+
+            ws4.column_dimensions['H'].width = 15
+            ws4.column_dimensions['I'].width = 12
+
+            cell_pointer = 3
+            for item in result:
+                ws4[f"H{cell_pointer}"] = item[0]
+                ws4[f"I{cell_pointer}"] = item[1]
+                ws4[f"H{cell_pointer}"].alignment = center_Alignment
+                ws4[f"I{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            self.cursor.execute(f"""
+                            SELECT supervisor, COUNT(supervisor)
+                            FROM
+                            (SELECT t1.lot_number, t2.operator, t2.supervisor
+                            FROM returns t1
+                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                            WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
+                            GROUP BY supervisor
+                                            """)
+
+            result = self.cursor.fetchall()
+
+            ws4["V1"] = "Supervisor"
+            ws4['W1'] = "RETURNS"
+            ws4['V1'].alignment = center_Alignment
+            ws4['W1'].alignment = center_Alignment
+
+            ws4.column_dimensions['V'].width = 15
+            ws4.column_dimensions['W'].width = 12
+
+            cell_pointer = 2
+            for item in result:
+                ws4[f"V{cell_pointer}"] = item[0]
+                ws4[f"W{cell_pointer}"] = item[1]
+                ws4[f"V{cell_pointer}"].alignment = center_Alignment
+                ws4[f"W{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+            self.cursor.execute(f"""
+                            SELECT operator, COUNT(operator)
+                            FROM
+                            (SELECT t1.lot_number, t2.operator, t2.supervisor
+                            FROM returns t1
+                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                            WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
+                            GROUP BY operator
+
+                                            """)
+            result = self.cursor.fetchall()
+
+            ws4.merge_cells(start_row=1, start_column=17, end_row=1, end_column=18)
+            ws4['Q1'] = 'Highest Returns By Operator'
+            ws4['Q1'].font = title_color
+            ws4['Q1'].alignment = center_Alignment
+
+
+            ws4["Q2"] = "Operator"
+            ws4['R2'] = "RETURNS"
+            ws4['Q2'].alignment = center_Alignment
+            ws4['R2'].alignment = center_Alignment
+
+            ws4.column_dimensions['Q'].width = 15
+            ws4.column_dimensions['R'].width = 15
+
+            cell_pointer = 3
+            for item in result:
+                ws4[f"Q{cell_pointer}"] = item[0]
+                ws4[f"R{cell_pointer}"] = item[1]
+                ws4[f"Q{cell_pointer}"].alignment = center_Alignment
+                ws4[f"R{cell_pointer}"].alignment = center_Alignment
+                cell_pointer += 1
+
+
+
             # Worksheet 3
-            ws3 = wb.create_sheet("Failed")
+            ws3 = wb.create_sheet("4) INTERNAL REJECT")
 
             self.cursor.execute(f"""
             SELECT product_code, COUNT(*) as failed_count
@@ -4873,21 +5108,26 @@ LIMIT 20
 
             # Failed First Run by Operator
             self.cursor.execute("""
-                                WITH lot_range as (
+                 WITH operator_count AS (                                WITH lot_range as (
                 SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
                 (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
-                
                 FROM quality_control
-                
+				WHERE status = 'Failed' AND qc_type = 'NEW'                
                 )
                 
-                SELECT *, 
+                SELECT t2.operator, 
                 CASE 
                     WHEN last_lot IS NULL THEN 1
                     ELSE (last_lot - first_lot) + 1
                     END AS lot_count
-                FROM lot_range	
+                FROM lot_range	t1
+				JOIN extruder t2 ON t1.lot_number = ANY(t2.lot_number)
+				)
 
+                SELECT operator, SUM(lot_count) as total_
+                FROM operator_count
+                GROUP BY operator
+				
             """)
 
             result = self.cursor.fetchall()
@@ -4940,206 +5180,7 @@ LIMIT 20
             ws3['Q1'].alignment = center_Alignment
             ws3['Q1'].font = title_color
 
-            ws4 = wb.create_sheet("Returns")
 
-            self.cursor.execute(f"""
-            SELECT product_code, COUNT(*) 
-                FROM returns
-				WHERE return_date BETWEEN '{date1}' AND '{date2}'
-                GROUP BY product_code				
-
-            """)
-
-            result = self.cursor.fetchall()
-
-            ws4["A1"] = "Product Code"
-            ws4['B1'] = "RETURNS"
-            ws4['A1'].alignment = center_Alignment
-            ws4['B1'].alignment = center_Alignment
-
-            ws4.column_dimensions['B'].width = 10
-            ws4.column_dimensions['A'].width = 15
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"A{cell_pointer}"] = item[0]
-                ws4[f"B{cell_pointer}"] = item[1]
-                ws4[f"A{cell_pointer}"].alignment = center_Alignment
-                ws4[f"B{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-            # Returns By Formula ID
-            self.cursor.execute(f"""
-            SELECT product_code, formula_id, COUNT(*)
-            FROM returns
-            WHERE return_date BETWEEN '{date1}' AND '{date2}'
-            GROUP BY product_code, formula_id
-            ORDER BY product_code
-            
-            """)
-            result = self.cursor.fetchall()
-
-            ws4["E1"] = "Product Code"
-            ws4['F1'] = "Formula ID"
-            ws4['G1'] = "RETURNS"
-            ws4['E1'].alignment = center_Alignment
-            ws4['F1'].alignment = center_Alignment
-            ws4['G1'].alignment = center_Alignment
-
-            ws4.column_dimensions['F'].width = 13
-            ws4.column_dimensions['E'].width = 15
-            ws4.column_dimensions['G'].width = 10
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"E{cell_pointer}"] = item[0]
-                ws4[f"F{cell_pointer}"] = item[1]
-                ws4[f"G{cell_pointer}"] = item[2]
-                ws4[f"E{cell_pointer}"].alignment = center_Alignment
-                ws4[f"F{cell_pointer}"].alignment = center_Alignment
-                ws4[f"G{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-            # Returns BY QC Analyst
-            self.cursor.execute(f"""
-            SELECT evaluated_by, COUNT(evaluated_by)
-                    FROM (SELECT t1.*, t2.evaluated_by
-                    FROM returns t1
-                    JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
-                    WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                    GROUP BY evaluated_by
-            
-            """)
-
-            result = self.cursor.fetchall()
-
-            ws4["J1"] = "QC Analyst"
-            ws4['K1'] = "Returns"
-            ws4['J1'].alignment = center_Alignment
-            ws4['K1'].alignment = center_Alignment
-
-            ws4.column_dimensions['J'].width = 15
-            ws4.column_dimensions['K'].width = 12
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"J{cell_pointer}"] = item[0]
-                ws4[f"K{cell_pointer}"] = item[1]
-                ws4[f"J{cell_pointer}"].alignment = center_Alignment
-                ws4[f"K{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-            self.cursor.execute(f"""
-                SELECT machine, COUNT(machine)
-                FROM
-                (SELECT t1.lot_number, t2.machine
-                FROM returns t1
-                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                GROUP BY machine
-                                """)
-
-            result = self.cursor.fetchall()
-
-            ws4["N1"] = "Machine"
-            ws4['O1'] = "RETURNS"
-            ws4['N1'].alignment = center_Alignment
-            ws4['O1'].alignment = center_Alignment
-
-            ws4.column_dimensions['N'].width = 15
-            ws4.column_dimensions['O'].width = 12
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"N{cell_pointer}"] = item[0]
-                ws4[f"O{cell_pointer}"] = item[1]
-                ws4[f"N{cell_pointer}"].alignment = center_Alignment
-                ws4[f"O{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-            self.cursor.execute(f"""
-                SELECT product_code, SUM(quantity) as total_kg
-                FROM returns
-                WHERE return_date BETWEEN '{date1}' AND '{date2}'
-                GROUP BY product_code
-                ORDER BY total_kg
-                                    """)
-
-            result = self.cursor.fetchall()
-
-            ws4["R1"] = "Product Code"
-            ws4['S1'] = "RETURNS(kg)"
-            ws4['R1'].alignment = center_Alignment
-            ws4['S1'].alignment = center_Alignment
-
-            ws4.column_dimensions['R'].width = 15
-            ws4.column_dimensions['S'].width = 12
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"R{cell_pointer}"] = item[0]
-                ws4[f"S{cell_pointer}"] = item[1]
-                ws4[f"R{cell_pointer}"].alignment = center_Alignment
-                ws4[f"S{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-
-            self.cursor.execute(f"""
-                SELECT supervisor, COUNT(supervisor)
-                FROM
-                (SELECT t1.lot_number, t2.operator, t2.supervisor
-                FROM returns t1
-                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                GROUP BY supervisor
-                                """)
-
-            result = self.cursor.fetchall()
-
-            ws4["V1"] = "Supervisor"
-            ws4['W1'] = "RETURNS"
-            ws4['V1'].alignment = center_Alignment
-            ws4['W1'].alignment = center_Alignment
-
-            ws4.column_dimensions['V'].width = 15
-            ws4.column_dimensions['W'].width = 12
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"V{cell_pointer}"] = item[0]
-                ws4[f"W{cell_pointer}"] = item[1]
-                ws4[f"V{cell_pointer}"].alignment = center_Alignment
-                ws4[f"W{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
-
-
-            self.cursor.execute(f"""
-                SELECT operator, COUNT(operator)
-                FROM
-                (SELECT t1.lot_number, t2.operator, t2.supervisor
-                FROM returns t1
-                JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                GROUP BY operator
-
-                                """)
-            result = self.cursor.fetchall()
-
-            ws4["Z1"] = "Operator"
-            ws4['AA1'] = "RETURNS"
-            ws4['Z1'].alignment = center_Alignment
-            ws4['AA1'].alignment = center_Alignment
-
-            ws4.column_dimensions['Z'].width = 15
-            ws4.column_dimensions['AA'].width = 12
-
-            cell_pointer = 2
-            for item in result:
-                ws4[f"Z{cell_pointer}"] = item[0]
-                ws4[f"AA{cell_pointer}"] = item[1]
-                ws4[f"Z{cell_pointer}"].alignment = center_Alignment
-                ws4[f"AA{cell_pointer}"].alignment = center_Alignment
-                cell_pointer += 1
 
 
             # Open QFileDialog
