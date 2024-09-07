@@ -4545,68 +4545,128 @@ class Ui_LoginWindow(object):
         def save_to_excel(date1, date2):
             show_qc_data()
 
-            # Query for getting the Average QC days
+            # Query for getting the Average QC days For Each Product Code
             self.cursor.execute(f"""
-                               SELECT product_code, ROUND(AVG(dayoff), 2) as avg_dayoff
-                FROM(SELECT product_code, qc_day - dayoff AS dayoff
-                FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
-                FROM quality_control_tbl2 t1
-                JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
-                GROUP BY product_code, t1.original_lot, dayoff))
-                GROUP BY product_code
-                ORDER BY avg_dayoff DESC
-                LIMIT 20
-                              ;
+                SELECT product_code, ROUND(AVG(dayoff), 2) as avg_dayoff
+                    FROM(SELECT product_code, qc_day - dayoff AS dayoff
+                    FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
+                    FROM quality_control_tbl2 t1
+                    JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                    GROUP BY product_code, t1.original_lot, dayoff))
+                    GROUP BY product_code
+                    ORDER BY avg_dayoff DESC
+                    LIMIT 20
 
                             """)
             result = self.cursor.fetchall()
 
             wb = Workbook()
             ws1 = wb.active
-            ws1.title = "AVG QC Days"
+            ws1.title = "1)	How long is QC (days)"
             center_Alignment = Alignment(horizontal='center', vertical='center')
             ws1.column_dimensions['B'].width = 20
             ws1.column_dimensions['A'].width = 20
 
             title_color = Font(color='FF0000')
 
+            ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=2)
+
+            ws1['A2'].alignment = center_Alignment
+            ws1['B2'].alignment = center_Alignment
+            ws1['A2'] = "Product Code"
+            ws1['B2'] = "Average QC Days"
+
+            ws1['A1'] = "Average QC Days Per Product Code"
             ws1['A1'].alignment = center_Alignment
-            ws1['B1'].alignment = center_Alignment
-            ws1['A1'] = "Product Code"
-            ws1['B1'] = "Average QC Days"
+            ws1['A1'].font = title_color
 
             for i in range(len(result)):
-                ws1[f"A{2 + i}"] = result[i][0]
-                ws1[f"B{2 + i}"] = result[i][1]
-                ws1[f"A{2 + i}"].alignment = center_Alignment
-                ws1[f"B{2 + i}"].alignment = center_Alignment
+                ws1[f"A{3 + i}"] = result[i][0]
+                ws1[f"B{3 + i}"] = result[i][1]
+                ws1[f"A{3 + i}"].alignment = center_Alignment
+                ws1[f"B{3 + i}"].alignment = center_Alignment
 
-            # Product Code Highest QC Day Query
+            # Query For The Highest QC day For Each UNIQUE product Code
             self.cursor.execute("""
-                SELECT  product_code, MAX((EXTRACT(DAY FROM qc_days) + 1) - dayoff) as qc_day
-                FROM qc_num_days a
-                JOIN qc_dayoff b ON a.original_lot = b.original_lot
-                GROUP BY product_code
-                ORDER BY qc_day DESC
-                LIMIT 20
+                WITH LotQcDays AS (
+    SELECT t1.original_lot, product_code, formula_id, qc_days - dayoff AS qc_days
+FROM (SELECT
+        original_lot,
+        product_code,
+        formula_id,
+        (MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
+    FROM
+        quality_control_tbl2 
+    GROUP BY
+        original_lot, product_code, formula_id) t1
+JOIN qc_dayoff t2 ON t2.original_lot = t1.original_lot
+),
+MaxQcDays AS (
+    SELECT
+        product_code,
+        MAX(qc_days) AS max_qc_days
+    FROM
+        LotQcDays
+    GROUP BY
+        product_code
+),
+RankedQcDays AS (
+    SELECT
+        l.product_code,
+        t.lot_number,
+        l.qc_days,
+        l.formula_id,
+        ROW_NUMBER() OVER (PARTITION BY l.product_code ORDER BY l.qc_days DESC) AS rn
+    FROM
+        LotQcDays l
+    JOIN
+        MaxQcDays m
+    ON
+        l.product_code = m.product_code
+        AND l.qc_days = m.max_qc_days
+    JOIN
+        quality_control_tbl2 t
+    ON
+        l.original_lot = t.original_lot
+)
+SELECT
+    product_code,
+    lot_number,
+    qc_days,
+    formula_id
+FROM
+    RankedQcDays
+WHERE
+    rn = 1
+ORDER BY qc_days DESC
+LIMIT 20
+
                                 """)
             result = self.cursor.fetchall()
 
             ws1["D2"] = "Product Code"
-            ws1['E2'] = "Count"
+            ws1['E2'] = "Lot Number"
+            ws1['F2'] = "QC Days"
+            ws1['G2'] = "Formula ID"
 
             cell_pointer = 3
             for item in result:
                 ws1[f"D{cell_pointer}"] = item[0]
                 ws1[f"E{cell_pointer}"] = item[1]
+                ws1[f"F{cell_pointer}"] = item[2]
+                ws1[f"G{cell_pointer}"] = item[3]
                 ws1[f"D{cell_pointer}"].alignment = center_Alignment
                 ws1[f"E{cell_pointer}"].alignment = center_Alignment
+                ws1[f"F{cell_pointer}"].alignment = center_Alignment
+                ws1[f"G{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
             ws1.column_dimensions['D'].width = 15
-            ws1.column_dimensions['E'].width = 10
+            ws1.column_dimensions['E'].width = 15
+            ws1.column_dimensions['F'].width = 15
+            ws1.column_dimensions['G'].width = 15
 
-            ws1.merge_cells(start_row=1, start_column=4, end_row=1, end_column=5)
+            ws1.merge_cells(start_row=1, start_column=4, end_row=1, end_column=7)
             ws1['D1'] = "Product Code Highest QC Days"
             ws1['D1'].alignment = center_Alignment
             ws1['D1'].font = title_color
@@ -4622,44 +4682,58 @@ class Ui_LoginWindow(object):
             """)
             result = self.cursor.fetchall()
 
-            ws1["G2"] = "AVG QC Days"
+            ws1["I2"] = "AVG QC Days"
 
             cell_pointer = 3
             for item in result:
-                ws1[f"G{cell_pointer}"] = item[0]
-                ws1[f"G{cell_pointer}"].alignment = center_Alignment
+                ws1[f"I{cell_pointer}"] = item[0]
+                ws1[f"I{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
-            ws1.column_dimensions['G'].width = 15
+            ws1.column_dimensions['I'].width = 15
 
 
 
 
             # Create a new Worksheet
-            ws2 = wb.create_sheet("Most Changing")
+            ws2 = wb.create_sheet("2) QC evaluation changes")
 
             # Query For Getting the Count of Every Decision Changed.
             self.cursor.execute("""
-            SELECT product_code, COUNT(*)
-            FROM quality_control
-            WHERE status_changed = true
-            GROUP BY product_code
-            ORDER BY COUNT(*) DESC
+            WITH lot_range as (
+                SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
+                (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
+                
+                FROM quality_control
+                
+                )
+                
+                SELECT product_code, 
+                CASE 
+                    WHEN last_lot IS NULL THEN 1
+                    ELSE (last_lot - first_lot) + 1
+                    END AS lot_count
+                FROM lot_range	
+				WHERE status_changed = true
             
             """)
 
             status_changed = self.cursor.fetchall()
 
-            # For Failt To Pass
-            ws2["A1"] = "Product Code"
-            ws2['B1'] = "Decision Changed"
-            ws2['A1'].alignment = center_Alignment
-            ws2['B1'].alignment = center_Alignment
+            ws2.merge_cells(start_row=1, start_column=1, end_row=1, end_column=3)
+            ws2['A1'] = "Top 20 Product Code With The Highest Evaluation Change"
+            ws2['A1'].font = title_color
 
-            ws2.column_dimensions['B'].width = 15
+            ws2['A2'] = "Product Code"
+            ws2['B2'] = "Decision Changed"
+            ws2['A2'].alignment = center_Alignment
+            ws2['B2'].alignment = center_Alignment
+
             ws2.column_dimensions['A'].width = 15
+            ws2.column_dimensions['B'].width = 15
+            ws2.column_dimensions['C'].width = 15
 
-            cell_pointer = 2
+            cell_pointer = 3
             for items in status_changed:
                 ws2[f"A{cell_pointer}"] = items[0]
                 ws2[f"B{cell_pointer}"] = items[1]
@@ -5019,8 +5093,8 @@ class Ui_LoginWindow(object):
                 JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
                 WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
                 GROUP BY supervisor
-
                                 """)
+
             result = self.cursor.fetchall()
 
             ws4["V1"] = "Supervisor"
