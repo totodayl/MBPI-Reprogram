@@ -4715,7 +4715,6 @@ LIMIT 20
                     END AS lot_count
                 FROM lot_range	
 				WHERE status_changed = true
-            
             """)
 
             status_changed = self.cursor.fetchall()
