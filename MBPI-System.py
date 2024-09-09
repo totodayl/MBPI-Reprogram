@@ -4939,51 +4939,13 @@ LIMIT 20
                 cell_pointer += 1
 
             self.cursor.execute(f"""
-                            WITH splitted_lot AS (
-
-SELECT  *,
-(regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
-(regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
-(regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
-(regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
-(regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
-(regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
-(regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
-(regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
-(regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
-FROM extruder
-)
-
-SELECT operator, SUM(lot_count) as total_ffr FROM 
-
-
-(WITH lot_range as (
-                SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
-                (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
-                
-                FROM quality_control
-                
-                )
-                
-                SELECT *, 
-                CASE 
-                    WHEN last_lot IS NULL THEN 1
-                    ELSE (last_lot - first_lot) + 1
-                    END AS lot_count
-                FROM lot_range	) t1
-				
-				
-JOIN splitted_lot t2
-ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
-AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
-	((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
-AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
-	((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
-AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code)
-   )
-
-WHERE status = 'Failed' AND qc_type = 'NEW'
-GROUP BY operator
+                            SELECT operator, COUNT(operator)
+                            FROM
+                            (SELECT t1.lot_number, t2.operator, t2.supervisor
+                            FROM returns t1
+                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
+                            WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
+                            GROUP BY operator
 
                                             """)
             result = self.cursor.fetchall()
