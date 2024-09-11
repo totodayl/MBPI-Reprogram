@@ -2557,19 +2557,20 @@ class Ui_LoginWindow(object):
         def import_statistics():
 
             self.cursor.execute(f"""
-                SELECT machine, product_code, ROUND(AVG(output_per_hour), 4) AS average_output_per_hour,
-                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(output_percent), 4) AS ave_yield,
-                ROUND(AVG(resin_quantity), 2) as average_cleaning_material
+                SELECT  product_code, machine, ROUND(AVG(output_per_hour), 4) AS average_output_per_hour,
+                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(resin_quantity), 2) as average_cleaning_material,
+                ROUND(AVG(output_percent), 4) AS ave_yield
+                
                 FROM public.extruder
                 WHERE time_start[1]::DATE BETWEEN '{date1.text()}' AND '{date2.text()}'
                 
-                GROUP BY machine, product_code
+                GROUP BY product_code, machine
+                ORDER BY product_code, machine
                     
 
             """)
 
             result = self.cursor.fetchall()
-            print(result)
             df = pandas.DataFrame(result)
 
             column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield", "Average_cleaning_material_used"]
@@ -4349,6 +4350,7 @@ class Ui_LoginWindow(object):
                 # Getting the Percentage of Product Code returns for each Product Codes
 
                 for key in productCodeReturns.keys():
+                    print(key, total_productCodes)
                     productCodeReturns[key] = (productCodeReturns[key] / total_productCodes[key]) * 100
 
                 x = []
@@ -4552,6 +4554,7 @@ class Ui_LoginWindow(object):
                     FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
                     FROM quality_control_tbl2 t1
                     JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                    WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
                     GROUP BY product_code, t1.original_lot, dayoff))
                     GROUP BY product_code
                     ORDER BY avg_dayoff DESC
@@ -4586,8 +4589,8 @@ class Ui_LoginWindow(object):
                 ws1[f"A{3 + i}"].alignment = center_Alignment
                 ws1[f"B{3 + i}"].alignment = center_Alignment
 
-            # Query For The Highest QC day For Each UNIQUE product Code
-            self.cursor.execute("""
+            # Query For The Highest QC day For Each UNIQUE product Code with lot_number and FN
+            self.cursor.execute(f"""
                 WITH LotQcDays AS (
     SELECT t1.original_lot, product_code, formula_id, qc_days - dayoff AS qc_days
 FROM (SELECT
@@ -4597,8 +4600,11 @@ FROM (SELECT
         (MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
     FROM
         quality_control_tbl2 
+	WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
     GROUP BY
-        original_lot, product_code, formula_id) t1
+        original_lot, product_code, formula_id
+	 
+	 ) t1
 JOIN qc_dayoff t2 ON t2.original_lot = t1.original_lot
 ),
 MaxQcDays AS (
@@ -4672,11 +4678,12 @@ LIMIT 20
             ws1['D1'].font = title_color
 
             # Getting the Average QC days of all lot number, Sunday and Holidays are excluded.
-            self.cursor.execute("""
+            self.cursor.execute(f"""
                 SELECT ROUND(avg(qc_day), 2)
                 FROM (SELECT t1.original_lot, MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE) + 1 as qc_day
                 FROM quality_control_tbl2 t1
                 JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
                 GROUP BY t1.original_lot)
             
             """)
@@ -4699,22 +4706,27 @@ LIMIT 20
             ws2 = wb.create_sheet("2) QC evaluation changes")
 
             # Query For Getting the Count of Every Decision Changed.
-            self.cursor.execute("""
+            self.cursor.execute(f"""
             WITH lot_range as (
                 SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
                 (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
-                
                 FROM quality_control
+				WHERE evaluated_on BETWEEN '{date1}' AND '{date2}'
+                ),
                 
-                )
-                
-                SELECT product_code, 
-                CASE 
-                    WHEN last_lot IS NULL THEN 1
-                    ELSE (last_lot - first_lot) + 1
-                    END AS lot_count
-                FROM lot_range	
-				WHERE status_changed = true
+                decision_changed AS (SELECT product_code, 
+                        CASE 
+                            WHEN last_lot IS NULL THEN 1
+                            ELSE (last_lot - first_lot) + 1
+                            END AS lot_count
+                        FROM lot_range	
+                                WHERE status_changed = true)
+                                
+                SELECT product_code, SUM(lot_count) as change
+                FROM decision_changed
+                GROUP BY product_code
+                ORDER BY change DESC
+                LIMIT 20
             """)
 
             status_changed = self.cursor.fetchall()
@@ -4813,7 +4825,7 @@ LIMIT 20
 
             # Returns BY QC Analyst
             self.cursor.execute(f"""
-                        SELECT evaluated_by, COUNT(evaluated_by)
+                        SELECT evaluated_by, COUNT(*)
                                 FROM (SELECT t1.*, t2.evaluated_by
                                 FROM returns t1
                                 JOIN quality_control t2 ON t1.origin_lot = t2.lot_number
@@ -4846,13 +4858,35 @@ LIMIT 20
                 cell_pointer += 1
 
             self.cursor.execute(f"""
-                    SELECT machine, COUNT(machine)
-                    FROM
-                    (SELECT t1.lot_number, t2.machine
-                    FROM returns t1
-                    JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                    WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                    GROUP BY machine
+                WITH splitted_lot AS (
+                                    
+                                    SELECT  *,
+                                    (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                                    (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                                    (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                                    (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                                    (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                                    (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                                    (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                                    (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                                    (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                                    FROM extruder
+                                    )
+                                    
+                SELECT t2.machine, COUNT(*) FROM returns t1
+                JOIN splitted_lot t2
+                ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
+                                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
+                                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
+                                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
+                                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
+                                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
+                                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
+                                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
+                                   )
+                GROUP BY machine
+                WHERE return_date BETWEEN '{date1}' AND '{date2}'
+
                                             """)
 
             result = self.cursor.fetchall()
@@ -5105,30 +5139,16 @@ LIMIT 20
 
             # Failed First Run by Operator
             self.cursor.execute(f"""
-                 WITH splitted_lot AS (
-                    
-                    SELECT  *,
-                    (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
-                    (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
-                    (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
-                    (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
-                    (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
-                    (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
-                    FROM extruder
-                    )
-                    
+                  
+              
                     SELECT operator, SUM(lot_count) as total_ffr FROM 
-                    
-                    
+                            
                 (WITH lot_range as (
                                 SELECT * ,  (regexp_matches(SPLIT_PART(lot_number, '-', 1), '(\d+)[A-Z]', 'g'))[1]::INTEGER as first_lot, 
                                 (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
                                 
                                 FROM quality_control
-                                WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
+                                WHERE evaluated_on BETWEEN '{date1}' AND '{date2}'
                                 
                                 )
                                 
@@ -5201,7 +5221,7 @@ LIMIT 20
                                     (regexp_matches(SPLIT_PART(lot_number, '-', 2), '(\d+)[A-Z]', 'g'))[1]::INTEGER as last_lot
                                     
                                     FROM quality_control
-                                    WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
+                                    WHERE evaluated_on BETWEEN '{date1}' AND '{date2}'
                                     
                                     )
                                     
@@ -5702,39 +5722,48 @@ LIMIT 20
             header_widget.setStyleSheet('border: 1px solid black; background-color:rgb(239, 243, 254)')
             header_widget.show()
 
+            page_title = QtWidgets.QLabel(header_widget)
+            page_title.setGeometry(520, 10, 200, 40)
+            page_title.setText('RETURNS')
+            page_title.setFont(QtGui.QFont('Arial Black', 22))
+            page_title.setAlignment(Qt.AlignCenter)
+            page_title.setStyleSheet('border: none; color: red')
+            page_title.show()
+
+
             edited_checkbox = QCheckBox(header_widget)
-            edited_checkbox.move(355, 5)
+            edited_checkbox.move(15, 5)
             edited_checkbox.setStyleSheet("border: none;")
             edited_checkbox.show()
 
             edited_label = QLabel(header_widget)
-            edited_label.setGeometry(370, 4, 90, 15)
+            edited_label.setGeometry(30, 4, 90, 15)
             edited_label.setStyleSheet("border: none;")
             edited_label.setText("EDITED RECORDS")
             edited_label.setFont(QtGui.QFont("Arial", 8))
             edited_label.show()
 
             masterbatch_checkbox = QCheckBox(header_widget)
-            masterbatch_checkbox.move(470, 5)
+            masterbatch_checkbox.move(125, 5)
             masterbatch_checkbox.setStyleSheet('border:none')
             masterbatch_checkbox.stateChanged.connect(filter_data)
             masterbatch_checkbox.show()
 
             masterbatch_label = QLabel(header_widget)
-            masterbatch_label.setGeometry(485, 4, 90, 15)
+            masterbatch_label.setGeometry(140, 4, 90, 15)
             masterbatch_label.setStyleSheet("border: none;")
             masterbatch_label.setText("MASTERBATCH")
             masterbatch_label.setFont(QtGui.QFont("Arial", 8))
             masterbatch_label.show()
 
             dryColor_checkbox = QCheckBox(header_widget)
-            dryColor_checkbox.move(580, 5)
+            dryColor_checkbox.move(235, 5)
             dryColor_checkbox.setStyleSheet('border:none')
             dryColor_checkbox.stateChanged.connect(filter_data)
             dryColor_checkbox.show()
 
             drycolor_label = QLabel(header_widget)
-            drycolor_label.setGeometry(595, 4, 90, 15)
+            drycolor_label.setGeometry(250, 4, 90, 15)
             drycolor_label.setStyleSheet("border: none;")
             drycolor_label.setText("DRYCOLOR")
             drycolor_label.setFont(QtGui.QFont("Arial", 8))
