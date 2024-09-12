@@ -1,6 +1,6 @@
 import os
 import matplotlib
-import pandas
+import pandas as pd
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font
 from openpyxl.styles import Alignment
@@ -2571,7 +2571,7 @@ class Ui_LoginWindow(object):
             """)
 
             result = self.cursor.fetchall()
-            df = pandas.DataFrame(result)
+            df = pd.DataFrame(result)
 
             column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield", "Average_cleaning_material_used"]
 
@@ -2591,6 +2591,47 @@ class Ui_LoginWindow(object):
             except PermissionError:
                 QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
+        def import_extruder():
+
+            self.cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'extruder'
+                ORDER BY ordinal_position
+                
+            """)
+            column_names = [i[0] for i in self.cursor.fetchall()]
+            print(column_names)
+
+            self.cursor.execute("""
+            SELECT * FROM extruder
+            
+            """)
+
+            result = self.cursor.fetchall()
+
+            df = pd.DataFrame(result)
+
+            try:
+                filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
+                                                                 'Excel Files (*.xlsx)',options=QtWidgets.QFileDialog.Options())
+
+                if filename:
+                    # Ensuring the file name ends with .xlsx
+                    if not filename.lower().endswith('.xlsx'):
+                        filename += '.xlsx'
+
+                    # Print or use the file name
+                    df.to_excel(excel_writer=filename, index=False,
+                                header=column_names)
+                    QMessageBox.information(self.production_widget, "File Imported", "Successfully Imported Data")
+            except PermissionError:
+                QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
+                                                                         "Someone is using blank.xlsx")
+
+
+
+
+
         def compounding():
             self.compounding_widget = QWidget(self.main_widget)
             self.compounding_widget.setGeometry(0, 0, 991, 751)
@@ -2775,11 +2816,19 @@ class Ui_LoginWindow(object):
         date2.setDisplayFormat('yyyy-MM-dd')
         date2.show()
 
+        import_extruder_btn = ClickableLabel(self.production_widget)
+        import_extruder_btn.setGeometry(280, 713, 20, 20)
+        import_extruder_btn.setPixmap(QtGui.QIcon('export.png').pixmap(20, 20))
+        import_extruder_btn.setCursor(Qt.PointingHandCursor)
+        import_extruder_btn.setToolTip('Import to Excel')
+        import_extruder_btn.clicked.connect(import_extruder)
+        import_extruder_btn.show()
+
         statsButtonImport = ClickableLabel(self.production_widget)
-        statsButtonImport.setGeometry(290, 713, 20, 20)
-        statsButtonImport.setPixmap(QtGui.QIcon('export.png').pixmap(20,20))
+        statsButtonImport.setGeometry(310, 713, 20, 20)
+        statsButtonImport.setPixmap(QtGui.QIcon('statistics-icon.png').pixmap(20,20))
         statsButtonImport.setCursor(Qt.PointingHandCursor)
-        statsButtonImport.setToolTip('Get Statistics')
+        statsButtonImport.setToolTip('Export Extruder Data')
         statsButtonImport.clicked.connect(import_statistics)
         statsButtonImport.show()
 
@@ -4699,9 +4748,6 @@ LIMIT 20
 
             ws1.column_dimensions['I'].width = 15
 
-
-
-
             # Create a new Worksheet
             ws2 = wb.create_sheet("2) QC evaluation changes")
 
@@ -4754,6 +4800,7 @@ LIMIT 20
 
             ws4 = wb.create_sheet("3) CUSTOMER REJECT")
 
+            # Query for getting the total customer return by product code
             self.cursor.execute(f"""
                         SELECT product_code, COUNT(*) 
                             FROM returns
@@ -4857,6 +4904,7 @@ LIMIT 20
                 ws4[f"L{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
+            # Query for getting the Machine's total customer return
             self.cursor.execute(f"""
                 WITH splitted_lot AS (
                                     
@@ -4884,8 +4932,9 @@ LIMIT 20
                                     ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
                                 AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
                                    )
-                GROUP BY machine
                 WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                GROUP BY machine
+                
 
                                             """)
 
@@ -4895,7 +4944,6 @@ LIMIT 20
             ws4['N1'] = "Highest Return Per Machine"
             ws4['N1'].alignment = center_Alignment
             ws4['N1'].font = title_color
-
 
             ws4["N2"] = "Machine"
             ws4['O2'] = "RETURNS"
@@ -4913,12 +4961,13 @@ LIMIT 20
                 ws4[f"O{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
+            # Query for getting the total kg of Customer Returns by product code
             self.cursor.execute(f"""
-                            SELECT product_code, SUM(quantity) as total_kg
-                            FROM returns
-                            WHERE return_date BETWEEN '{date1}' AND '{date2}'
-                            GROUP BY product_code
-                            ORDER BY total_kg
+                SELECT product_code, SUM(quantity) as total_kg
+                FROM returns
+                WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                GROUP BY product_code
+                ORDER BY total_kg
                                                 """)
 
             result = self.cursor.fetchall()
@@ -4944,35 +4993,36 @@ LIMIT 20
                 ws4[f"I{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
+            # Query for getting the Returns By Each Supervisor
             self.cursor.execute(f"""
-                            WITH splitted_lot AS (
-                    
-                    SELECT  *,
-                    (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
-                    (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
-                    (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
-                    (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
-                    (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
-                    (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
-                    (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
-                    FROM extruder
+                    WITH splitted_lot AS (
+                        SELECT  *,
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                        (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                        (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                        (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                        FROM extruder
                     )
 					
-SELECT t2.supervisor, COUNT(*) FROM returns t1
-JOIN splitted_lot t2
-ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
-                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
-                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
-                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
-                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
-                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
-                    ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
-                AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
-                   )
-GROUP BY supervisor
-WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                SELECT t2.supervisor, COUNT(*) FROM returns t1
+                JOIN splitted_lot t2
+                    ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
+                       )
+                WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                GROUP BY supervisor
+                
                                             """)
 
             result = self.cursor.fetchall()
@@ -4993,14 +5043,35 @@ WHERE return_date BETWEEN '{date1}' AND '{date2}'
                 ws4[f"W{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
+            # Query for getting the Returns By Each Operator
             self.cursor.execute(f"""
-                            SELECT operator, COUNT(operator)
-                            FROM
-                            (SELECT t1.lot_number, t2.operator, t2.supervisor
-                            FROM returns t1
-                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                            WHERE t1.return_date BETWEEN '{date1}' AND '{date2}')
-                            GROUP BY operator
+                            WITH splitted_lot AS (
+                        SELECT  *,
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                        (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                        (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                        (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                        FROM extruder
+                    )
+					
+                SELECT t2.operator, COUNT(*) FROM returns t1
+                JOIN splitted_lot t2
+                    ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
+                       )
+                WHERE return_date BETWEEN '{date1}' AND '{date2}'
+                GROUP BY operator
 
                                             """)
             result = self.cursor.fetchall()
@@ -5032,6 +5103,7 @@ WHERE return_date BETWEEN '{date1}' AND '{date2}'
             # Worksheet 3
             ws3 = wb.create_sheet("4) INTERNAL REJECT")
 
+            # Query for getting the Highest Failed First Run by product code
             self.cursor.execute(f"""
             SELECT product_code, COUNT(*) as failed_count
             FROM quality_control_tbl2
@@ -5063,7 +5135,7 @@ WHERE return_date BETWEEN '{date1}' AND '{date2}'
                 ws3[f"B{cell_pointer}"].alignment = center_Alignment
                 cell_pointer += 1
 
-
+            # Query for getting the total failed by product code
             self.cursor.execute(f"""
                 SELECT product_code, COUNT(*) as failed_count
                 FROM quality_control_tbl2
@@ -5160,8 +5232,20 @@ WHERE return_date BETWEEN '{date1}' AND '{date2}'
 
             # Failed First Run by Operator
             self.cursor.execute(f"""
-                  
-              
+                WITH splitted_lot AS (
+
+                    SELECT  *,
+                    (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                    (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                    (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                    (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                    (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                    (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                    (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                    (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                    (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                    FROM extruder
+                    )
                     SELECT operator, SUM(lot_count) as total_ffr FROM 
                             
                 (WITH lot_range as (
