@@ -4232,34 +4232,16 @@ class Ui_LoginWindow(object):
 
                 # Query For Getting the AVERAGE qc_days PER PRODUCT_CODE
                 self.cursor.execute(f"""
-                 SELECT product_code,
-    round(avg(days_float), 4) AS avg_qcdays
-   FROM ( SELECT t1.product_code,
-            EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0 AS days_float
-           FROM ( WITH aggregated_materials AS (
-         SELECT max(quality_control_tbl2.evaluation_date) - min(quality_control_tbl2.evaluation_date) AS qc_days,
-            quality_control_tbl2.original_lot
-           FROM quality_control_tbl2
-		    WHERE evaluation_date::DATE BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
-          GROUP BY quality_control_tbl2.original_lot
-          
-        )
- SELECT q.id AS qc_id,
-    q.lot_number,
-    q.evaluation_date,
-    q.original_lot,
-    q.status,
-    q.product_code,
-    a.qc_days,
-    q.qc_type
-	
-   FROM aggregated_materials a
-     JOIN quality_control_tbl2 q ON a.original_lot::text = q.original_lot::text) t1
-             JOIN qc_dayoff t2 ON t1.original_lot::text = t2.original_lot::text
-          GROUP BY t1.product_code, (EXTRACT(epoch FROM t1.qc_days - ((t2.dayoff || ' day'::text)::interval)) / 86400.0)) subquery
-  GROUP BY product_code
-  ORDER BY avg_qcdays DESC;
-                
+                 SELECT product_code, ROUND(AVG(dayoff), 2) as avg_dayoff
+                    FROM(SELECT product_code, qc_day - dayoff AS dayoff
+                    FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
+                    FROM quality_control_tbl2 t1
+                    JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
+                    WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                    GROUP BY product_code, t1.original_lot, dayoff))
+                    GROUP BY product_code
+                    ORDER BY avg_dayoff DESC
+                    LIMIT 20
                 """)
 
                 layout = QHBoxLayout(self.body_widget)
@@ -4315,7 +4297,7 @@ class Ui_LoginWindow(object):
 		    WHERE evaluation_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
             ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
             GROUP BY product_code
-            ORDER BY product_code
+            ORDER BY COUNT(*) DESC
 
                 """)
                 result = self.cursor.fetchall()
@@ -4324,10 +4306,10 @@ class Ui_LoginWindow(object):
                 for i in result:
                     total_productCodes[i[0].strip()] = i[1]
 
-                self.cursor.execute("""
+                self.cursor.execute(f"""
                 SELECT product_code, COUNT(*)
                 FROM quality_control
-                WHERE status_changed = true
+                WHERE status_changed = true AND evaluated_on BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
                 GROUP BY product_code
                 ORDER BY COUNT(*) DESC
                 LIMIT 5
@@ -4386,7 +4368,8 @@ class Ui_LoginWindow(object):
                 SELECT product_code, COUNT(*) 
                 FROM returns
 				WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
-                GROUP BY product_code				
+                GROUP BY product_code			
+                ORDER BY count DESC	
                 LIMIT 5
                 """)
 
@@ -4422,13 +4405,33 @@ class Ui_LoginWindow(object):
 
                 # Getting the Data for how many times an operator have a Returned product
                 self.cursor.execute(f"""
-                                    SELECT operator, COUNT(operator)
-                                    FROM
-                                    (SELECT t1.lot_number, t2.operator, t2.supervisor
-                                    FROM returns t1
-                                    JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                                    WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
-                                    GROUP BY operator
+                     WITH splitted_lot AS (
+                        SELECT  *,
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                        (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                        (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                        (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                        FROM extruder
+                    )
+					
+                SELECT t2.operator, COUNT(*) FROM returns t1
+                JOIN splitted_lot t2
+                    ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
+                       )
+                WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY operator
                 
                 """)
                 result = self.cursor.fetchall()
