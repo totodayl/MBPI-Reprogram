@@ -2573,7 +2573,7 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
             df = pd.DataFrame(result)
 
-            column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "ave_yield", "Average_cleaning_material_used"]
+            column_names = ["Machine", "Product Code", "average_output_per_hour", "average_cleaning_time", "Average_cleaning_material_used", "ave_yield"]
 
             try:
                 filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
@@ -2629,10 +2629,37 @@ class Ui_LoginWindow(object):
                                                                          "Someone is using blank.xlsx")
 
 
-
-
-
         def compounding():
+
+            def save_entry():
+
+                # Compute for the Time Difference to get the Duration
+
+                self.cursor.execute(f"""
+                INSERT INTO mixer
+                VALUES({production_id_input.text()}, {machine_input.text()}::INTEGER, '{product_code_input.text()}',
+                       {operator_input.text()}, '{operator_input.text()}', {material_output.text()}, {material_input.text()}, {remarks_box.toPlainText()})
+                
+                
+                """)
+                self.conn.commit()
+
+            def clear_inputs():
+
+                product_code_input.clear()
+                time_start_input.clear()
+                time_end_input.clear()
+                operator_input.clear()
+                material_input.clear()
+                material_output.clear()
+                date_input.clear()
+                remarks_box.clear()
+
+
+
+
+
+
             self.compounding_widget = QWidget(self.main_widget)
             self.compounding_widget.setGeometry(0, 0, 991, 751)
             self.compounding_widget.setStyleSheet("background-color: rgb(240,240,240);")
@@ -2654,12 +2681,199 @@ class Ui_LoginWindow(object):
 
             compounding_btn = QPushButton(buttons_widget)
             compounding_btn.setGeometry(150, 0, 150, 30)
-            compounding_btn.setText('COMPOUNDING')
+            compounding_btn.setText('MIXER')
             compounding_btn.setFont(QtGui.QFont('Arial', 10))
             compounding_btn.setStyleSheet('color: blue')
             compounding_btn.setCursor(Qt.PointingHandCursor)
             compounding_btn.clicked.connect(compounding)
             compounding_btn.show()
+
+            title_widget = QWidget(self.compounding_widget)
+            title_widget.setGeometry(0, 30, 991, 50)
+            title_widget.show()
+
+            title_label = QLabel(title_widget)
+            title_label.setGeometry(493, 10, 260, 30)
+            title_label.setText('MIXER REPORT')
+            title_label.setStyleSheet('color: rgb(78, 135, 82)')
+            title_label.setFont(QtGui.QFont('Rockwell Extra Bold', 20))
+            title_label.setAlignment(Qt.AlignCenter)
+            title_label.show()
+
+            input_widget = QWidget(self.compounding_widget)
+            input_widget.setGeometry(0, 80, 320, 621)
+            input_widget.setStyleSheet('border: 1px solid black; background-color: rgb(187, 228, 252)')
+
+            mixer_table = QTableWidget(self.compounding_widget)
+            mixer_table.setGeometry(320, 80, 671, 621)
+            mixer_table.setColumnCount(7)
+            mixer_table.setRowCount(25)
+            mixer_table.verticalHeader().setVisible(False)
+            mixer_table.setHorizontalHeaderLabels(['Production ID', 'Machine', 'Product Code', 'Total Time', 'Processed By', 'Output', 'Remarks'])
+
+            mixer_table.setColumnWidth(0, 90)
+            mixer_table.setColumnWidth(1, 70)
+            mixer_table.setColumnWidth(3, 70)
+            mixer_table.setColumnWidth(6, 120)
+
+            mixer_table.show()
+
+            font = QtGui.QFont('Arial Black', 12)
+
+            production_id_label = QLabel()
+            production_id_label.setText('Production ID')
+            production_id_label.setFixedHeight(25)
+            production_id_label.setFixedWidth(120)
+            production_id_label.setFont(font)
+            production_id_label.setStyleSheet('border: none')
+
+            machine_number_label = QLabel()
+            machine_number_label.setText('Machine No.')
+            machine_number_label.setFixedHeight(25)
+            machine_number_label.setFixedWidth(120)
+            machine_number_label.setFont(font)
+            machine_number_label.setStyleSheet('border: none')
+
+            product_code_label = QLabel()
+            product_code_label.setText('Product Code')
+            product_code_label.setFixedHeight(25)
+            product_code_label.setFixedWidth(120)
+            product_code_label.setFont(font)
+            product_code_label.setStyleSheet('border: none')
+
+            time_start_label = QLabel()
+            time_start_label.setText('Time Start')
+            time_start_label.setFixedHeight(25)
+            time_start_label.setFixedWidth(120)
+            time_start_label.setFont(font)
+            time_start_label.setStyleSheet('border: none')
+
+            time_end_label = QLabel()
+            time_end_label.setText('Time End')
+            time_end_label.setFixedHeight(25)
+            time_end_label.setFixedWidth(120)
+            time_end_label.setFont(font)
+            time_end_label.setStyleSheet('border: none')
+
+            operator_label = QLabel()
+            operator_label.setText('Operator')
+            operator_label.setFixedHeight(25)
+            operator_label.setFixedWidth(120)
+            operator_label.setFont(font)
+            operator_label.setStyleSheet('border: none')
+
+            input_label = QLabel()
+            input_label.setText('Input')
+            input_label.setFixedHeight(25)
+            input_label.setFixedWidth(120)
+            input_label.setFont(font)
+            input_label.setStyleSheet('border: none')
+
+            output_label = QLabel()
+            output_label.setText('Output')
+            output_label.setFixedHeight(25)
+            output_label.setFixedWidth(120)
+            output_label.setFont(font)
+            output_label.setStyleSheet('border: none')
+
+            date_label = QLabel()
+            date_label.setText('Date')
+            date_label.setFixedHeight(25)
+            date_label.setFixedWidth(120)
+            date_label.setFont(font)
+            date_label.setStyleSheet('border: none')
+
+            remarks_label = QLabel()
+            remarks_label.setText('Remarks')
+            remarks_label.setFixedHeight(25)
+            remarks_label.setFixedWidth(120)
+            remarks_label.setFont(font)
+            remarks_label.setStyleSheet('border: none')
+
+            background_color = 'background-color: rgb(240, 240, 240)'
+
+            production_id_input = QLineEdit()
+            production_id_input.setFixedHeight(25)
+            production_id_input.setStyleSheet(background_color)
+            machine_input = QComboBox()
+            machine_input.setStyleSheet(background_color)
+            machine_input.setFixedHeight(25)
+            machine_input.addItem('1')
+            machine_input.addItem('2')
+            machine_input.addItem('3')
+            machine_input.addItem('4')
+            machine_input.addItem('5')
+            machine_input.addItem('6')
+            machine_input.setFont(QtGui.QFont('Arial', 10))
+
+
+
+            product_code_input = QComboBox()
+            product_code_input.setStyleSheet(background_color)
+            product_code_input.setFixedHeight(25)
+            time_start_input = QTimeEdit()
+            time_start_input.setStyleSheet(background_color)
+            time_start_input.setFixedHeight(25)
+            time_start_input.setDisplayFormat('HH:mm')
+            time_start_input.setAlignment(Qt.AlignCenter)
+            time_end_input = QTimeEdit()
+            time_end_input.setStyleSheet(background_color)
+            time_end_input.setFixedHeight(25)
+            time_end_input.setDisplayFormat('HH:mm')
+            time_end_input.setAlignment(Qt.AlignCenter)
+            operator_input = QComboBox()
+            operator_input.setStyleSheet(background_color)
+            operator_input.setFixedHeight(25)
+            material_input = QLineEdit()
+            material_input.setStyleSheet(background_color)
+            material_input.setFixedHeight(25)
+            material_output = QLineEdit()
+            material_output.setStyleSheet(background_color)
+            material_output.setFixedHeight(25)
+            date_input = QDateEdit()
+            date_input.setStyleSheet(background_color)
+            date_input.setFixedHeight(25)
+            date_input.setAlignment(Qt.AlignCenter)
+            date_input.setDisplayFormat('MM-dd-yyyy')
+            remarks_box = QTextEdit()
+            remarks_box.setStyleSheet(background_color)
+            remarks_box.setFixedHeight(130)
+
+            form_layout = QFormLayout(input_widget)
+
+            form_layout.addRow(production_id_label, production_id_input)
+            form_layout.addRow(machine_number_label, machine_input)
+            form_layout.addRow(product_code_label, product_code_input)
+            form_layout.addRow(date_label, date_input)
+            form_layout.addRow(time_start_label, time_start_input)
+            form_layout.addRow(time_end_label, time_end_input)
+            form_layout.addRow(operator_label, operator_input)
+            form_layout.addRow(input_label, material_input)
+            form_layout.addRow(output_label, material_output)
+            form_layout.addRow(remarks_label, remarks_box)
+
+            input_widget.show()
+
+
+            save_btn = QPushButton(input_widget)
+            save_btn.setGeometry(80, 590, 60, 25)
+            save_btn.setText('SAVE')
+            save_btn.setStyleSheet('border:none; background-color: rgb(128, 128, 128)')
+            save_btn.setCursor(Qt.PointingHandCursor)
+            save_btn.clicked.connect(save_entry)
+            save_btn.show()
+
+            clear_btn = QPushButton(input_widget)
+            clear_btn.setGeometry(190, 590, 60, 25)
+            clear_btn.setText('CLEAR')
+            clear_btn.setStyleSheet('border:none; background-color: rgb(128, 128, 128)')
+            clear_btn.setCursor(Qt.PointingHandCursor)
+            clear_btn.clicked.connect(clear_inputs)
+            clear_btn.show()
+
+
+
+
 
 
         self.production_widget = QtWidgets.QWidget(self.main_widget)
@@ -2683,13 +2897,11 @@ class Ui_LoginWindow(object):
 
         compounding_btn = QPushButton(buttons_widget)
         compounding_btn.setGeometry(150, 0, 150, 30)
-        compounding_btn.setText('COMPOUNDING')
+        compounding_btn.setText('MIXER')
         compounding_btn.setFont(QtGui.QFont('Arial', 10))
         compounding_btn.setCursor(Qt.PointingHandCursor)
         compounding_btn.clicked.connect(compounding)
         compounding_btn.show()
-
-
 
         self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
         self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
@@ -4038,13 +4250,33 @@ class Ui_LoginWindow(object):
 
                     if graph5_selections.currentText() == 'Supervisor':
                         self.cursor.execute(f"""
-                            SELECT supervisor, COUNT(supervisor)
-                            FROM
-                            (SELECT t1.lot_number, t2.operator, t2.supervisor
-                            FROM returns t1
-                            JOIN extruder t2 ON t1.origin_lot = ANY(t2.lot_number)
-                            WHERE t1.return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}')
-                            GROUP BY supervisor
+                            WITH splitted_lot AS (
+                        SELECT  *,
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[1], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as first_lot_max,
+                        (regexp_match(lot_number[1], '[A-Z]+'))[1] as first_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[2], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as second_lot_max,
+                        (regexp_match(lot_number[2], '[A-Z]+'))[1] as second_lot_code,
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 1), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_min, 
+                        (regexp_match(SPLIT_PART(lot_number[3], '-', 2), '(\d+)[A-Z]'))[1]::INTEGER as third_lot_max,
+                        (regexp_match(lot_number[3], '[A-Z]+'))[1] as third_lot_code
+                        FROM extruder
+                    )
+					
+                SELECT t2.supervisor, COUNT(*) FROM returns t1
+                JOIN splitted_lot t2
+                    ON (((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.first_lot_min AND t2.first_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.second_lot_min AND t2.second_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = second_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER BETWEEN t2.third_lot_min AND t2.third_lot_max 
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = third_lot_code) OR
+                        ((regexp_match(t1.lot_number, '(\d+)[A-Z]+'))[1]::INTEGER IN (t2.first_lot_min, t2.second_lot_min, t2.third_lot_min)
+                    AND (regexp_match(t1.lot_number, '[A-Z]+'))[1] = first_lot_code)
+                       )
+                WHERE return_date BETWEEN '2024-{date1}-01' AND '2024-{date2}-{calendar.monthrange(2024, date2)[1]}'
+                GROUP BY supervisor
                                              """)
                         result = self.cursor.fetchall()
                         x = []
