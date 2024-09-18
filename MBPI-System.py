@@ -92,7 +92,7 @@ class Ui_LoginWindow(object):
 
     # This is the main window after login screen
     def launch_main(self):
-        LoginWindow.move(37, 100)
+        LoginWindow.move(75, 0)
         LoginWindow.setFixedSize(1200, 750)
         self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
         self.main_widget = QtWidgets.QWidget(self.login_window)
@@ -2436,53 +2436,6 @@ class Ui_LoginWindow(object):
                 print(e)
                 QMessageBox.information(self.production_widget, "ERROR", "No Selected Items")
 
-        def filter_table():
-
-            queryConList = []
-
-            if self.machine_combo.currentText() != "-":
-                queryConList.append(f"machine = '{self.machine_combo.currentText()}'")
-            if self.company_combo.currentText() != "-":
-                queryConList.append(f"customer = '{self.company_combo.currentText()}'")
-            if self.formula_combo.currentText() != "":
-                queryConList.append(f"formula_id = '{self.formula_combo.currentText()}'")
-            if self.productCode_combo.currentText() != "":
-                queryConList.append(f"product_code = '{self.productCode_combo.currentText()}'")
-
-            query = f"""
-                    SELECT 
-                    process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
-                    FROM extruder WHERE
-                                    """
-
-            if len(queryConList) == 0:
-                query = query.replace("WHERE", "")
-
-            for condition in queryConList:
-                if condition != queryConList[-1]:
-                    query += condition + " AND "
-                else:
-                    query += condition
-
-            query += "ORDER BY process_id"
-
-            self.cursor.execute(query)
-            result = self.cursor.fetchall()
-
-            self.extruder_table.clearContents()
-            for i in range(len(result)):
-                for j in range(len(column_names)):
-                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
-                    # Set Alignment for specific columns
-                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7:
-                        item.setTextAlignment(Qt.AlignCenter)
-                    else:
-                        pass
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
-                    self.extruder_table.setItem(i, j, item)
-
-            self.extruder_table.show()
-            pass
 
         def show_tables():
 
@@ -2632,7 +2585,6 @@ class Ui_LoginWindow(object):
         def compounding():
 
             def save_entry():
-
                 # Compute for the Time Difference to get the Duration
 
                 self.cursor.execute(f"""
@@ -2654,11 +2606,6 @@ class Ui_LoginWindow(object):
                 material_output.clear()
                 date_input.clear()
                 remarks_box.clear()
-
-
-
-
-
 
             self.compounding_widget = QWidget(self.main_widget)
             self.compounding_widget.setGeometry(0, 0, 991, 751)
@@ -2790,11 +2737,13 @@ class Ui_LoginWindow(object):
             remarks_label.setFont(font)
             remarks_label.setStyleSheet('border: none')
 
-            background_color = 'background-color: rgb(240, 240, 240)'
+            background_color = 'background-color: rgb(255, 255, 0)'
 
             production_id_input = QLineEdit()
             production_id_input.setFixedHeight(25)
             production_id_input.setStyleSheet(background_color)
+            production_id_input.setAlignment(Qt.AlignCenter)
+
             machine_input = QComboBox()
             machine_input.setStyleSheet(background_color)
             machine_input.setFixedHeight(25)
@@ -2805,8 +2754,6 @@ class Ui_LoginWindow(object):
             machine_input.addItem('5')
             machine_input.addItem('6')
             machine_input.setFont(QtGui.QFont('Arial', 10))
-
-
 
             product_code_input = QComboBox()
             product_code_input.setStyleSheet(background_color)
@@ -2854,7 +2801,6 @@ class Ui_LoginWindow(object):
 
             input_widget.show()
 
-
             save_btn = QPushButton(input_widget)
             save_btn.setGeometry(80, 590, 60, 25)
             save_btn.setText('SAVE')
@@ -2872,10 +2818,6 @@ class Ui_LoginWindow(object):
             clear_btn.show()
 
 
-
-
-
-
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
         self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
@@ -2885,6 +2827,9 @@ class Ui_LoginWindow(object):
         buttons_widget.setGeometry(0, 0, 991, 30)
         buttons_widget.setStyleSheet('background-color: gray')
         buttons_widget.show()
+
+        headers_widget = QWidget(self.production_widget)
+
 
         # Extruder Tab Button
         extruder_btn = QPushButton(buttons_widget)
@@ -2977,44 +2922,6 @@ class Ui_LoginWindow(object):
         self.extruder_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.extruder_table.itemSelectionChanged.connect(show_tables)
         self.extruder_table.show()
-
-        #Filters
-        self.machine_combo = QtWidgets.QComboBox(self.production_widget)
-        self.machine_combo.setGeometry(120, 45, 100, 25)
-        self.cursor.execute("""
-                    SELECT DISTINCT(machine) FROM extruder;
-                """)
-        machine = self.cursor.fetchall()
-        self.machine_combo.addItem("-")
-        for i in machine:
-            self.machine_combo.addItem(i[0])
-        self.machine_combo.currentIndexChanged.connect(filter_table)
-        self.machine_combo.show()
-
-        self.company_combo = QtWidgets.QComboBox(self.production_widget)
-        self.company_combo.setGeometry(220, 45, 200, 25)
-        self.cursor.execute("""
-            SELECT DISTINCT(customer) FROM extruder;
-        """)
-        customers = self.cursor.fetchall()
-        self.company_combo.addItem("-")
-        for i in customers:
-            self.company_combo.addItem(i[0])
-        self.company_combo.setEditable(True)
-        self.company_combo.currentIndexChanged.connect(filter_table)
-        self.company_combo.show()
-
-        self.formula_combo = QtWidgets.QComboBox(self.production_widget)
-        self.formula_combo.setGeometry(620, 45, 100, 25)
-        self.formula_combo.setEditable(True)
-        self.formula_combo.currentTextChanged.connect(filter_table)
-        self.formula_combo.show()
-
-        self.productCode_combo = QtWidgets.QComboBox(self.production_widget)
-        self.productCode_combo.setGeometry(720, 45, 100, 25)
-        self.productCode_combo.currentTextChanged.connect(filter_table)
-        self.productCode_combo.setEditable(True)
-        self.productCode_combo.show()
 
         date1 = QDateEdit(self.production_widget)
         date1.setGeometry(50, 710, 100, 25)
