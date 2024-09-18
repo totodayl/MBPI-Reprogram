@@ -2609,28 +2609,29 @@ class Ui_LoginWindow(object):
 
             self.compounding_widget = QWidget(self.main_widget)
             self.compounding_widget.setGeometry(0, 0, 991, 751)
-            self.compounding_widget.setStyleSheet("background-color: rgb(240,240,240);")
+            self.compounding_widget.setStyleSheet("background-color: white;")
             self.compounding_widget.show()
 
             buttons_widget = QWidget(self.compounding_widget)
             buttons_widget.setGeometry(0, 0, 991, 30)
-            buttons_widget.setStyleSheet('background-color: gray')
+            buttons_widget.setStyleSheet('background-color: rgb(31, 102, 254)')
             buttons_widget.show()
 
             # Extruder Tab Button
             extruder_btn = QPushButton(buttons_widget)
-            extruder_btn.setGeometry(0, 0, 150, 30)
+            extruder_btn.setGeometry(50, 0, 75, 30)
             extruder_btn.setText('EXTRUDER')
-            extruder_btn.setFont(QtGui.QFont('Arial', 10))
+            extruder_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            extruder_btn.setStyleSheet('color: white; border: none;')
             extruder_btn.setCursor(Qt.PointingHandCursor)
             extruder_btn.clicked.connect(self.production)
             extruder_btn.show()
 
             compounding_btn = QPushButton(buttons_widget)
-            compounding_btn.setGeometry(150, 0, 150, 30)
+            compounding_btn.setGeometry(150, 0, 50, 30)
             compounding_btn.setText('MIXER')
-            compounding_btn.setFont(QtGui.QFont('Arial', 10))
-            compounding_btn.setStyleSheet('color: blue')
+            compounding_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            compounding_btn.setStyleSheet('color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;')
             compounding_btn.setCursor(Qt.PointingHandCursor)
             compounding_btn.clicked.connect(compounding)
             compounding_btn.show()
@@ -2649,7 +2650,7 @@ class Ui_LoginWindow(object):
 
             input_widget = QWidget(self.compounding_widget)
             input_widget.setGeometry(0, 80, 320, 621)
-            input_widget.setStyleSheet('border: 1px solid black; background-color: rgb(187, 228, 252)')
+            input_widget.setStyleSheet('border: 1px solid black;')
 
             mixer_table = QTableWidget(self.compounding_widget)
             mixer_table.setGeometry(320, 80, 671, 621)
@@ -2817,41 +2818,40 @@ class Ui_LoginWindow(object):
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.show()
 
-
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
-        self.production_widget.setStyleSheet("background-color: rgb(240,240,240);")
+        self.production_widget.setStyleSheet("background-color: rgb(245, 246, 248);")
         self.production_widget.show()
 
         buttons_widget = QWidget(self.production_widget)
         buttons_widget.setGeometry(0, 0, 991, 30)
-        buttons_widget.setStyleSheet('background-color: gray')
+        buttons_widget.setStyleSheet('background-color: rgb(31, 102, 254)')
         buttons_widget.show()
-
-        headers_widget = QWidget(self.production_widget)
-
 
         # Extruder Tab Button
         extruder_btn = QPushButton(buttons_widget)
-        extruder_btn.setGeometry(0, 0, 150, 30)
+        extruder_btn.setGeometry(50, 0, 75, 30)
         extruder_btn.setText('EXTRUDER')
-        extruder_btn.setFont(QtGui.QFont('Arial', 10))
+        extruder_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+        extruder_btn.setStyleSheet('color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;')
         extruder_btn.setCursor(Qt.PointingHandCursor)
         extruder_btn.clicked.connect(self.production)
         extruder_btn.show()
 
         compounding_btn = QPushButton(buttons_widget)
-        compounding_btn.setGeometry(150, 0, 150, 30)
+        compounding_btn.setGeometry(150, 0, 50, 30)
         compounding_btn.setText('MIXER')
-        compounding_btn.setFont(QtGui.QFont('Arial', 10))
+        compounding_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+        compounding_btn.setStyleSheet('color: white; border: none')
         compounding_btn.setCursor(Qt.PointingHandCursor)
         compounding_btn.clicked.connect(compounding)
         compounding_btn.show()
 
         self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
-        self.extruder_table.setGeometry(QtCore.QRect(20, 80, 900, 375))
+        self.extruder_table.setGeometry(QtCore.QRect(20, 60, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
         self.extruder_table.setSortingEnabled(True)
+
 
         self.cursor.execute("""
         SELECT column_name FROM information_schema.columns
@@ -2887,6 +2887,7 @@ class Ui_LoginWindow(object):
         self.extruder_table.setStyleSheet("""
         gridline-color: black; 
         color : black;
+        background-color: rgb(255, 255, 255);
         """)
 
         # Populate table with data
@@ -2904,17 +2905,22 @@ class Ui_LoginWindow(object):
         bold_font = QtGui.QFont()
         bold_font.setBold(True)
         self.extruder_table.horizontalHeader().setFont(bold_font)
+
         self.extruder_table.horizontalHeader().setStyleSheet("""
         QHeaderView::section{
         font-weight: bold;
-        background-color: black;
+        background-color: rgb(0, 109, 189);
         color: white;
         }
 
         """)
 
+
         # Set Column Width
+        self.extruder_table.setColumnWidth(0, 90)
+        self.extruder_table.setColumnWidth(1, 90)
         self.extruder_table.setColumnWidth(2, 198)
+        self.extruder_table.setColumnWidth(8, 90)
 
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
         # Set selection mode to select entire rows and disable single item selection
@@ -2952,7 +2958,7 @@ class Ui_LoginWindow(object):
         statsButtonImport.show()
 
         self.view_btn = QtWidgets.QPushButton(self.production_widget)
-        self.view_btn.setGeometry(600, 700, 80, 30)
+        self.view_btn.setGeometry(600, 710, 80, 30)
         self.view_btn.setText("View")
         self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.view_btn.clicked.connect(show_form)
@@ -2960,7 +2966,7 @@ class Ui_LoginWindow(object):
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.production_widget)
-        self.add_btn.setGeometry(681, 700, 80, 30)
+        self.add_btn.setGeometry(681, 710, 80, 30)
         self.add_btn.setText("Add Entry")
         self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.add_btn.clicked.connect(add_entry)
@@ -2968,7 +2974,7 @@ class Ui_LoginWindow(object):
         self.add_btn.show()
 
         self.update_btn = QtWidgets.QPushButton(self.production_widget)
-        self.update_btn.setGeometry(762, 700, 80, 30)
+        self.update_btn.setGeometry(762, 710, 80, 30)
         self.update_btn.setText("Update")
         self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
         self.update_btn.clicked.connect(update_entry)
@@ -2976,7 +2982,7 @@ class Ui_LoginWindow(object):
         self.update_btn.show()
 
         self.print_btn = QtWidgets.QPushButton(self.production_widget)
-        self.print_btn.setGeometry(843, 700, 80, 30)
+        self.print_btn.setGeometry(843, 710, 80, 30)
         self.print_btn.setText("Print")
         self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
         self.print_btn.clicked.connect(print_file)
@@ -2984,29 +2990,59 @@ class Ui_LoginWindow(object):
         self.print_btn.show()
 
         main_time_table = QtWidgets.QTableWidget(self.production_widget)
-        main_time_table.setGeometry(20, 455, 475, 225)
+        main_time_table.setGeometry(20, 455, 460, 245)
         main_time_table.setColumnCount(3)
         main_time_table.setRowCount(6)
         main_time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
+        main_time_table.verticalHeader().setVisible(False)
+        main_time_table.horizontalHeader().setStyleSheet("""
+                QHeaderView::section{
+                font-weight: bold;
+                background-color: rgb(0, 109, 189);
+                color: white;
+                }
+
+                """)
         main_time_table.setColumnWidth(0, 180)
         main_time_table.setColumnWidth(1, 180)
         main_time_table.setColumnWidth(2, 98)
+        main_time_table.setStyleSheet('background-color: white')
         main_time_table.show()
 
         material_table = QtWidgets.QTableWidget(self.production_widget)
-        material_table.setGeometry(495, 455, 263, 225)
+        material_table.setGeometry(495, 455, 245, 245)
         material_table.setColumnCount(2)
         material_table.setRowCount(13)
         material_table.setHorizontalHeaderLabels(["Material", "Value(Kg)"])
+        material_table.verticalHeader().setVisible(False)
+        material_table.horizontalHeader().setStyleSheet("""
+                QHeaderView::section{
+                font-weight: bold;
+                background-color: rgb(0, 109, 189);
+                color: white;
+                }
+
+                """)
+        material_table.setStyleSheet('background-color: white;')
         material_table.setColumnWidth(0, 120)
         material_table.setColumnWidth(1, 100)
         material_table.show()
 
         lotNumber_table = QtWidgets.QTableWidget(self.production_widget)
-        lotNumber_table.setGeometry(758, 455, 162, 225)
+        lotNumber_table.setGeometry(758, 455, 162, 245)
         lotNumber_table.setColumnCount(1)
         lotNumber_table.setRowCount(6)
         lotNumber_table.setHorizontalHeaderLabels(["Lot Number"])
+        lotNumber_table.verticalHeader().setVisible(False)
+        lotNumber_table.horizontalHeader().setStyleSheet("""
+                QHeaderView::section{
+                font-weight: bold;
+                background-color: rgb(0, 109, 189);
+                color: white;
+                }
+
+                """)
+        lotNumber_table.setStyleSheet('background-color: white;')
         lotNumber_table.setColumnWidth(0, 162)
         lotNumber_table.show()
 
