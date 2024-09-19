@@ -94,7 +94,7 @@ class Ui_LoginWindow(object):
     def launch_main(self):
         LoginWindow.move(75, 0)
         LoginWindow.setFixedSize(1200, 750)
-        self.login_window.setStyleSheet("background-color: rgb(60,60,60);")
+        self.login_window.setStyleSheet("background-color: white;")
         self.main_widget = QtWidgets.QWidget(self.login_window)
         self.main_widget.setStyleSheet("""
         background-color: rgb(240,240,240);     
@@ -104,46 +104,52 @@ class Ui_LoginWindow(object):
         self.main_widget.show()
 
         self.production_btn = QtWidgets.QPushButton(self.login_window)
-        self.production_btn.setGeometry(30, 200, 180, 40)
+        self.production_btn.setGeometry(0, 140, 210, 40)
         self.production_btn.setCursor(Qt.PointingHandCursor)
         self.production_btn.setStyleSheet("""
-        border-top-left-radius: 10px; 
-        border-bottom-left-radius: 10px; 
-        background-color: rgb(125,125,125);
+        background-color: white;
+        border: none
         """)
         self.production_btn.clicked.connect(self.production)
         self.production_btn.show()
 
         self.production_lbl = QtWidgets.QLabel(self.production_btn)
-        self.production_lbl.setText("Extruder")
-        self.production_lbl.setGeometry(50, 5, 100, 30)
-        self.production_lbl.setFont(QtGui.QFont("Arial", 12))
-        self.production_lbl.setStyleSheet("color: blue;")
+        self.production_lbl.setText("Production")
+        self.production_lbl.setGeometry(70, 5, 100, 30)
+        self.production_lbl.setFont(QtGui.QFont("Segoe UI", 12))
+        self.production_lbl.setStyleSheet("color: gray;")
         self.production_lbl.setCursor(Qt.PointingHandCursor)
         self.production_lbl.show()
 
         self.production_icon = ClickableLabel(self.production_btn)
-        self.production_icon.setGeometry(10, 3, 30, 30)
-        self.production_icon.setPixmap(QtGui.QIcon('setting.png').pixmap(30, 30))  # Set icon
+        self.production_icon.setGeometry(15, 0, 40, 40)
+        self.production_icon.setPixmap(QtGui.QIcon('production_icon.png').pixmap(40, 40))  # Set icon
         self.production_icon.setScaledContents(True)  # Scale icon to fit the label
         self.production_icon.setCursor(Qt.PointingHandCursor)
         self.production_icon.clicked.connect(self.production)
         self.production_icon.show()
 
+        self.dropdown_production = ClickableLabel(self.production_btn)
+        self.dropdown_production.setGeometry(185, 10, 20, 20)
+        self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
+        self.dropdown_production.setScaledContents(True)  # Scale icon to fit the label
+        self.dropdown_production.setCursor(Qt.PointingHandCursor)
+        self.dropdown_production.show()
+
         self.qualityControl_btn = QtWidgets.QPushButton(self.login_window)
-        self.qualityControl_btn.setGeometry(30, 260, 180, 40)
+        self.qualityControl_btn.setGeometry(0, 200, 210, 40)
         self.qualityControl_btn.setCursor(Qt.PointingHandCursor)
         self.qualityControl_btn.setStyleSheet("""
                 border-top-left-radius: 10px; 
                 border-bottom-left-radius: 10px; 
-                background-color: rgb(125,125,125);
+                background-color: white;
                 """)
         self.qualityControl_btn.clicked.connect(self.quality_control)
         self.qualityControl_btn.show()
 
         self.qc_icon = ClickableLabel(self.qualityControl_btn)
-        self.qc_icon.setGeometry(10, 3, 30, 30)
-        self.qc_icon.setPixmap(QtGui.QIcon('qc.png').pixmap(30, 30))  # Set icon
+        self.qc_icon.setGeometry(15, 0, 40, 40)
+        self.qc_icon.setPixmap(QtGui.QIcon('qc-icon.png').pixmap(40, 40))  # Set icon
         self.qc_icon.setScaledContents(True)  # Scale icon to fit the label
         self.qc_icon.setCursor(Qt.PointingHandCursor)
         self.qc_icon.clicked.connect(self.quality_control)
@@ -151,36 +157,51 @@ class Ui_LoginWindow(object):
 
         self.qualityControl_lbl = QtWidgets.QLabel(self.qualityControl_btn)
         self.qualityControl_lbl.setText("Quality Control")
-        self.qualityControl_lbl.setGeometry(50, 5, 120, 30)
-        self.qualityControl_lbl.setFont(QtGui.QFont("Arial", 12))
-        self.qualityControl_lbl.setStyleSheet("color: blue;")
+        self.qualityControl_lbl.setGeometry(70, 5, 120, 30)
+        self.qualityControl_lbl.setFont(QtGui.QFont("Segoe UI", 12))
+        self.qualityControl_lbl.setStyleSheet("color: gray;")
         self.qualityControl_lbl.setCursor(Qt.PointingHandCursor)
         self.qualityControl_lbl.show()
 
+        self.dropdown_qc = ClickableLabel(self.qualityControl_btn)
+        self.dropdown_qc.setGeometry(185, 10, 20, 20)
+        self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
+        self.dropdown_qc.setScaledContents(True)  # Scale icon to fit the label
+        self.dropdown_qc.setCursor(Qt.PointingHandCursor)
+        self.dropdown_qc.show()
+
+
         self.warehouse_btn = QtWidgets.QPushButton(self.login_window)
-        self.warehouse_btn.setGeometry(30, 320, 180, 40)
+        self.warehouse_btn.setGeometry(0, 260, 210, 40)
         self.warehouse_btn.setCursor(Qt.PointingHandCursor)
         self.warehouse_btn.setStyleSheet("""
                         border-top-left-radius: 10px; 
                         border-bottom-left-radius: 10px; 
-                        background-color: rgb(125,125,125);
+                        background-color: white;
                         """)
         self.warehouse_btn.clicked.connect(self.warehouse)
         self.warehouse_btn.show()
 
         self.warehouse_icon = ClickableLabel(self.warehouse_btn)
-        self.warehouse_icon.setGeometry(10, 3, 30, 30)
-        self.warehouse_icon.setPixmap(QtGui.QIcon('warehouse.png').pixmap(30, 30))
+        self.warehouse_icon.setGeometry(15, 0, 40, 40)
+        self.warehouse_icon.setPixmap(QtGui.QIcon('warehouse2.png').pixmap(40, 40))
         self.warehouse_icon.setScaledContents(True)  # Scale icon to fit the label
         self.warehouse_icon.setCursor(Qt.PointingHandCursor)
         self.warehouse_icon.show()
 
         self.warehouse_lbl = QLabel(self.warehouse_btn)
-        self.warehouse_lbl.setGeometry(50, 5, 120, 30)
+        self.warehouse_lbl.setGeometry(70, 5, 120, 30)
         self.warehouse_lbl.setText("Warehouse")
-        self.warehouse_lbl.setFont(QtGui.QFont("Arial", 12))
-        self.warehouse_lbl.setStyleSheet("color: blue;")
+        self.warehouse_lbl.setFont(QtGui.QFont("Segoe UI", 12))
+        self.warehouse_lbl.setStyleSheet("color: gray;")
         self.warehouse_lbl.show()
+
+        self.dropdown_wh = ClickableLabel(self.warehouse_btn)
+        self.dropdown_wh.setGeometry(185, 10, 20, 20)
+        self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
+        self.dropdown_wh.setScaledContents(True)  # Scale icon to fit the label
+        self.dropdown_wh.setCursor(Qt.PointingHandCursor)
+        self.dropdown_wh.show()
 
         self.logo = QLabel(self.login_window)
         self.logo.setGeometry(23, 10, 170, 121)
@@ -188,13 +209,6 @@ class Ui_LoginWindow(object):
         pixmap = pixmap.scaled(170, 121)
         self.logo.setPixmap(pixmap)
         self.logo.show()
-
-        self.logo2 = QLabel(self.login_window)
-        self.logo2.setGeometry(0, 145, 210, 15)
-        pixmap = QtGui.QPixmap('LOGO-NEW.png')
-        pixmap = pixmap.scaled(210, 15)
-        self.logo2.setPixmap(pixmap)
-        self.logo2.show()
 
         self.production()
 
@@ -3567,50 +3581,52 @@ class Ui_LoginWindow(object):
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
             self.qc_widget.setGeometry(0, 0, 991, 751)
-            self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
+            self.qc_widget.setStyleSheet("background-color: white;")
             self.qc_widget.show()
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
-            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setGeometry(55, 0, 70, 30)
+            self.qc_TableBtn.setText("QC DATA")
             self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-            self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_TableBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
+            self.qc_TableBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
             self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
-            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setGeometry(145, 0, 100, 30)
+            self.qc_addEntryBtn.setText("QC ENTRY")
             self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189);")
+            self.qc_addEntryBtn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
-            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setGeometry(270, 0, 70, 30)
             self.qc_dataBtn.setText("QC Data")
             self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_dataBtn.setStyleSheet("color: white; border: none;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
-            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.dashboardBtn.setGeometry(450, 0, 150, 30)
-            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setGeometry(370, 0, 85, 30)
+            self.dashboardBtn.setText("DASHBOARD")
             self.dashboardBtn.setCursor(Qt.PointingHandCursor)
-            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.dashboardBtn.setStyleSheet("color: white; border: none")
             self.dashboardBtn.clicked.connect(show_dashboards)
-            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
@@ -3621,11 +3637,11 @@ class Ui_LoginWindow(object):
             self.body_widget.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_returns.setGeometry(600, 0, 150, 30)
-            self.qc_returns.setText("Returns")
+            self.qc_returns.setGeometry(500, 0, 70, 30)
+            self.qc_returns.setText("RETURNS")
             self.qc_returns.setCursor(Qt.PointingHandCursor)
-            self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160);")
-            self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+            self.qc_returns.setStyleSheet("color: white; border: none;")
+            self.qc_returns.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_returns.clicked.connect(qc_returns)
             self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
@@ -3931,54 +3947,57 @@ class Ui_LoginWindow(object):
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
-            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setGeometry(55, 0, 70, 30)
+            self.qc_TableBtn.setText("QC DATA")
             self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-            self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_TableBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
+            self.qc_TableBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
             self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
-            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setGeometry(145, 0, 100, 30)
+            self.qc_addEntryBtn.setText("QC ENTRY")
             self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_addEntryBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
-            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setGeometry(270, 0, 70, 30)
             self.qc_dataBtn.setText("QC Data")
             self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189);")
+            self.qc_dataBtn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
-            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.dashboardBtn.setGeometry(450, 0, 150, 30)
-            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setGeometry(370, 0, 85, 30)
+            self.dashboardBtn.setText("DASHBOARD")
             self.dashboardBtn.setCursor(Qt.PointingHandCursor)
-            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.dashboardBtn.setStyleSheet("color: white; border: none")
             self.dashboardBtn.clicked.connect(show_dashboards)
-            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_returns.setGeometry(600, 0, 150, 30)
-            self.qc_returns.setText("Returns")
+            self.qc_returns.setGeometry(500, 0, 70, 30)
+            self.qc_returns.setText("RETURNS")
             self.qc_returns.setCursor(Qt.PointingHandCursor)
-            self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
-            self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+            self.qc_returns.setStyleSheet("color: white; border: none;")
+            self.qc_returns.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_returns.clicked.connect(qc_returns)
             self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
@@ -4677,55 +4696,57 @@ class Ui_LoginWindow(object):
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-            self.qcBtn_topBorder.setStyleSheet("border-bottom: 1px solid rgb(160, 160, 160)")
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
-            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setGeometry(55, 0, 70, 30)
+            self.qc_TableBtn.setText("QC DATA")
             self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-            self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_TableBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
+            self.qc_TableBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
             self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
-            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setGeometry(145, 0, 100, 30)
+            self.qc_addEntryBtn.setText("QC ENTRY")
             self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_addEntryBtn.setStyleSheet(
+                "color: white; border: none; padding-bottom: 5px;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
-            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setGeometry(270, 0, 70, 30)
             self.qc_dataBtn.setText("QC Data")
             self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_dataBtn.setStyleSheet("color: white; border: none;")
             self.qc_dataBtn.clicked.connect(show_qc_data)
-            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.dashboardBtn.setGeometry(450, 0, 150, 30)
-            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setGeometry(370, 0, 85, 30)
+            self.dashboardBtn.setText("DASHBOARD")
             self.dashboardBtn.setCursor(Qt.PointingHandCursor)
-            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189)")
+            self.dashboardBtn.setStyleSheet("color: white; border: none; border-bottom: 2px solid white;")
             self.dashboardBtn.clicked.connect(show_dashboards)
-            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_returns.setGeometry(600, 0, 150, 30)
-            self.qc_returns.setText("Returns")
+            self.qc_returns.setGeometry(500, 0, 70, 30)
+            self.qc_returns.setText("RETURNS")
             self.qc_returns.setCursor(Qt.PointingHandCursor)
-            self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
-            self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+            self.qc_returns.setStyleSheet("color: white; border: none;")
+            self.qc_returns.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_returns.clicked.connect(qc_returns)
             self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
@@ -5930,9 +5951,6 @@ LIMIT 20
                 cancel_button.clicked.connect(lambda : self.edit_returns_widget.close())
                 cancel_button.show()
 
-
-
-
             self.qc_widget.deleteLater()
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
@@ -5942,45 +5960,49 @@ LIMIT 20
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_TableBtn.setGeometry(0, 0, 150, 30)
-            self.qc_TableBtn.setText("Evaluated Products")
+            self.qc_TableBtn.setGeometry(55, 0, 70, 30)
+            self.qc_TableBtn.setText("QC DATA")
             self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-            self.qc_TableBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_TableBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
+            self.qc_TableBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_TableBtn.clicked.connect(self.quality_control)
             self.qc_TableBtn.setShortcut("F1")
             self.qc_TableBtn.show()
 
             self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
-            self.qc_addEntryBtn.setText("Evaluation Entry")
+            self.qc_addEntryBtn.setGeometry(145, 0, 100, 30)
+            self.qc_addEntryBtn.setText("QC ENTRY")
             self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_addEntryBtn.setStyleSheet(
+                "color: white; border: none;")
             self.qc_addEntryBtn.clicked.connect(evaluation_entry)
-            self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_addEntryBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_addEntryBtn.setShortcut("F2")
             self.qc_addEntryBtn.show()
 
             self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+            self.qc_dataBtn.setGeometry(270, 0, 70, 30)
             self.qc_dataBtn.setText("QC Data")
             self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
-            self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.qc_dataBtn.setStyleSheet(
+                "color: white; border: none; ")
             self.qc_dataBtn.clicked.connect(show_qc_data)
-            self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+            self.qc_dataBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_dataBtn.setShortcut("F3")
             self.qc_dataBtn.show()
 
             self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.dashboardBtn.setGeometry(450, 0, 150, 30)
-            self.dashboardBtn.setText("Dashboard")
+            self.dashboardBtn.setGeometry(370, 0, 85, 30)
+            self.dashboardBtn.setText("DASHBOARD")
             self.dashboardBtn.setCursor(Qt.PointingHandCursor)
-            self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+            self.dashboardBtn.setStyleSheet("color: white; border: none")
             self.dashboardBtn.clicked.connect(show_dashboards)
-            self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+            self.dashboardBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.dashboardBtn.setShortcut("F4")
             self.dashboardBtn.show()
 
@@ -5991,11 +6013,11 @@ LIMIT 20
             self.body_widget.show()
 
             self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
-            self.qc_returns.setGeometry(600, 0, 150, 30)
-            self.qc_returns.setText("Returns")
+            self.qc_returns.setGeometry(500, 0, 70, 30)
+            self.qc_returns.setText("RETURNS")
             self.qc_returns.setCursor(Qt.PointingHandCursor)
-            self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); color: rgb(0,109,189)")
-            self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+            self.qc_returns.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
+            self.qc_returns.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
             self.qc_returns.clicked.connect(qc_returns)
             self.qc_returns.setShortcut("F5")
             self.qc_returns.show()
@@ -6421,16 +6443,17 @@ LIMIT 20
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
-        self.qc_widget.setStyleSheet("background-color: rgb(240,240,240);")
+        self.qc_widget.setStyleSheet("background-color: white;")
         self.qc_widget.show()
 
         self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
         self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
+        self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
         self.qcBtn_topBorder.show()
 
         self.qc_topBorder = QtWidgets.QWidget(self.qc_widget)
         self.qc_topBorder.setGeometry(0, 30, 991, 60)
-        self.qc_topBorder.setStyleSheet("border-top: 1px solid black; background-color: rgb(239, 243, 254)")
+        self.qc_topBorder.setStyleSheet("background-color: white")
         self.qc_topBorder.show()
 
         self.qc_table = QtWidgets.QTableWidget(self.qc_widget)
@@ -6449,11 +6472,11 @@ LIMIT 20
         self.qc_table.setHorizontalHeaderLabels(["ID", "Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
 
         self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-        self.qc_TableBtn.setGeometry(0, 0, 150, 30)
-        self.qc_TableBtn.setText("Evaluated Products")
+        self.qc_TableBtn.setGeometry(55, 0, 70, 30)
+        self.qc_TableBtn.setText("QC DATA")
         self.qc_TableBtn.setCursor(Qt.PointingHandCursor)
-        self.qc_TableBtn.setFont(QtGui.QFont("Arial", 11))
-        self.qc_TableBtn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+        self.qc_TableBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
+        self.qc_TableBtn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
         self.qc_TableBtn.clicked.connect(self.quality_control)
         self.qc_TableBtn.setShortcut("F1")
 
@@ -6489,41 +6512,41 @@ LIMIT 20
         self.qc_TableBtn.show()
 
         self.qc_addEntryBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-        self.qc_addEntryBtn.setGeometry(150, 0, 150, 30)
-        self.qc_addEntryBtn.setText("Evaluation Entry")
+        self.qc_addEntryBtn.setGeometry(145, 0, 100, 30)
+        self.qc_addEntryBtn.setText("QC ENTRY")
         self.qc_addEntryBtn.setCursor(Qt.PointingHandCursor)
-        self.qc_addEntryBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160);  text-align: top;")
+        self.qc_addEntryBtn.setStyleSheet("color: white; border: none;")
         self.qc_addEntryBtn.clicked.connect(evaluation_entry)
-        self.qc_addEntryBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_addEntryBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
         self.qc_addEntryBtn.setShortcut("F2")
         self.qc_addEntryBtn.show()
 
         self.qc_dataBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-        self.qc_dataBtn.setGeometry(300, 0, 150, 30)
+        self.qc_dataBtn.setGeometry(270, 0, 70, 30)
         self.qc_dataBtn.setText("QC Data")
         self.qc_dataBtn.setCursor(Qt.PointingHandCursor)
-        self.qc_dataBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+        self.qc_dataBtn.setStyleSheet("color: white; border: none;")
         self.qc_dataBtn.clicked.connect(show_qc_data)
-        self.qc_dataBtn.setFont(QtGui.QFont("Arial", 11))
+        self.qc_dataBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
         self.qc_dataBtn.setShortcut("F3")
         self.qc_dataBtn.show()
 
         self.dashboardBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
-        self.dashboardBtn.setGeometry(450, 0, 150, 30)
-        self.dashboardBtn.setText("Dashboard")
+        self.dashboardBtn.setGeometry(370, 0, 85, 30)
+        self.dashboardBtn.setText("DASHBOARD")
         self.dashboardBtn.setCursor(Qt.PointingHandCursor)
-        self.dashboardBtn.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
+        self.dashboardBtn.setStyleSheet("color: white; border: none")
         self.dashboardBtn.clicked.connect(show_dashboards)
-        self.dashboardBtn.setFont(QtGui.QFont("Arial", 11))
+        self.dashboardBtn.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
         self.dashboardBtn.setShortcut("F4")
         self.dashboardBtn.show()
 
-        self.qc_returns  = QtWidgets.QPushButton(self.qcBtn_topBorder)
-        self.qc_returns.setGeometry(600, 0, 150, 30)
-        self.qc_returns.setText("Returns")
+        self.qc_returns = QtWidgets.QPushButton(self.qcBtn_topBorder)
+        self.qc_returns.setGeometry(500, 0, 70, 30)
+        self.qc_returns.setText("RETURNS")
         self.qc_returns.setCursor(Qt.PointingHandCursor)
-        self.qc_returns.setStyleSheet("border: 1px solid rgb(160, 160, 160); text-align: top;")
-        self.qc_returns.setFont(QtGui.QFont("Arial", 11))
+        self.qc_returns.setStyleSheet("color: white; border: none;")
+        self.qc_returns.setFont(QtGui.QFont("Berlin Sans FB Demi", 10))
         self.qc_returns.clicked.connect(qc_returns)
         self.qc_returns.setShortcut("F5")
         self.qc_returns.show()
@@ -7355,9 +7378,6 @@ LIMIT 20
                 except PermissionError:
                     QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                                      "Someone is using blank.xlsx")
-
-
-
 
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
             fg_incoming_btn.setGeometry(0, 0, 150, 30)
@@ -8364,8 +8384,6 @@ LIMIT 20
             delete_btn.setShortcut('Delete')
             delete_btn.show()
 
-
-
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
         self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -8373,7 +8391,7 @@ LIMIT 20
 
         self.warehouse_tabs = QtWidgets.QWidget(self.warehouse_widget)
         self.warehouse_tabs.setGeometry(0, 0, 991, 30)
-        self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160)')
+        self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160); background-color: rgb(31, 102, 254)')
         self.warehouse_tabs.show()
 
         fg_incoming()
