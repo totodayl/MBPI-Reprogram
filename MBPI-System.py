@@ -92,9 +92,75 @@ class Ui_LoginWindow(object):
 
     # This is the main window after login screen
     def launch_main(self):
+
+        def show_production_tabs():
+            if self.production_tabs_showed == False:
+                self.production_tabs_showed = True
+                self.qualityControl_btn.move(20, 300)
+                self.warehouse_btn.move(20, 360)
+                self.dropdown_production.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
+
+                # Create Buttons for Tabs Sections
+                self.extruder_btn = QPushButton(self.login_window)
+                self.extruder_btn.setGeometry(60, 180, 150, 30)
+                self.extruder_btn.setStyleSheet('border: 1px solid black; text-align: left; padding-left: 10px; background-color: rgb(143, 144, 145)')
+                self.extruder_btn.setText('Extruder')
+                self.extruder_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.extruder_btn.setCursor(Qt.PointingHandCursor)
+                self.extruder_btn.show()
+
+                self.mixer_btn = QPushButton(self.login_window)
+                self.mixer_btn.setGeometry(60, 210, 150, 30)
+                self.mixer_btn.setStyleSheet('border: 1px solid black; text-align: left; padding-left: 10px; background-color: rgb(143, 144, 145)')
+                self.mixer_btn.setText('Mixer')
+                self.mixer_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.mixer_btn.setCursor(Qt.PointingHandCursor)
+                self.mixer_btn.show()
+
+            else:
+                self.production_tabs_showed = False
+                self.qualityControl_btn.move(20, 200)
+                self.warehouse_btn.move(20, 260)
+                self.extruder_btn.hide()
+                self.mixer_btn.hide()
+                self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+
+            self.qualityControl_btn.show()
+            self.warehouse_btn.show()
+            self.dropdown_production.show()
+
+        def show_qc_tabs():
+            if self.qc_tab_showed == False:
+                self.qc_tab_showed = True
+                self.warehouse_btn.move(20, 360)
+                self.dropdown_qc.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
+            else:
+                self.qc_tab_showed = False
+                self.warehouse_btn.move(20, 260)
+                self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+
+            self.warehouse_btn.show()
+            self.dropdown_production.show()
+
+        def show_warehouse_tabs():
+            if self.warehouse_tabs_showed == False:
+                self.warehouse_tabs_showed = True
+                self.warehouse_btn.move(20, 360)
+                self.dropdown_wh.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
+            else:
+                self.warehouse_tabs_showed = False
+                self.warehouse_btn.move(20, 260)
+                self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+
+
+
+
+
+
+
         LoginWindow.move(75, 0)
         LoginWindow.setFixedSize(1200, 750)
-        self.login_window.setStyleSheet("background-color: white;")
+        self.login_window.setStyleSheet("background-color: rgb(239, 243, 254);")
         self.main_widget = QtWidgets.QWidget(self.login_window)
         self.main_widget.setStyleSheet("""
         background-color: rgb(240,240,240);     
@@ -104,11 +170,14 @@ class Ui_LoginWindow(object):
         self.main_widget.show()
 
         self.production_btn = QtWidgets.QPushButton(self.login_window)
-        self.production_btn.setGeometry(0, 140, 210, 40)
+        self.production_btn.setGeometry(20, 140, 190, 40)
         self.production_btn.setCursor(Qt.PointingHandCursor)
         self.production_btn.setStyleSheet("""
-        background-color: white;
-        border: none
+        background-color: white; 
+        border:none; 
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+
         """)
         self.production_btn.clicked.connect(self.production)
         self.production_btn.show()
@@ -122,33 +191,36 @@ class Ui_LoginWindow(object):
         self.production_lbl.show()
 
         self.production_icon = ClickableLabel(self.production_btn)
-        self.production_icon.setGeometry(15, 0, 40, 40)
+        self.production_icon.setGeometry(0, 0, 40, 40)
         self.production_icon.setPixmap(QtGui.QIcon('production_icon.png').pixmap(40, 40))  # Set icon
         self.production_icon.setScaledContents(True)  # Scale icon to fit the label
         self.production_icon.setCursor(Qt.PointingHandCursor)
         self.production_icon.clicked.connect(self.production)
         self.production_icon.show()
 
+        self.production_tabs_showed = False
         self.dropdown_production = ClickableLabel(self.production_btn)
-        self.dropdown_production.setGeometry(185, 10, 20, 20)
+        self.dropdown_production.setGeometry(165, 10, 20, 20)
         self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
         self.dropdown_production.setScaledContents(True)  # Scale icon to fit the label
         self.dropdown_production.setCursor(Qt.PointingHandCursor)
+        self.dropdown_production.clicked.connect(show_production_tabs)
+
         self.dropdown_production.show()
 
         self.qualityControl_btn = QtWidgets.QPushButton(self.login_window)
-        self.qualityControl_btn.setGeometry(0, 200, 210, 40)
+        self.qualityControl_btn.setGeometry(20, 200, 190, 40)
         self.qualityControl_btn.setCursor(Qt.PointingHandCursor)
         self.qualityControl_btn.setStyleSheet("""
-                border-top-left-radius: 10px; 
-                border-bottom-left-radius: 10px; 
+                border-top-left-radius: 20px; 
+                border-bottom-left-radius: 20px; 
                 background-color: white;
                 """)
         self.qualityControl_btn.clicked.connect(self.quality_control)
         self.qualityControl_btn.show()
 
         self.qc_icon = ClickableLabel(self.qualityControl_btn)
-        self.qc_icon.setGeometry(15, 0, 40, 40)
+        self.qc_icon.setGeometry(0, 0, 40, 40)
         self.qc_icon.setPixmap(QtGui.QIcon('qc-icon.png').pixmap(40, 40))  # Set icon
         self.qc_icon.setScaledContents(True)  # Scale icon to fit the label
         self.qc_icon.setCursor(Qt.PointingHandCursor)
@@ -157,50 +229,55 @@ class Ui_LoginWindow(object):
 
         self.qualityControl_lbl = QtWidgets.QLabel(self.qualityControl_btn)
         self.qualityControl_lbl.setText("Quality Control")
-        self.qualityControl_lbl.setGeometry(70, 5, 120, 30)
+        self.qualityControl_lbl.setGeometry(50, 5, 120, 30)
         self.qualityControl_lbl.setFont(QtGui.QFont("Segoe UI", 12))
         self.qualityControl_lbl.setStyleSheet("color: gray;")
         self.qualityControl_lbl.setCursor(Qt.PointingHandCursor)
         self.qualityControl_lbl.show()
 
         self.dropdown_qc = ClickableLabel(self.qualityControl_btn)
-        self.dropdown_qc.setGeometry(185, 10, 20, 20)
+        self.dropdown_qc.setGeometry(165, 10, 20, 20)
         self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
         self.dropdown_qc.setScaledContents(True)  # Scale icon to fit the label
         self.dropdown_qc.setCursor(Qt.PointingHandCursor)
+        self.dropdown_qc.clicked.connect(show_qc_tabs)
+        self.qc_tab_showed = False
         self.dropdown_qc.show()
 
 
         self.warehouse_btn = QtWidgets.QPushButton(self.login_window)
-        self.warehouse_btn.setGeometry(0, 260, 210, 40)
+        self.warehouse_btn.setGeometry(20, 260, 190, 40)
         self.warehouse_btn.setCursor(Qt.PointingHandCursor)
         self.warehouse_btn.setStyleSheet("""
-                        border-top-left-radius: 10px; 
-                        border-bottom-left-radius: 10px; 
+                        border-top-left-radius: 20px; 
+                        border-bottom-left-radius: 20px; 
                         background-color: white;
                         """)
         self.warehouse_btn.clicked.connect(self.warehouse)
+
         self.warehouse_btn.show()
 
         self.warehouse_icon = ClickableLabel(self.warehouse_btn)
-        self.warehouse_icon.setGeometry(15, 0, 40, 40)
+        self.warehouse_icon.setGeometry(0, 0, 40, 40)
         self.warehouse_icon.setPixmap(QtGui.QIcon('warehouse2.png').pixmap(40, 40))
         self.warehouse_icon.setScaledContents(True)  # Scale icon to fit the label
         self.warehouse_icon.setCursor(Qt.PointingHandCursor)
         self.warehouse_icon.show()
 
         self.warehouse_lbl = QLabel(self.warehouse_btn)
-        self.warehouse_lbl.setGeometry(70, 5, 120, 30)
+        self.warehouse_lbl.setGeometry(50, 5, 120, 30)
         self.warehouse_lbl.setText("Warehouse")
         self.warehouse_lbl.setFont(QtGui.QFont("Segoe UI", 12))
         self.warehouse_lbl.setStyleSheet("color: gray;")
         self.warehouse_lbl.show()
 
         self.dropdown_wh = ClickableLabel(self.warehouse_btn)
-        self.dropdown_wh.setGeometry(185, 10, 20, 20)
+        self.dropdown_wh.setGeometry(165, 10, 20, 20)
         self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
         self.dropdown_wh.setScaledContents(True)  # Scale icon to fit the label
         self.dropdown_wh.setCursor(Qt.PointingHandCursor)
+        self.warehouse_tabs_showed = False
+        self.dropdown_wh.clicked.connect(show_warehouse_tabs)
         self.dropdown_wh.show()
 
         self.logo = QLabel(self.login_window)
@@ -213,6 +290,7 @@ class Ui_LoginWindow(object):
         self.production()
 
     def production(self):
+
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
@@ -6814,7 +6892,6 @@ LIMIT 20
     def warehouse(self):
 
         def fg_incoming():
-
             def add_entry():
 
                 def autofill():
@@ -7263,10 +7340,10 @@ LIMIT 20
 
                 elif masterbatch_checkbox.isChecked() == False and drycolor_checkbox.isChecked() == True:
                     self.cursor.execute("""
-                                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
-                                    FROM fg_incoming
-                                    WHERE deleted = false AND category = 'DRYCOLOR'
-                                    ORDER BY control_id DESC
+                        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                        FROM fg_incoming
+                        WHERE deleted = false AND category = 'DRYCOLOR'
+                        ORDER BY control_id DESC
 
                                     """)
 
@@ -7356,7 +7433,7 @@ LIMIT 20
                 """)
                 result = self.cursor.fetchall()
 
-                df = pandas.DataFrame(result)
+                df = pd.DataFrame(result)
 
                 column_names = ['Control ID', 'Customer', 'Product Code', 'Date', 'Lot Number', 'Quantity', 'category', 'deleted', 'Color']
 
@@ -7380,20 +7457,20 @@ LIMIT 20
                                                                                      "Someone is using blank.xlsx")
 
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
-            fg_incoming_btn.setGeometry(0, 0, 150, 30)
+            fg_incoming_btn.setGeometry(30, 0, 100, 30)
             fg_incoming_btn.setText("FG INCOMING")
             fg_incoming_btn.setCursor(Qt.PointingHandCursor)
-            fg_incoming_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
-            fg_incoming_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+            fg_incoming_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            fg_incoming_btn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
             fg_incoming_btn.clicked.connect(self.warehouse)
             fg_incoming_btn.show()
 
             fg_outgoing_btn = QPushButton(self.warehouse_tabs)
-            fg_outgoing_btn.setGeometry(150, 0, 150, 30)
+            fg_outgoing_btn.setGeometry(150, 0, 100, 30)
             fg_outgoing_btn.setText("FG OUTGOING")
             fg_outgoing_btn.setCursor(Qt.PointingHandCursor)
-            fg_outgoing_btn.setFont(QtGui.QFont("Berlin Sans FB", 11))
-            fg_outgoing_btn.setStyleSheet("color: rgb(0,109,189); border: 1px solid rgb(160, 160, 160);")
+            fg_outgoing_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            fg_outgoing_btn.setStyleSheet("color: white; border: none")
             fg_outgoing_btn.clicked.connect(fg_outgoing)
             fg_outgoing_btn.show()
 
@@ -8147,7 +8224,7 @@ LIMIT 20
                 """)
                 result = self.cursor.fetchall()
 
-                df = pandas.DataFrame(result)
+                df = pd.DataFrame(result)
 
                 column_names = ['Control ID', 'Customer', 'Product Code', 'Date', 'Lot Number', 'Quantity', 'category',
                                 'deleted', 'Color']
@@ -8170,6 +8247,25 @@ LIMIT 20
                 except PermissionError:
                     QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                                      "Someone is using blank.xlsx")
+
+            fg_incoming_btn = QPushButton(self.warehouse_tabs)
+            fg_incoming_btn.setGeometry(30, 0, 100, 30)
+            fg_incoming_btn.setText("FG INCOMING")
+            fg_incoming_btn.setCursor(Qt.PointingHandCursor)
+            fg_incoming_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            fg_incoming_btn.setStyleSheet(
+                "color: white; border: none; ")
+            fg_incoming_btn.clicked.connect(self.warehouse)
+            fg_incoming_btn.show()
+
+            fg_outgoing_btn = QPushButton(self.warehouse_tabs)
+            fg_outgoing_btn.setGeometry(150, 0, 100, 30)
+            fg_outgoing_btn.setText("FG OUTGOING")
+            fg_outgoing_btn.setCursor(Qt.PointingHandCursor)
+            fg_outgoing_btn.setFont(QtGui.QFont('Berlin Sans FB Demi', 10))
+            fg_outgoing_btn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
+            fg_outgoing_btn.clicked.connect(fg_outgoing)
+            fg_outgoing_btn.show()
 
 
             fg_incoming_widget = QWidget(self.warehouse_widget)
@@ -8347,8 +8443,6 @@ LIMIT 20
             export_logo.setCursor(Qt.PointingHandCursor)
             export_logo.clicked.connect(export_to_excel)
             export_logo.show()
-
-
 
             # Buttons
             add_btn = QPushButton(bottom_button_widget)
