@@ -108,11 +108,15 @@ class Ui_LoginWindow(object):
                     self.returns_btn.hide()
                     self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
                     self.qc_tab_showed = False
+                elif self.warehouse_tabs_showed == True:
+                    self.fgIncoming_btn.hide()
+                    self.fgOutgoing_btn.hide()
+                    self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.warehouse_tabs_showed = False
                 else:
                     pass
             except:
                 pass
-
 
             if self.production_tabs_showed == False:
                 self.production_tabs_showed = True
@@ -182,6 +186,11 @@ class Ui_LoginWindow(object):
                     self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
                     self.dropdown_production.show()
                     self.production_tabs_showed = False
+                elif self.warehouse_tabs_showed == True:
+                    self.fgIncoming_btn.hide()
+                    self.fgOutgoing_btn.hide()
+                    self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.warehouse_tabs_showed = False
             except:
                 pass
 
@@ -254,19 +263,75 @@ class Ui_LoginWindow(object):
             self.dropdown_production.show()
 
         def show_warehouse_tabs():
+
+            def fg_outgoing_clicked():
+                self.fgOutgoing_btn_clicked_status = True
+                self.warehouse()
+
+
+            try:
+                if self.production_tabs_showed == True:
+                    self.mixer_btn.hide()
+                    self.extruder_btn.hide()
+                    self.qualityControl_btn.move(20, 200)
+                    self.warehouse_btn.move(20, 260)
+                    self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.dropdown_production.show()
+                    self.production_tabs_showed = False
+                elif self.qc_tab_showed == True:
+                    # Hide the Buttons
+                    self.qc_data_btn.hide()
+                    self.qc_entry_btn.hide()
+                    self.dashboard_btn.hide()
+                    self.returns_btn.hide()
+                    self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.qc_tab_showed = False
+                else:
+                    pass
+
+            except:
+                pass
+
+
+
             if self.warehouse_tabs_showed == False:
                 self.warehouse_tabs_showed = True
-                self.warehouse_btn.move(20, 360)
                 self.dropdown_wh.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
+                self.warehouse_btn.move(20, 260)
+
+                # Create Dropdown Buttons
+                self.fgIncoming_btn = QPushButton(self.login_window)
+                self.fgIncoming_btn.setGeometry(60, 300, 150, 30)
+                self.fgIncoming_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.fgIncoming_btn.setText('FG Incoming')
+                self.fgIncoming_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.fgIncoming_btn.setCursor(Qt.PointingHandCursor)
+                self.fgIncoming_btn.clicked.connect(self.warehouse)
+                self.fgIncoming_btn.show()
+
+                self.fgOutgoing_btn = QPushButton(self.login_window)
+                self.fgOutgoing_btn.setGeometry(60, 330, 150, 30)
+                self.fgOutgoing_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.fgOutgoing_btn.setText('FG Outgoing')
+                self.fgOutgoing_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.fgOutgoing_btn.setCursor(Qt.PointingHandCursor)
+                self.fgOutgoing_btn_clicked_status = False
+                self.fgOutgoing_btn.clicked.connect(fg_outgoing_clicked)
+                self.fgOutgoing_btn.show()
+
             else:
                 self.warehouse_tabs_showed = False
                 self.warehouse_btn.move(20, 260)
                 self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
 
+                self.fgOutgoing_btn.hide()
+                self.fgIncoming_btn.hide()
 
-
-
-
+            self.warehouse_btn.show()
 
 
         LoginWindow.move(75, 0)
@@ -354,7 +419,6 @@ class Ui_LoginWindow(object):
         self.dropdown_qc.clicked.connect(show_qc_tabs)
         self.qc_tab_showed = False
         self.dropdown_qc.show()
-
 
         self.warehouse_btn = QtWidgets.QPushButton(self.login_window)
         self.warehouse_btn.setGeometry(20, 260, 190, 40)
@@ -7947,6 +8011,7 @@ LIMIT 20
                     self.conn.commit()
                     QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
 
+
                 self.widget = QWidget()
                 self.widget.setGeometry(780, 305, 400, 500)
                 self.widget.setFixedSize(400, 500)
@@ -8400,6 +8465,8 @@ LIMIT 20
                     QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                                      "Someone is using blank.xlsx")
 
+
+
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
             fg_incoming_btn.setGeometry(30, 0, 100, 30)
             fg_incoming_btn.setText("FG INCOMING")
@@ -8418,7 +8485,6 @@ LIMIT 20
             fg_outgoing_btn.setStyleSheet("color: white; border: none; padding-bottom: 5px; border-bottom: 2px solid white;")
             fg_outgoing_btn.clicked.connect(fg_outgoing)
             fg_outgoing_btn.show()
-
 
             fg_incoming_widget = QWidget(self.warehouse_widget)
             fg_incoming_widget.setGeometry(0, 30, 991, 721)
@@ -8452,6 +8518,8 @@ LIMIT 20
             mb_checkbox_label.setGeometry(22, 40, 85, 10)
             mb_checkbox_label.setText('MASTERBATCH')
             mb_checkbox_label.show()
+
+
 
             drycolor_checkbox = QCheckBox(fg_incoming_widget)
             drycolor_checkbox.move(110, 40)
@@ -8526,6 +8594,7 @@ LIMIT 20
             category_value.setStyleSheet('color: rgb(0, 128, 192); border-bottom: 1px solid rgb(160, 160, 160)')
             category_value.show()
 
+
             outgoing_table = QTableWidget(fg_incoming_widget)
             outgoing_table.setGeometry(0, 95, 991, 556)
             outgoing_table.setColumnCount(8)
@@ -8596,6 +8665,7 @@ LIMIT 20
             export_logo.clicked.connect(export_to_excel)
             export_logo.show()
 
+
             # Buttons
             add_btn = QPushButton(bottom_button_widget)
             add_btn.setGeometry(650, 18, 60, 25)
@@ -8630,6 +8700,9 @@ LIMIT 20
             delete_btn.setShortcut('Delete')
             delete_btn.show()
 
+
+
+
         self.warehouse_widget = QWidget(self.main_widget)
         self.warehouse_widget.setGeometry(0, 0, 991, 751)
         self.warehouse_widget.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -8639,6 +8712,16 @@ LIMIT 20
         self.warehouse_tabs.setGeometry(0, 0, 991, 30)
         self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160); background-color: rgb(31, 102, 254)')
         self.warehouse_tabs.show()
+
+        try:
+            if self.fgOutgoing_btn_clicked_status == True:
+                fg_outgoing()
+                self.fgOutgoing_btn_clicked_status = False
+                return
+            else:
+                pass
+        except Exception as e:
+            print(e)
 
         fg_incoming()
 
