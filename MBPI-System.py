@@ -94,27 +94,52 @@ class Ui_LoginWindow(object):
     def launch_main(self):
 
         def show_production_tabs():
+
+            def mixer_clicked():
+                self.mixer_btn_clicked = True
+                self.production()
+
+            try:
+                if self.qc_tab_showed == True:
+                    # Hide the Buttons
+                    self.qc_data_btn.hide()
+                    self.qc_entry_btn.hide()
+                    self.dashboard_btn.hide()
+                    self.returns_btn.hide()
+                    self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.qc_tab_showed = False
+                else:
+                    pass
+            except:
+                pass
+
+
             if self.production_tabs_showed == False:
                 self.production_tabs_showed = True
-                self.qualityControl_btn.move(20, 300)
-                self.warehouse_btn.move(20, 360)
+                self.qualityControl_btn.move(20, 240)
+                self.warehouse_btn.move(20, 300)
                 self.dropdown_production.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
 
                 # Create Buttons for Tabs Sections
                 self.extruder_btn = QPushButton(self.login_window)
                 self.extruder_btn.setGeometry(60, 180, 150, 30)
-                self.extruder_btn.setStyleSheet('border: 1px solid black; text-align: left; padding-left: 10px; background-color: rgb(143, 144, 145)')
+                self.extruder_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                                             'QPushButton:hover{background-color: yellow}')
                 self.extruder_btn.setText('Extruder')
                 self.extruder_btn.setFont(QtGui.QFont("Segoe UI", 12))
                 self.extruder_btn.setCursor(Qt.PointingHandCursor)
+                self.extruder_btn.clicked.connect(self.production)
                 self.extruder_btn.show()
 
                 self.mixer_btn = QPushButton(self.login_window)
                 self.mixer_btn.setGeometry(60, 210, 150, 30)
-                self.mixer_btn.setStyleSheet('border: 1px solid black; text-align: left; padding-left: 10px; background-color: rgb(143, 144, 145)')
+                self.mixer_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                                             'QPushButton:hover{background-color: yellow}')
                 self.mixer_btn.setText('Mixer')
                 self.mixer_btn.setFont(QtGui.QFont("Segoe UI", 12))
                 self.mixer_btn.setCursor(Qt.PointingHandCursor)
+                self.mixer_btn_clicked = False
+                self.mixer_btn.clicked.connect(mixer_clicked)
                 self.mixer_btn.show()
 
             else:
@@ -130,14 +155,100 @@ class Ui_LoginWindow(object):
             self.dropdown_production.show()
 
         def show_qc_tabs():
+            # Hide other tabs opened
+
+            def qc_clicked():
+                self.quality_control()
+
+            def qc_entry_clicked():
+                self.qc_entry_clicked_status = True
+                self.quality_control()
+
+            def dashboard_clicked():
+                self.dashboard_clicked_status = True
+                self.quality_control()
+
+            def returns_clicked():
+                self.returns_clicked_status = True
+                self.quality_control()
+
+
+            try:
+                if self.production_tabs_showed == True:
+                    self.mixer_btn.hide()
+                    self.extruder_btn.hide()
+                    self.qualityControl_btn.move(20, 200)
+                    self.warehouse_btn.move(20, 260)
+                    self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+                    self.dropdown_production.show()
+                    self.production_tabs_showed = False
+            except:
+                pass
+
             if self.qc_tab_showed == False:
                 self.qc_tab_showed = True
                 self.warehouse_btn.move(20, 360)
                 self.dropdown_qc.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
+
+                # Create Buttons for Tabs Sections
+                self.qc_data_btn = QPushButton(self.login_window)
+                self.qc_data_btn.setGeometry(60, 240, 150, 30)
+                self.qc_data_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.qc_data_btn.setText('QC Data')
+                self.qc_data_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.qc_data_btn.setCursor(Qt.PointingHandCursor)
+                self.qc_data_btn.clicked.connect(qc_clicked)
+                self.qc_data_btn.show()
+
+                self.qc_entry_btn = QPushButton(self.login_window)
+                self.qc_entry_btn.setGeometry(60, 270, 150, 30)
+                self.qc_entry_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.qc_entry_btn.setText('QC Entry')
+                self.qc_entry_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.qc_entry_btn.setCursor(Qt.PointingHandCursor)
+                self.qc_entry_clicked_status = False
+                self.qc_entry_btn.clicked.connect(qc_entry_clicked)
+                self.qc_entry_btn.show()
+
+                self.dashboard_btn = QPushButton(self.login_window)
+                self.dashboard_btn.setGeometry(60, 300, 150, 30)
+                self.dashboard_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.dashboard_btn.setText('Dashboard')
+                self.dashboard_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.dashboard_btn.setCursor(Qt.PointingHandCursor)
+                self.dashboard_clicked_status = False
+                self.dashboard_btn.clicked.connect(dashboard_clicked)
+                self.dashboard_btn.show()
+
+                self.returns_btn = QPushButton(self.login_window)
+                self.returns_btn.setGeometry(60, 330, 150, 30)
+                self.returns_btn.setStyleSheet(
+                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton:hover{background-color: yellow}')
+                self.returns_btn.setText('Returns')
+                self.returns_btn.setFont(QtGui.QFont("Segoe UI", 12))
+                self.returns_btn.setCursor(Qt.PointingHandCursor)
+                self.returns_clicked_status = False
+                self.returns_btn.clicked.connect(returns_clicked)
+                self.returns_btn.show()
+
             else:
                 self.qc_tab_showed = False
                 self.warehouse_btn.move(20, 260)
                 self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))
+
+                # Hide the Buttons
+                self.qc_data_btn.hide()
+                self.qc_entry_btn.hide()
+                self.dashboard_btn.hide()
+                self.returns_btn.hide()
+
 
             self.warehouse_btn.show()
             self.dropdown_production.show()
@@ -2910,6 +3021,17 @@ class Ui_LoginWindow(object):
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.show()
 
+        try:
+            if self.mixer_btn_clicked == True:
+                compounding()
+                self.mixer_btn_clicked = False
+                return
+            else:
+                pass
+
+        except:
+            print('test')
+
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
         self.production_widget.setStyleSheet("background-color: rgb(245, 246, 248);")
@@ -3137,6 +3259,7 @@ class Ui_LoginWindow(object):
         lotNumber_table.setStyleSheet('background-color: white;')
         lotNumber_table.setColumnWidth(0, 162)
         lotNumber_table.show()
+
 
     def quality_control(self):
 
@@ -3655,7 +3778,10 @@ class Ui_LoginWindow(object):
             def clear_field():
                 evaluation_entry()
 
-            self.qc_widget.deleteLater()
+            try:
+                self.qc_widget.deleteLater()
+            except:
+                pass
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
             self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -4765,7 +4891,10 @@ class Ui_LoginWindow(object):
                 import_button.clicked.connect(lambda: save_to_excel(date1, date2))
                 import_button.show()
 
-            self.qc_widget.deleteLater()
+            try:
+                self.qc_widget.deleteLater()
+            except:
+                pass
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
             self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -6029,7 +6158,10 @@ LIMIT 20
                 cancel_button.clicked.connect(lambda : self.edit_returns_widget.close())
                 cancel_button.show()
 
-            self.qc_widget.deleteLater()
+            try:
+                self.qc_widget.deleteLater()
+            except:
+                pass
 
             self.qc_widget = QtWidgets.QWidget(self.main_widget)
             self.qc_widget.setGeometry(0, 0, 991, 751)
@@ -6518,6 +6650,26 @@ LIMIT 20
 
             else:
                 QMessageBox.information(self.qc_widget, "No Selected", "No Item Selected")
+
+        try:
+            if self.qc_entry_clicked_status == True:
+                evaluation_entry()
+                self.qc_entry_clicked_status = False
+                return
+            elif self.dashboard_clicked_status == True:
+                show_dashboards()
+                self.dashboard_clicked_status = False
+                return
+            elif self.returns_clicked_status == True:
+                qc_returns()
+                self.returns_clicked_status = False
+                return
+            else:
+                pass
+        except Exception as e:
+            print(e)
+
+
 
         self.qc_widget = QtWidgets.QWidget(self.main_widget)
         self.qc_widget.setGeometry(0, 0, 991, 751)
