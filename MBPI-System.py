@@ -127,7 +127,7 @@ class Ui_LoginWindow(object):
                 # Create Buttons for Tabs Sections
                 self.extruder_btn = QPushButton(self.login_window)
                 self.extruder_btn.setGeometry(60, 180, 150, 30)
-                self.extruder_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                self.extruder_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                                              'QPushButton:hover{background-color: yellow}')
                 self.extruder_btn.setText('Extruder')
                 self.extruder_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -137,7 +137,7 @@ class Ui_LoginWindow(object):
 
                 self.mixer_btn = QPushButton(self.login_window)
                 self.mixer_btn.setGeometry(60, 210, 150, 30)
-                self.mixer_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                self.mixer_btn.setStyleSheet('QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                                              'QPushButton:hover{background-color: yellow}')
                 self.mixer_btn.setText('Mixer')
                 self.mixer_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -203,7 +203,7 @@ class Ui_LoginWindow(object):
                 self.qc_data_btn = QPushButton(self.login_window)
                 self.qc_data_btn.setGeometry(60, 240, 150, 30)
                 self.qc_data_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
                 self.qc_data_btn.setText('QC Data')
                 self.qc_data_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -214,7 +214,7 @@ class Ui_LoginWindow(object):
                 self.qc_entry_btn = QPushButton(self.login_window)
                 self.qc_entry_btn.setGeometry(60, 270, 150, 30)
                 self.qc_entry_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
                 self.qc_entry_btn.setText('QC Entry')
                 self.qc_entry_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -226,9 +226,9 @@ class Ui_LoginWindow(object):
                 self.dashboard_btn = QPushButton(self.login_window)
                 self.dashboard_btn.setGeometry(60, 300, 150, 30)
                 self.dashboard_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
-                self.dashboard_btn.setText('Dashboard')
+                self.dashboard_btn.setText('Analytics')
                 self.dashboard_btn.setFont(QtGui.QFont("Segoe UI", 12))
                 self.dashboard_btn.setCursor(Qt.PointingHandCursor)
                 self.dashboard_clicked_status = False
@@ -238,7 +238,7 @@ class Ui_LoginWindow(object):
                 self.returns_btn = QPushButton(self.login_window)
                 self.returns_btn.setGeometry(60, 330, 150, 30)
                 self.returns_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
                 self.returns_btn.setText('Returns')
                 self.returns_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -293,7 +293,6 @@ class Ui_LoginWindow(object):
                 pass
 
 
-
             if self.warehouse_tabs_showed == False:
                 self.warehouse_tabs_showed = True
                 self.dropdown_wh.setPixmap(QtGui.QIcon('up.png').pixmap(20, 20))
@@ -303,7 +302,7 @@ class Ui_LoginWindow(object):
                 self.fgIncoming_btn = QPushButton(self.login_window)
                 self.fgIncoming_btn.setGeometry(60, 300, 150, 30)
                 self.fgIncoming_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
                 self.fgIncoming_btn.setText('FG Incoming')
                 self.fgIncoming_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -314,7 +313,7 @@ class Ui_LoginWindow(object):
                 self.fgOutgoing_btn = QPushButton(self.login_window)
                 self.fgOutgoing_btn.setGeometry(60, 330, 150, 30)
                 self.fgOutgoing_btn.setStyleSheet(
-                    'QPushButton{ border: none; text-align: left; padding-left: 10px; background-color: rgb(217, 218, 221)}'
+                    'QPushButton{ border: none; text-align: left; padding-left: 40px; background-color: rgb(217, 218, 221)}'
                     'QPushButton:hover{background-color: yellow}')
                 self.fgOutgoing_btn.setText('FG Outgoing')
                 self.fgOutgoing_btn.setFont(QtGui.QFont("Segoe UI", 12))
@@ -376,9 +375,8 @@ class Ui_LoginWindow(object):
 
         self.production_tabs_showed = False
         self.dropdown_production = ClickableLabel(self.production_btn)
-        self.dropdown_production.setGeometry(165, 10, 20, 20)
-        self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
-        self.dropdown_production.setScaledContents(True)  # Scale icon to fit the label
+        self.dropdown_production.setGeometry(165, 0, 40, 40)
+        self.dropdown_production.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon# Scale icon to fit the label
         self.dropdown_production.setCursor(Qt.PointingHandCursor)
         self.dropdown_production.clicked.connect(show_production_tabs)
 
@@ -412,9 +410,8 @@ class Ui_LoginWindow(object):
         self.qualityControl_lbl.show()
 
         self.dropdown_qc = ClickableLabel(self.qualityControl_btn)
-        self.dropdown_qc.setGeometry(165, 10, 20, 20)
+        self.dropdown_qc.setGeometry(165, 0, 40, 40)
         self.dropdown_qc.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
-        self.dropdown_qc.setScaledContents(True)  # Scale icon to fit the label
         self.dropdown_qc.setCursor(Qt.PointingHandCursor)
         self.dropdown_qc.clicked.connect(show_qc_tabs)
         self.qc_tab_showed = False
@@ -447,9 +444,8 @@ class Ui_LoginWindow(object):
         self.warehouse_lbl.show()
 
         self.dropdown_wh = ClickableLabel(self.warehouse_btn)
-        self.dropdown_wh.setGeometry(165, 10, 20, 20)
+        self.dropdown_wh.setGeometry(165, 0, 40, 40)
         self.dropdown_wh.setPixmap(QtGui.QIcon('icons8-dropdown-48.png').pixmap(20, 20))  # Set icon
-        self.dropdown_wh.setScaledContents(True)  # Scale icon to fit the label
         self.dropdown_wh.setCursor(Qt.PointingHandCursor)
         self.warehouse_tabs_showed = False
         self.dropdown_wh.clicked.connect(show_warehouse_tabs)
@@ -2808,9 +2804,53 @@ class Ui_LoginWindow(object):
                     df.to_excel(excel_writer=filename, index=False,
                                 header=column_names)
                     QMessageBox.information(self.production_widget, "File Imported", "Successfully Imported Data")
+                    print(filename)
             except PermissionError:
                 QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
+
+            wb = load_workbook(fr'{filename}')
+            worksheet = wb.active
+
+            self.cursor.execute(f"""
+            WITH extruder_stats AS (
+                SELECT  product_code, machine, ROUND(AVG(output_per_hour), 4) AS average_output_per_hour,
+                                ROUND(AVG(purge_duration), 2) AS average_cleaning_time, ROUND(AVG(resin_quantity), 2) as average_cleaning_material,
+                                ROUND(AVG(output_percent), 4) AS ave_yield
+                                
+                                FROM public.extruder
+                                WHERE time_start[1]::DATE BETWEEN '{date1.text()}' AND '{date2.text()}'
+                                
+                                GROUP BY product_code, machine
+                                ORDER BY product_code, machine
+                )
+                
+                SELECT ROUND(STDDEV_POP(average_output_per_hour), 2), ROUND(STDDEV_POP(average_cleaning_time), 2),
+                       ROUND(STDDEV_POP(average_cleaning_material), 2), ROUND(STDDEV_POP(ave_yield), 2)
+                FROM extruder_stats
+            """)
+            result = self.cursor.fetchall()
+            result = result[0]
+            print(type(result[0]))
+            worksheet.column_dimensions['H'].width = 20
+            worksheet.column_dimensions['I'].width = 20
+
+            worksheet['H2'] = "Output Per Hour"
+            worksheet['H3'] = "Cleaning Time"
+            worksheet['H4'] = "Cleaning Material QTY"
+            worksheet['H5'] = "Yield"
+
+            worksheet['I1'] = "STANDARD DEVIATION"
+            worksheet['I2'] = result[0]
+            worksheet['I3'] = result[1]
+            worksheet['I4'] = result[2]
+            worksheet['I5'] = result[3]
+
+            wb.save(filename)
+
+
+
+
         def import_extruder():
 
             self.cursor.execute("""
@@ -2854,14 +2894,32 @@ class Ui_LoginWindow(object):
             def save_entry():
                 # Compute for the Time Difference to get the Duration
 
-                self.cursor.execute(f"""
-                INSERT INTO mixer
-                VALUES({production_id_input.text()}, {machine_input.text()}::INTEGER, '{product_code_input.text()}',
-                       {operator_input.text()}, '{operator_input.text()}', {material_output.text()}, {material_input.text()}, {remarks_box.toPlainText()})
-                
-                
+                mix_duration = timedelta()
+                try:
+                    mix_start = datetime.strptime(time_start_input.text(), "%H:%M")
+                    mix_end = datetime.strptime(time_end_input.text(), "%H:%M")
+
+                    print(mix_start, mix_end)
+
+                    mix_duration = mix_end - mix_start
+                    hours = int(str(mix_duration).split(':')[0])
+                    minutes = int(str(mix_duration).split(':')[1])
+                    mix_duration = (hours * 60) + minutes
+                    print(mix_duration)
+                except Exception as e:
+                    print(e)
+
+
+                try:
+                    self.cursor.execute(f"""
+                                    INSERT INTO mixer
+                                    VALUES({production_id_input.text()}, {machine_input.currentText()}::INTEGER, '{product_code_input.currentText()}', {mix_duration},
+                                            '{operator_input.currentText()}', {material_output.text()}, {material_input.text()},
+                                            '{remarks_box.toPlainText()}', '{date_input.text()}')              
                 """)
-                self.conn.commit()
+                    self.conn.commit()
+                except Exception as e:
+                    print(e)
 
             def clear_inputs():
 
@@ -2881,7 +2939,7 @@ class Ui_LoginWindow(object):
 
             buttons_widget = QWidget(self.compounding_widget)
             buttons_widget.setGeometry(0, 0, 991, 30)
-            buttons_widget.setStyleSheet('background-color: rgb(31, 102, 254)')
+            buttons_widget.setStyleSheet('background-color: rgb(92, 154, 255)')
             buttons_widget.show()
 
             # Extruder Tab Button
@@ -2907,10 +2965,12 @@ class Ui_LoginWindow(object):
             title_widget.setGeometry(0, 30, 991, 50)
             title_widget.show()
 
+
+
             title_label = QLabel(title_widget)
             title_label.setGeometry(493, 10, 260, 30)
             title_label.setText('MIXER REPORT')
-            title_label.setStyleSheet('color: rgb(78, 135, 82)')
+            title_label.setStyleSheet('color: rgb(92, 154, 255)')
             title_label.setFont(QtGui.QFont('Rockwell Extra Bold', 20))
             title_label.setAlignment(Qt.AlignCenter)
             title_label.show()
@@ -2921,19 +2981,27 @@ class Ui_LoginWindow(object):
 
             mixer_table = QTableWidget(self.compounding_widget)
             mixer_table.setGeometry(320, 80, 671, 621)
-            mixer_table.setColumnCount(7)
+            mixer_table.setColumnCount(8)
             mixer_table.setRowCount(25)
             mixer_table.verticalHeader().setVisible(False)
-            mixer_table.setHorizontalHeaderLabels(['Production ID', 'Machine', 'Product Code', 'Total Time', 'Processed By', 'Output', 'Remarks'])
+            mixer_table.setHorizontalHeaderLabels(['Date', 'Production ID', 'Machine', 'Product Code', 'Total Time', 'Processed By', 'Output', 'Remarks'])
+            mixer_table.horizontalHeader().setStyleSheet("""
+        QHeaderView::section{
+        font-weight: bold;
+        background-color: rgb(0, 109, 189);
+        color: white;
+        }
+        """)
 
-            mixer_table.setColumnWidth(0, 90)
-            mixer_table.setColumnWidth(1, 70)
-            mixer_table.setColumnWidth(3, 70)
-            mixer_table.setColumnWidth(6, 120)
+
+            mixer_table.setColumnWidth(1, 90)
+            mixer_table.setColumnWidth(2, 70)
+            mixer_table.setColumnWidth(4, 70)
+            mixer_table.setColumnWidth(7, 120)
 
             mixer_table.show()
 
-            font = QtGui.QFont('Arial Black', 12)
+            font = QtGui.QFont('Arial', 11)
 
             production_id_label = QLabel()
             production_id_label.setText('Production ID')
@@ -3025,6 +3093,7 @@ class Ui_LoginWindow(object):
 
             product_code_input = QComboBox()
             product_code_input.setStyleSheet(background_color)
+            product_code_input.setEditable(True)
             product_code_input.setFixedHeight(25)
             time_start_input = QTimeEdit()
             time_start_input.setStyleSheet(background_color)
@@ -3038,6 +3107,7 @@ class Ui_LoginWindow(object):
             time_end_input.setAlignment(Qt.AlignCenter)
             operator_input = QComboBox()
             operator_input.setStyleSheet(background_color)
+            operator_input.setEditable(True)
             operator_input.setFixedHeight(25)
             material_input = QLineEdit()
             material_input.setStyleSheet(background_color)
@@ -3072,7 +3142,8 @@ class Ui_LoginWindow(object):
             save_btn = QPushButton(input_widget)
             save_btn.setGeometry(80, 590, 60, 25)
             save_btn.setText('SAVE')
-            save_btn.setStyleSheet('border:none; background-color: rgb(128, 128, 128)')
+            save_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.clicked.connect(save_entry)
             save_btn.show()
@@ -3080,7 +3151,8 @@ class Ui_LoginWindow(object):
             clear_btn = QPushButton(input_widget)
             clear_btn.setGeometry(190, 590, 60, 25)
             clear_btn.setText('CLEAR')
-            clear_btn.setStyleSheet('border:none; background-color: rgb(128, 128, 128)')
+            clear_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             clear_btn.setCursor(Qt.PointingHandCursor)
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.show()
@@ -3103,7 +3175,7 @@ class Ui_LoginWindow(object):
 
         buttons_widget = QWidget(self.production_widget)
         buttons_widget.setGeometry(0, 0, 991, 30)
-        buttons_widget.setStyleSheet('background-color: rgb(31, 102, 254)')
+        buttons_widget.setStyleSheet('background-color: rgb(92, 154, 255)')
         buttons_widget.show()
 
         # Extruder Tab Button
@@ -3163,7 +3235,7 @@ class Ui_LoginWindow(object):
         self.extruder_table.setRowCount(len(result))
 
         self.extruder_table.setStyleSheet("""
-        gridline-color: black; 
+        
         color : black;
         background-color: rgb(255, 255, 255);
         """)
@@ -3236,33 +3308,37 @@ class Ui_LoginWindow(object):
         statsButtonImport.show()
 
         self.view_btn = QtWidgets.QPushButton(self.production_widget)
-        self.view_btn.setGeometry(600, 710, 80, 30)
+        self.view_btn.setGeometry(600, 710, 60, 25)
         self.view_btn.setText("View")
-        self.view_btn.setStyleSheet("background-color : rgb(240,240,240);")
+        self.view_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
         self.view_btn.clicked.connect(show_form)
         self.view_btn.setCursor(Qt.PointingHandCursor)
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.production_widget)
-        self.add_btn.setGeometry(681, 710, 80, 30)
-        self.add_btn.setText("Add Entry")
-        self.add_btn.setStyleSheet("background-color : rgb(240,240,240);")
+        self.add_btn.setGeometry(665, 710, 60, 25)
+        self.add_btn.setText("Add")
+        self.add_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                   " border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
         self.add_btn.clicked.connect(add_entry)
         self.add_btn.setCursor(Qt.PointingHandCursor)
         self.add_btn.show()
 
         self.update_btn = QtWidgets.QPushButton(self.production_widget)
-        self.update_btn.setGeometry(762, 710, 80, 30)
+        self.update_btn.setGeometry(730, 710, 60, 25)
         self.update_btn.setText("Update")
-        self.update_btn.setStyleSheet("background-color : rgb(240,240,240);")
+        self.update_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                      "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
         self.update_btn.clicked.connect(update_entry)
         self.update_btn.setCursor(Qt.PointingHandCursor)
         self.update_btn.show()
 
         self.print_btn = QtWidgets.QPushButton(self.production_widget)
-        self.print_btn.setGeometry(843, 710, 80, 30)
+        self.print_btn.setGeometry(795, 710, 60, 25)
         self.print_btn.setText("Print")
-        self.print_btn.setStyleSheet("background-color: rgb(240,240,240);")
+        self.print_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                     "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
         self.print_btn.clicked.connect(print_file)
         self.print_btn.setCursor(Qt.PointingHandCursor)
         self.print_btn.show()
@@ -3854,7 +3930,7 @@ class Ui_LoginWindow(object):
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(92, 154, 255)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4170,23 +4246,26 @@ class Ui_LoginWindow(object):
             user_input.show()
 
             save_btn = QPushButton(self.body_widget)
-            save_btn.setGeometry(804, 648, 60, 27)
-            save_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            save_btn.setGeometry(534, 648, 60, 25)
+            save_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             save_btn.setText("SAVE")
             save_btn.clicked.connect(saveBtn_clicked)
             save_btn.setShortcut("Return")
             save_btn.show()
 
             clear_btn = QPushButton(self.body_widget)
-            clear_btn.setGeometry(866, 648, 60, 27)
-            clear_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            clear_btn.setGeometry(596, 648, 60, 25)
+            clear_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             clear_btn.setText("CLEAR")
             clear_btn.clicked.connect(clear_field)
             clear_btn.show()
 
             close_btn = QPushButton(self.body_widget)
-            close_btn.setGeometry(928, 648, 60, 27)
-            close_btn.setStyleSheet("border-radius: 2px; border: 1px solid rgb(171, 173, 179);")
+            close_btn.setGeometry(658, 648, 60, 25)
+            close_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             close_btn.setText("CLOSE")
             close_btn.show()
 
@@ -4215,7 +4294,7 @@ class Ui_LoginWindow(object):
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(92, 154, 255)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -4967,7 +5046,7 @@ class Ui_LoginWindow(object):
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(92, 154, 255)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -6234,7 +6313,7 @@ LIMIT 20
 
             self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
             self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
+            self.qcBtn_topBorder.setStyleSheet('background-color: rgb(92, 154, 255)')
             self.qcBtn_topBorder.show()
 
             self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
@@ -6366,7 +6445,7 @@ LIMIT 20
             self.body_widget.setStyleSheet("border: none")
             entry_widget = QtWidgets.QWidget(self.body_widget)
             entry_widget.setGeometry(0, 60, 340, 600)
-            entry_widget.setStyleSheet("background-color: rgb(187, 228, 252)")
+            entry_widget.setStyleSheet("background-color: white;")
             entry_widget.show()
 
             form_layout = QFormLayout(entry_widget)
@@ -6380,7 +6459,7 @@ LIMIT 20
             return_id_label.setFont(font)
 
             return_id_input = QLineEdit()
-            return_id_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            return_id_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid black")
             return_id_input.setAlignment(Qt.AlignCenter)
             return_id_input.setFixedHeight(25)
 
@@ -6389,7 +6468,7 @@ LIMIT 20
             lot_label.setFont(font)
 
             lot_input = QLineEdit()
-            lot_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            lot_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid black")
             lot_input.setAlignment(Qt.AlignCenter)
             lot_input.setFixedHeight(25)
             lot_input.editingFinished.connect(autofill)
@@ -6399,7 +6478,7 @@ LIMIT 20
             quantity_label.setFont(font)
 
             quantity_input = QLineEdit()
-            quantity_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            quantity_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid black")
             quantity_input.setAlignment(Qt.AlignCenter)
             quantity_input.setFixedHeight(25)
 
@@ -6439,7 +6518,7 @@ LIMIT 20
             remarks_label.setAlignment(Qt.AlignRight)
 
             remarks_input = QTextEdit()
-            remarks_input.setStyleSheet("background-color: rgb(255, 255, 0)")
+            remarks_input.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid black")
             remarks_input.setFont(font)
             remarks_input.setFixedHeight(160)
 
@@ -6449,7 +6528,7 @@ LIMIT 20
             date_label.setAlignment(Qt.AlignRight)
 
             date_return = QDateEdit()
-            date_return.setStyleSheet("background-color: rgb(255, 255, 0)")
+            date_return.setStyleSheet("background-color: rgb(255, 255, 0); border: 1px solid black")
             date_return.setFont(font)
             date_return.setFixedHeight(25)
             today = date.today()
@@ -6492,12 +6571,12 @@ LIMIT 20
             returns_table.setColumnWidth(5, 115)
             returns_table.setColumnWidth(6, 200)
 
-            returns_table.setStyleSheet("gridline-color: rgb(138, 199, 235); border: 1px solid black")
+
             returns_table.horizontalHeader().setStyleSheet("""
             QHeaderView::section{
             font-weight: bold;
-            background-color: rgb(187, 228, 252);
-            color: black;
+            background-color: rgb(0, 109, 189);
+            color: white;
                 }  
             
             """)
@@ -6510,7 +6589,8 @@ LIMIT 20
             save_button = QPushButton(self.body_widget)
             save_button.setGeometry(50, 680, 60, 25)
             save_button.setText("Save")
-            save_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
+            save_button.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             save_button.setCursor(Qt.PointingHandCursor)
             save_button.clicked.connect(insert_entry)
             save_button.setShortcut("Return")
@@ -6519,14 +6599,16 @@ LIMIT 20
             clear_button = QPushButton(self.body_widget)
             clear_button.setGeometry(150, 680, 60, 25)
             clear_button.setText("Clear")
-            clear_button.setStyleSheet("background-color: rgb(150, 147, 147); ")
+            clear_button.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             clear_button.setCursor(Qt.PointingHandCursor)
             clear_button.clicked.connect(clear_entry)
 
             edit_button = QPushButton(self.body_widget)
             edit_button.setGeometry(250, 680, 60, 25)
             edit_button.setText("Edit")
-            edit_button.setStyleSheet("background-color: rgb(150, 147, 147);")
+            edit_button.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             edit_button.clicked.connect(update_returns)
             edit_button.show()
 
@@ -6742,7 +6824,7 @@ LIMIT 20
 
         self.qcBtn_topBorder = QtWidgets.QWidget(self.qc_widget)
         self.qcBtn_topBorder.setGeometry(0, 0, 991, 30)
-        self.qcBtn_topBorder.setStyleSheet('background-color: rgb(31, 102, 254)')
+        self.qcBtn_topBorder.setStyleSheet('background-color: rgb(92, 154, 255)')
         self.qcBtn_topBorder.show()
 
         self.qc_topBorder = QtWidgets.QWidget(self.qc_widget)
@@ -6763,7 +6845,16 @@ LIMIT 20
         self.qc_table.setColumnWidth(5, 170)
 
         self.qc_table.verticalHeader().setVisible(False)
-        self.qc_table.setHorizontalHeaderLabels(["ID", "Lot Number", "Customer", "Product Code", "Status", "Remarks", "Action Taken"])
+        self.qc_table.horizontalHeader().setStyleSheet("""
+        QHeaderView::section{
+        font-weight: bold;
+        background-color: rgb(0, 109, 189);
+        color: white;
+        }
+
+        """)
+
+        self.qc_table.setHorizontalHeaderLabels(["ID", "LOT NUMBER", "CUSTOMER", "PRODDUCT CODE", "STATUS", "REMARKS", "ACTION TAKEN"])
 
         self.qc_TableBtn = QtWidgets.QPushButton(self.qcBtn_topBorder)
         self.qc_TableBtn.setGeometry(55, 0, 70, 30)
@@ -6970,7 +7061,7 @@ LIMIT 20
 
         remarks_box = QTextEdit(bottom_widget)
         remarks_box.setGeometry(722, 110, 200, 80)
-        remarks_box.setStyleSheet("background-color: rgb(227, 227, 227)")
+        remarks_box.setStyleSheet("background-color: white")
         remarks_box.setEnabled(False)
         remarks_box.show()
 
@@ -6983,7 +7074,7 @@ LIMIT 20
 
         actionTake_box = QTextEdit(bottom_widget)
         actionTake_box.setGeometry(722, 200, 200, 60)
-        actionTake_box.setStyleSheet("background-color: rgb(227, 227, 227)")
+        actionTake_box.setStyleSheet("background-color: white")
         actionTake_box.setEnabled(False)
         actionTake_box.show()
 
@@ -7029,14 +7120,14 @@ LIMIT 20
 
         updatedBy_val1 = QtWidgets.QLineEdit(self.qc_widget)
         updatedBy_val1.setGeometry(721, 445, 130, 25)
-        updatedBy_val1.setStyleSheet("background-color: rgb(227, 227, 227)")
+        updatedBy_val1.setStyleSheet("background-color: white")
         updatedBy_val1.setEnabled(False)
         updatedBy_val1.show()
 
         updatedBy_val2 = QtWidgets.QLineEdit(self.qc_widget)
         updatedBy_val2.setGeometry(851, 445, 130, 25)
         updatedBy_val2.setEnabled(False)
-        updatedBy_val2.setStyleSheet("background-color: rgb(227, 227, 227)")
+        updatedBy_val2.setStyleSheet("background-color: white")
         updatedBy_val2.show()
 
         export_label = QLabel(self.qc_widget)
@@ -7092,12 +7183,14 @@ LIMIT 20
 
         update_btn = QtWidgets.QPushButton(self.qc_widget)
         update_btn.setGeometry(650, 703, 60, 25)
+        update_btn.setStyleSheet('border: none; border-radius: 5px; background-color: rgb(194, 232, 255); border: 1px solid rgb(92, 154, 255)')
         update_btn.setText("UPDATE")
         update_btn.clicked.connect(update_entry)
         update_btn.show()
 
         delete_btn = QtWidgets.QPushButton(self.qc_widget)
-        delete_btn.setGeometry(710, 703, 60, 25)
+        delete_btn.setGeometry(715, 703, 60, 25)
+        delete_btn.setStyleSheet('border: none; border-radius: 5px; background-color: rgb(194, 232, 255); border: 1px solid rgb(92, 154, 255)')
         delete_btn.setText("DELETE")
         delete_btn.show()
 
@@ -7690,7 +7783,6 @@ LIMIT 20
             fg_outgoing_btn.clicked.connect(fg_outgoing)
             fg_outgoing_btn.show()
 
-
             self.status_border = QWidget(self.warehouse_widget)
             self.status_border.setGeometry(0, 30, 991, 35)
             self.status_border.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160)')
@@ -7842,7 +7934,6 @@ LIMIT 20
 
             bottom_button_widget = QWidget(self.warehouse_widget)
             bottom_button_widget.setGeometry(0, 681, 991, 43)
-            bottom_button_widget.setStyleSheet('border-bottom: 1px solid rgb(0, 128, 192)')
             bottom_button_widget.show()
 
             date1 = QDateEdit(bottom_button_widget)
@@ -7861,12 +7952,12 @@ LIMIT 20
             export_logo.clicked.connect(export_to_excel)
             export_logo.show()
 
-
             # Buttons
             add_btn = QPushButton(bottom_button_widget)
             add_btn.setGeometry(650, 18, 60, 25)
             add_btn.setText('ADD')
-            add_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245)')
+            add_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             add_btn.setCursor(Qt.PointingHandCursor)
             add_btn.clicked.connect(add_entry)
             add_btn.show()
@@ -7874,7 +7965,8 @@ LIMIT 20
             update_btn = QPushButton(bottom_button_widget)
             update_btn.setGeometry(715, 18, 60, 25)
             update_btn.setText('UPDATE')
-            update_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            update_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             update_btn.setCursor(Qt.PointingHandCursor)
             update_btn.clicked.connect(update_entry)
             update_btn.show()
@@ -7882,7 +7974,8 @@ LIMIT 20
             refresh_btn = QPushButton(bottom_button_widget)
             refresh_btn.setGeometry(780, 18, 60, 25)
             refresh_btn.setText('REFRESH')
-            refresh_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            refresh_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             refresh_btn.setCursor(Qt.PointingHandCursor)
             refresh_btn.clicked.connect(lambda: self.warehouse())
             refresh_btn.show()
@@ -7890,7 +7983,8 @@ LIMIT 20
             delete_btn = QPushButton(bottom_button_widget)
             delete_btn.setGeometry(845, 18, 60, 25)
             delete_btn.setText('DELETE')
-            delete_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            delete_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             delete_btn.setCursor(Qt.PointingHandCursor)
             delete_btn.clicked.connect(delete_incoming)
             delete_btn.setShortcut('Delete')
@@ -8645,8 +8739,7 @@ LIMIT 20
             outgoing_table.show()
 
             bottom_button_widget = QWidget(self.warehouse_widget)
-            bottom_button_widget.setGeometry(0, 651, 991, 43)
-            bottom_button_widget.setStyleSheet('border-bottom: 1px solid rgb(0, 128, 192)')
+            bottom_button_widget.setGeometry(0, 681, 991, 43)
             bottom_button_widget.show()
 
             date1 = QDateEdit(bottom_button_widget)
@@ -8670,7 +8763,8 @@ LIMIT 20
             add_btn = QPushButton(bottom_button_widget)
             add_btn.setGeometry(650, 18, 60, 25)
             add_btn.setText('ADD')
-            add_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245)')
+            add_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             add_btn.setCursor(Qt.PointingHandCursor)
             add_btn.clicked.connect(add_entry)
             add_btn.show()
@@ -8678,7 +8772,8 @@ LIMIT 20
             update_btn = QPushButton(bottom_button_widget)
             update_btn.setGeometry(715, 18, 60, 25)
             update_btn.setText('UPDATE')
-            update_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            update_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             update_btn.setCursor(Qt.PointingHandCursor)
             update_btn.clicked.connect(update_entry)
             update_btn.show()
@@ -8686,7 +8781,8 @@ LIMIT 20
             refresh_btn = QPushButton(bottom_button_widget)
             refresh_btn.setGeometry(780, 18, 60, 25)
             refresh_btn.setText('REFRESH')
-            refresh_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            refresh_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             refresh_btn.setCursor(Qt.PointingHandCursor)
             refresh_btn.clicked.connect(lambda: fg_outgoing())
             refresh_btn.show()
@@ -8694,7 +8790,8 @@ LIMIT 20
             delete_btn = QPushButton(bottom_button_widget)
             delete_btn.setGeometry(845, 18, 60, 25)
             delete_btn.setText('DELETE')
-            delete_btn.setStyleSheet('border-radius: 5px; background-color: rgb(229, 238, 245); border: none')
+            delete_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                    "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             delete_btn.setCursor(Qt.PointingHandCursor)
             delete_btn.clicked.connect(delete_outgoing)
             delete_btn.setShortcut('Delete')
@@ -8710,7 +8807,7 @@ LIMIT 20
 
         self.warehouse_tabs = QtWidgets.QWidget(self.warehouse_widget)
         self.warehouse_tabs.setGeometry(0, 0, 991, 30)
-        self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160); background-color: rgb(31, 102, 254)')
+        self.warehouse_tabs.setStyleSheet('border-bottom: 1px solid rgb(160, 160, 160); background-color: rgb(92, 154, 255)')
         self.warehouse_tabs.show()
 
         try:
@@ -8724,7 +8821,6 @@ LIMIT 20
             print(e)
 
         fg_incoming()
-
 
 if __name__ == "__main__":
 
