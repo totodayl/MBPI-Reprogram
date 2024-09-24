@@ -7216,8 +7216,6 @@ LIMIT 20
                     result = self.cursor.fetchone()
 
                     if result:
-                        customer_box.setText(result[1])
-                        product_color_box.setText(result[3])
                         product_code_box.setText(result[2])
 
                         if '-' in product_code_box.text():
@@ -7255,8 +7253,6 @@ LIMIT 20
                         result = self.cursor.fetchone()
 
                         if result:
-                            customer_box.setText(result[1])
-                            product_color_box.setText(result[3])
                             product_code_box.setText(result[2])
 
                             if '-' in product_code_box.text():
@@ -7293,8 +7289,6 @@ LIMIT 20
                             result = self.cursor.fetchone()
 
                             if result:
-                                customer_box.setText(result[1])
-                                product_color_box.setText(result[3])
                                 product_code_box.setText(result[2])
                             else:
                                 pass
@@ -7304,9 +7298,15 @@ LIMIT 20
 
                 def save_entry():
                     if input_type_box.currentText() == 'MULTIPLE':
+
                         num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
                         num2 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[1])
                         code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
+                        product_code = product_code_box.text()
+
+
+
+
 
                         for i in range(num1, num2+1):
                             self.cursor.execute(f"""
@@ -7315,6 +7315,35 @@ LIMIT 20
                                                 '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}')
                                                     """)
                             self.conn.commit()
+
+                        self.cursor.execute(f"""
+                        SELECT * FROM fg_inventory
+                        WHERE product_code = '{product_code}'
+                        
+                        """)
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            # UPDATE THE quantity if the product code exist in the inventory
+                            self.cursor.execute(f"""
+                            UPDATE fg_inventory
+                            SET quantity = quantity + ({(num2 - num1) + 1} * {int(quantity_box.text())})
+                            
+                            
+                            """)
+                            self.conn.commit()
+
+                        else:
+                            self.cursor.execute(f"""
+                            INSERT INTO fg_inventory
+                            VALUES ('{product_code}', {(num2 - num1) + 1} * {int(quantity_box.text())})
+                            
+                            """)
+                            self.conn.commit()
+
+
+
+
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
                     else:
                         self.cursor.execute(f"""
@@ -8004,7 +8033,6 @@ LIMIT 20
                     result = self.cursor.fetchone()
 
                     if result:
-                        customer_box.setText(result[1])
                         product_color_box.setText(result[3])
                         product_code_box.setText(result[2])
 
@@ -8043,7 +8071,6 @@ LIMIT 20
                         result = self.cursor.fetchone()
 
                         if result:
-                            customer_box.setText(result[1])
                             product_color_box.setText(result[3])
                             product_code_box.setText(result[2])
 
@@ -8081,7 +8108,6 @@ LIMIT 20
                             result = self.cursor.fetchone()
 
                             if result:
-                                customer_box.setText(result[1])
                                 product_color_box.setText(result[3])
                                 product_code_box.setText(result[2])
                             else:
@@ -8092,15 +8118,58 @@ LIMIT 20
 
                 def save_entry():
 
-                    self.cursor.execute(f"""
-                    INSERT INTO fg_outgoing(customer, product_code, date, lot_number, quantity, category, color)
-                    VALUES('{customer_box.text()}', '{product_code_box.text()}', '{production_date_box.text()}',
-                    '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}', '{product_color_box.text()}')
+                    if input_type_box.currentText() == 'MULTIPLE':
+
+                        num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
+                        num2 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[1])
+                        code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
+                        product_code = product_code_box.text()
+
+                        for i in range(num1, num2 + 1):
+                            self.cursor.execute(f"""
+                                                INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
+                                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}')
+                                                    """)
+                            self.conn.commit()
+
+                        self.cursor.execute(f"""
+                                                SELECT * FROM fg_inventory
+                                                WHERE product_code = '{product_code}'
+
+                                                """)
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            # UPDATE THE quantity if the product code exist in the inventory
+                            self.cursor.execute(f"""
+                                                    UPDATE fg_inventory
+                                                    SET quantity = quantity - ({(num2 - num1) + 1} * {int(quantity_box.text())})
 
 
-                    """)
-                    self.conn.commit()
-                    QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                                                    """)
+                            self.conn.commit()
+
+                        else:
+                            self.cursor.execute(f"""
+                                                    INSERT INTO fg_inventory
+                                                    VALUES ('{product_code}', {(num2 - num1) + 1} * {int(quantity_box.text())})
+
+                                                    """)
+                            self.conn.commit()
+
+
+                        QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                    else:
+                        self.cursor.execute(f"""
+                                            INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
+                                            VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                            '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}')
+
+
+                                            """)
+                        self.conn.commit()
+                        QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
 
 
                 self.widget = QWidget()
@@ -8116,6 +8185,18 @@ LIMIT 20
                 form_layout_widget.show()
 
                 label_font = QtGui.QFont("Arial", 11)
+
+                input_type_label = QLabel()
+                input_type_label.setFont(label_font)
+                input_type_label.setText("Input Type")
+                input_type_label.setFixedWidth(150)
+                input_type_label.setFixedHeight(35)
+
+                input_type_box = QComboBox()
+                input_type_box.addItem('SINGLE')
+                input_type_box.addItem('MULTIPLE')
+                input_type_box.setFixedHeight(30)
+                input_type_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
                 id_number_label = QLabel()
                 id_number_label.setFont(label_font)
@@ -8138,16 +8219,6 @@ LIMIT 20
                 production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 production_date_box.setDisplayFormat('MM-dd-yyyy')
 
-                customer_label = QLabel()
-                customer_label.setFont(label_font)
-                customer_label.setText('Customer')
-                customer_label.setFixedWidth(150)
-
-                customer_box = QLineEdit()
-                customer_box.setFixedHeight(30)
-                customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                customer_box.setEnabled(False)
-
                 category_label = QLabel()
                 category_label.setFont(label_font)
                 category_label.setText('Category')
@@ -8168,15 +8239,6 @@ LIMIT 20
                 lot_number_box.setFixedHeight(30)
                 lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 lot_number_box.editingFinished.connect(autofill)
-
-                excess_label = QLabel()
-                excess_label.setText('Excess')
-                excess_label.setFixedWidth(150)
-                excess_label.setFont(label_font)
-
-                excess_box = QLineEdit()
-                excess_box.setFixedHeight(30)
-                excess_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
                 quantity_label = QLabel()
                 quantity_label.setText('Quantity')
@@ -8206,12 +8268,11 @@ LIMIT 20
                 product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
                 layout = QFormLayout(form_layout_widget)
+                layout.addRow(input_type_label, input_type_box)
                 layout.addRow(id_number_label, id_number_box)
                 layout.addRow(lot_number_label, lot_number_box)
-                layout.addRow(customer_label, customer_box)
                 layout.addRow(production_date_label, production_date_box)
                 layout.addRow(product_code_label, product_code_box)
-                layout.addRow(product_color_label, product_color_box)
                 layout.addRow(category_label, category_box)
                 layout.addRow(quantity_label, quantity_box)
 
@@ -8688,10 +8749,10 @@ LIMIT 20
 
             outgoing_table = QTableWidget(fg_incoming_widget)
             outgoing_table.setGeometry(0, 95, 991, 556)
-            outgoing_table.setColumnCount(8)
+            outgoing_table.setColumnCount(6)
             outgoing_table.verticalHeader().setVisible(False)
             outgoing_table.setHorizontalHeaderLabels(
-                ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category"])
 
             outgoing_table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             outgoing_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -8715,7 +8776,7 @@ LIMIT 20
                                     """)
 
             self.cursor.execute("""
-                                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                                SELECT control_id, lot_number, date, product_code, quantity, category   
                                 FROM fg_outgoing
                                 WHERE deleted = false
                                 ORDER BY control_id DESC
