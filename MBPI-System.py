@@ -7303,16 +7303,30 @@ LIMIT 20
                             QMessageBox.critical(self.widget, 'ERROR', 'LOT NUMBER not Found!')
 
                 def save_entry():
+                    if input_type_box.currentText() == 'MULTIPLE':
+                        num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
+                        num2 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[1])
+                        code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
 
-                    self.cursor.execute(f"""
-                    INSERT INTO fg_incoming(customer, product_code, date, lot_number, quantity, category, color)
-                    VALUES('{customer_box.text()}', '{product_code_box.text()}', '{production_date_box.text()}',
-                    '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}', '{product_color_box.text()}')
+                        for i in range(num1, num2+1):
+                            self.cursor.execute(f"""
+                                                INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category)
+                                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}')
+                                                    """)
+                            self.conn.commit()
+                        QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                    else:
+                        self.cursor.execute(f"""
+                                            INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category)
+                                            VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                            '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}')
 
 
-                    """)
-                    self.conn.commit()
-                    QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                                            """)
+                        self.conn.commit()
+                        QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+
 
                 self.widget = QWidget()
                 self.widget.setGeometry(780, 305, 400, 500)
@@ -7327,6 +7341,18 @@ LIMIT 20
                 form_layout_widget.show()
 
                 label_font = QtGui.QFont("Arial", 11)
+
+                input_type_label = QLabel()
+                input_type_label.setFont(label_font)
+                input_type_label.setText("Input Type")
+                input_type_label.setFixedWidth(150)
+                input_type_label.setFixedHeight(35)
+
+                input_type_box = QComboBox()
+                input_type_box.addItem('SINGLE')
+                input_type_box.addItem('MULTIPLE')
+                input_type_box.setFixedHeight(30)
+                input_type_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
                 id_number_label = QLabel()
                 id_number_label.setFont(label_font)
@@ -7349,16 +7375,6 @@ LIMIT 20
                 production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 production_date_box.setDisplayFormat('MM-dd-yyyy')
 
-                customer_label = QLabel()
-                customer_label.setFont(label_font)
-                customer_label.setText('Customer')
-                customer_label.setFixedWidth(150)
-
-                customer_box = QLineEdit()
-                customer_box.setFixedHeight(30)
-                customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                customer_box.setEnabled(False)
-
                 category_label = QLabel()
                 category_label.setFont(label_font)
                 category_label.setText('Category')
@@ -7380,15 +7396,6 @@ LIMIT 20
                 lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 lot_number_box.editingFinished.connect(autofill)
 
-                excess_label = QLabel()
-                excess_label.setText('Excess')
-                excess_label.setFixedWidth(150)
-                excess_label.setFont(label_font)
-
-                excess_box = QLineEdit()
-                excess_box.setFixedHeight(30)
-                excess_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-
                 quantity_label = QLabel()
                 quantity_label.setText('Quantity')
                 quantity_label.setFont(label_font)
@@ -7407,22 +7414,12 @@ LIMIT 20
                 product_code_box.setFixedHeight(30)
                 product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
-                product_color_label = QLabel()
-                product_color_label.setText('Color')
-                product_color_label.setFont(label_font)
-                product_color_label.setFixedWidth(150)
-
-                product_color_box = QLineEdit()
-                product_color_box.setFixedHeight(30)
-                product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-
                 layout = QFormLayout(form_layout_widget)
+                layout.addRow(input_type_label, input_type_box)
                 layout.addRow(id_number_label, id_number_box)
                 layout.addRow(lot_number_label, lot_number_box)
-                layout.addRow(customer_label, customer_box)
                 layout.addRow(production_date_label, production_date_box)
                 layout.addRow(product_code_label, product_code_box)
-                layout.addRow(product_color_label, product_color_box)
                 layout.addRow(category_label, category_box)
                 layout.addRow(quantity_label, quantity_box)
 
@@ -7885,17 +7882,17 @@ LIMIT 20
 
             table_widget = QTableWidget(self.warehouse_widget)
             table_widget.setGeometry(0, 125, 991, 556)
-            table_widget.setColumnCount(8)
+            table_widget.setColumnCount(6)
             table_widget.verticalHeader().setVisible(False)
             table_widget.setHorizontalHeaderLabels(
-                ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category"])
 
             table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             table_widget.itemSelectionChanged.connect(show_selected)
 
             self.cursor.execute("""
-                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                    SELECT control_id, lot_number, date, product_code, quantity, category   
                     FROM fg_incoming
                     WHERE deleted = false
                     ORDER BY control_id DESC
@@ -7908,7 +7905,7 @@ LIMIT 20
             table_widget.setColumnWidth(3, 270)
             table_widget.setColumnWidth(4, 100)
             table_widget.setColumnWidth(5, 100)
-            table_widget.setColumnWidth(6, 90)
+
 
             table_widget.horizontalHeader().setStyleSheet("""
                         QHeaderView::section{
