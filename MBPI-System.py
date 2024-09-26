@@ -1132,6 +1132,11 @@ class Ui_LoginWindow(object):
                     try:
                         purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
                         purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
+
+                        if purge_end < purge_start:
+                            purge_end += timedelta(days=1)  # Adjust for next day
+
+
                         purge_duration = purge_end - purge_start
 
                     except:
@@ -1343,13 +1348,10 @@ class Ui_LoginWindow(object):
 
                         for i in range(len(search_result)):
                             item_pair = search_result[i]
-                            print(item_pair[0], item_pair[1])
 
                             item1 = QTableWidgetItem(str(item_pair[0]))
-                            print(item1.text())
                             item2 = QTableWidgetItem(item_pair[1])
                             item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
-                            print(item2.text())
                             self.table.setItem(i, 0, item1)
                             self.table.setItem(i, 1, item2)
                         self.table.itemSelectionChanged.connect(show_table)
