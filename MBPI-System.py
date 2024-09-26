@@ -1198,9 +1198,12 @@ class Ui_LoginWindow(object):
                     pass
 
                 def show_table():
+                    # Showing the Selected Item
                     self.table2.clearContents()
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
+
+                    print(item)
                     self.cursor.execute(f"""
                     SELECT t_prodid, t_lotnum, t_qtyreq, materials
                     FROM production_merge
@@ -1283,7 +1286,7 @@ class Ui_LoginWindow(object):
                             self.total_materialQty += materials[key]
 
                     # Set the Text to the Extruder Entry Form
-                    productionID_input.setText(prod_id)
+                    productionID_input.setText(str(prod_id))
                     customer_input.setText(customer)
                     productCode_input.setText(product_code)
                     lot_number_input.setText('/'.join(self.lot_numberList))
@@ -1305,7 +1308,7 @@ class Ui_LoginWindow(object):
                     self.table.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
 
                     for row in range(len(query_result)):
-                        prod = QTableWidgetItem(query_result[row][0])
+                        prod = QTableWidgetItem(str(query_result[row][0]))
                         prod.setFlags(prod.flags() & ~Qt.ItemIsEditable)
                         lot = QTableWidgetItem(query_result[row][1])
                         lot.setFlags(lot.flags() & ~Qt.ItemIsEditable)
@@ -1337,17 +1340,20 @@ class Ui_LoginWindow(object):
                                             """)
                         search_result = self.cursor.fetchall()
 
+
                         for i in range(len(search_result)):
                             item_pair = search_result[i]
+                            print(item_pair[0], item_pair[1])
 
-                            item = QTableWidgetItem(item_pair[0])
-                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            item1 = QTableWidgetItem(str(item_pair[0]))
+                            print(item1.text())
                             item2 = QTableWidgetItem(item_pair[1])
                             item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
-                            self.table.setItem(i, 0, item)
+                            print(item2.text())
+                            self.table.setItem(i, 0, item1)
                             self.table.setItem(i, 1, item2)
-
                         self.table.itemSelectionChanged.connect(show_table)
+
                     except Exception as e:
                         print(e)
 
@@ -1355,8 +1361,8 @@ class Ui_LoginWindow(object):
 
                     try:
                         self.cursor.execute("""
-                                            SELECT t_prodid, t_lotnum
-                                            FROM production_merge
+                            SELECT t_prodid, t_lotnum
+                            FROM production_merge
                                             """)
                         result = self.cursor.fetchall()
                         self.table.setRowCount(len(result))
@@ -4224,10 +4230,17 @@ class Ui_LoginWindow(object):
             actionTake_box.setStyleSheet("background-color: rgb(255, 255, 255); border: 1px solid rgb(171, 173, 179)")
             actionTake_box.show()
 
+            lot_number_board_label = QLabel(self.body_widget)
+            lot_number_board_label.setGeometry(470, 170, 100, 30)
+            lot_number_board_label.setText('LOT NUMBERS')
+            lot_number_board_label.setFont(QtGui.QFont('Arial', 10))
+            lot_number_board_label.setStyleSheet('border: none; ')
+            lot_number_board_label.show()
+
+
             lotNumbers_board = QtWidgets.QTextEdit(self.body_widget)
             lotNumbers_board.setGeometry(470, 200, 250, 180)
-            lotNumbers_board.setStyleSheet("border:none; background-color: rgb(240, 240, 240)")
-            lotNumbers_board.setEnabled(False)
+            lotNumbers_board.setStyleSheet("border: 1px solid black; background-color: rgb(255, 255, 0)")
             lotNumbers_board.setFont(font)
             lotNumbers_board.show()
 
@@ -7227,42 +7240,45 @@ LIMIT 20
                     else:
                         pass
 
-                    # for lot numbers that have cuts
-                    if '-' in lot_number_box.text() and lot_number_box.text()[-1] != ')':
-                        num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
-                        num2 = re.findall(r'\d{4}', lot_number_box.text().strip())[1]
-                        code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
+                    try:
+                        # for lot numbers that have cuts
+                        if '-' in lot_number_box.text() and lot_number_box.text()[-1] != ')':
+                            num1 = re.findall(r'\d{4}', lot_number_box.text().strip())[0]
+                            num2 = re.findall(r'\d{4}', lot_number_box.text().strip())[1]
+                            code_type = re.findall(r'[a-zA-Z]+', lot_number_box.text().strip())[0]
 
-                        self.cursor.execute(f"""
-                            SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
-                            FROM
-                            (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
-                            CASE 
-                            WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
-                            WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
-                            ELSE NULL
-                            END AS range2
-                            FROM tbl_prod01
-                            WHERE t_lotnum LIKE '%-%' 
-                            AND t_deleted = false
-                            AND t_lotnum ~* '\d{code_type}$'
-                            ORDER BY t_prodid::INTEGER DESC)
-                            WHERE {num1} >= range1 AND {num2} <= range2
+                            self.cursor.execute(f"""
+                                                    SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor
+                                                    FROM
+                                                    (SELECT t_lotnum, t_customer, t_prodcode, t_prodcolor, LEFT(t_lotnum, 4):: INT as range1, 
+                                                    CASE 
+                                                    WHEN LENGTH(t_lotnum) = 13 THEN SUBSTRING(t_lotnum FROM 8 FOR 4)::INTEGER
+                                                    WHEN LENGTH(t_lotnum) = 11 THEN SUBSTRING(t_lotnum FROM 7 FOR 4)::INTEGER
+                                                    ELSE NULL
+                                                    END AS range2
+                                                    FROM tbl_prod01
+                                                    WHERE t_lotnum LIKE '%-%' 
+                                                    AND t_deleted = false
+                                                    AND t_lotnum ~* '\d{code_type}$'
+                                                    ORDER BY t_prodid::INTEGER DESC)
+                                                    WHERE {num1} >= range1 AND {num2} <= range2
 
-                                        """)
-                        result = self.cursor.fetchone()
+                                                                """)
+                            result = self.cursor.fetchone()
 
-                        if result:
-                            product_code_box.setText(result[2])
+                            if result:
+                                product_code_box.setText(result[2])
 
-                            if '-' in product_code_box.text():
-                                category_box.setCurrentText('DRYCOLOR')
+                                if '-' in product_code_box.text():
+                                    category_box.setCurrentText('DRYCOLOR')
+                                else:
+                                    category_box.setCurrentText('MASTERBATCH')
+                                quantity_box.setFocus()
+
                             else:
-                                category_box.setCurrentText('MASTERBATCH')
-                            quantity_box.setFocus()
-
-                        else:
-                            pass
+                                pass
+                    except IndexError:
+                        QMessageBox.information(self.widget, 'Data Not Found', 'Data Does Not Exist')
 
                     else:
                         try:
@@ -7299,20 +7315,20 @@ LIMIT 20
                 def save_entry():
                     if input_type_box.currentText() == 'MULTIPLE':
 
-                        num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
-                        num2 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[1])
+                        num1 = int(re.findall(r'(\d+)[A-Z]+', lot_number_box.text())[0])
+                        num2 = int(re.findall(r'(\d+)[A-Z]+', lot_number_box.text())[1])
                         code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
                         product_code = product_code_box.text()
 
-
-
-
-
                         for i in range(num1, num2+1):
+                            while len(str(i)) != 4:
+                                i = '0' + str(i)
+
                             self.cursor.execute(f"""
-                                                INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category)
-                                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
-                                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}')
+                                INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category, remarks, location)
+                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}',
+                                '{remarks_box.currentText()}', '{warehouse_input.currentText() + " " + block_input.currentText()}')
                                                     """)
                             self.conn.commit()
 
@@ -7341,20 +7357,57 @@ LIMIT 20
                             """)
                             self.conn.commit()
 
-
-
-
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                        # Clear the Output after saving
+                        lot_number_val.clear()
+                        product_code_box.clear()
+                        quantity_box.clear()
+
                     else:
+                        num1 = int(re.findall(r'(\d+)[A-Z]+', lot_number_box.text())[0])
+                        code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
+                        product_code = product_code_box.text()
+
                         self.cursor.execute(f"""
-                                            INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category)
+                                            INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category, remarks, location)
                                             VALUES('{product_code_box.text()}', '{production_date_box.text()}',
-                                            '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}')
+                                            '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}',
+                                            '{remarks_box.currentText()}', '{warehouse_input.currentText() + " " + block_input.currentText()}')
 
 
                                             """)
                         self.conn.commit()
+
+                        self.cursor.execute(f"""
+                                                SELECT * FROM fg_inventory
+                                                WHERE product_code = '{product_code}'
+
+                                                """)
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            # UPDATE THE quantity if the product code exist in the inventory
+                            self.cursor.execute(f"""
+                                                    UPDATE fg_inventory
+                                                    SET quantity = quantity + {int(quantity_box.text())})
+
+
+                                                    """)
+                            self.conn.commit()
+
+                        else:
+                            self.cursor.execute(f"""
+                                                    INSERT INTO fg_inventory
+                                                    VALUES ('{product_code}', {quantity_box.text()})
+
+                                                    """)
+                            self.conn.commit()
+
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+                        # Clear the Output after saving
+                        lot_number_val.clear()
+                        product_code_box.clear()
+                        quantity_box.clear()
 
 
                 self.widget = QWidget()
@@ -7443,6 +7496,47 @@ LIMIT 20
                 product_code_box.setFixedHeight(30)
                 product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
+                warehouse_label = QLabel()
+                warehouse_label.setText('Warehouse')
+                warehouse_label.setFixedWidth(150)
+                warehouse_label.setFont(label_font)
+
+                warehouse_input = QComboBox()
+                warehouse_input.setFixedHeight(30)
+                warehouse_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+                warehouse_input.addItem("WAREHOUSE 1")
+                warehouse_input.addItem("WAREHOUSE 2")
+                warehouse_input.addItem("WAREHOUSE 4")
+
+                block_label = QLabel()
+                block_label.setText('Block')
+                block_label.setFixedWidth(150)
+                block_label.setFont(label_font)
+
+                block_input = QComboBox()
+                block_input.addItem('BLOCK 1')
+                block_input.addItem('BLOCK 2')
+                block_input.addItem('BLOCK 3')
+                block_input.addItem('BLOCK 4')
+                block_input.addItem('BLOCK 5')
+                block_input.setFixedHeight(30)
+                block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+                remarks_label = QLabel()
+                remarks_label.setText('Remarks')
+                remarks_label.setFixedWidth(150)
+                remarks_label.setFont(label_font)
+
+                remarks_box = QComboBox()
+                remarks_box.addItem("NEW")
+                remarks_box.addItem("RETURN PASS")
+                remarks_box.addItem("RETURN FAIL")
+                remarks_box.setFixedHeight(30)
+                remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+
+
+
                 layout = QFormLayout(form_layout_widget)
                 layout.addRow(input_type_label, input_type_box)
                 layout.addRow(id_number_label, id_number_box)
@@ -7451,21 +7545,26 @@ LIMIT 20
                 layout.addRow(product_code_label, product_code_box)
                 layout.addRow(category_label, category_box)
                 layout.addRow(quantity_label, quantity_box)
+                layout.addRow(warehouse_label, warehouse_input)
+                layout.addRow(block_label, block_input)
+                layout.addRow(remarks_label, remarks_box)
 
                 layout.setVerticalSpacing(20)
 
                 lot_number_box.setFocus()
 
                 save_btn = QPushButton(self.widget)
-                save_btn.setGeometry(100, 450, 60, 30)
+                save_btn.setGeometry(100, 450, 60, 25)
                 save_btn.setText('SAVE')
+                save_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
                 save_btn.clicked.connect(save_entry)
                 save_btn.setShortcut('Return')
                 save_btn.show()
 
                 cancel_btn = QPushButton(self.widget)
-                cancel_btn.setGeometry(230, 450, 60, 30)
+                cancel_btn.setGeometry(230, 450, 60, 25)
                 cancel_btn.setText('CANCEL')
+                cancel_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
                 cancel_btn.clicked.connect(lambda: self.widget.close())
                 cancel_btn.show()
 
@@ -7480,12 +7579,11 @@ LIMIT 20
 
                         try:
                             self.cursor.execute(f"""
-                                                UPDATE fg_incoming
-                                                SET customer = '{customer_box.text()}', product_code = '{product_code_box.text()}', 
-                                                date = '{production_date_box.text()}', lot_number = '{lot_number_box.text()}',
-                                                quantity = {quantity_box.text()}, color = '{product_color_box.text()}', category = '{category_box.currentText()}'
-                                                WHERE control_id = {selected[0]}
-
+                                UPDATE fg_incoming
+                                SET  product_code = '{product_code_box.text()}', 
+                                production_date = '{production_date_box.text()}', lot_number = '{lot_number_box.text()}',
+                                quantity = {quantity_box.text()}, category = '{category_box.currentText()}'
+                                WHERE control_id = {selected[0]}
 
                                                 """)
 
@@ -7542,16 +7640,43 @@ LIMIT 20
                     d = QtCore.QDate(year, month, day)
                     production_date_box.setDate(d)
 
-                    customer_label = QLabel()
-                    customer_label.setFont(label_font)
-                    customer_label.setText('Customer')
-                    customer_label.setFixedWidth(150)
+                    warehouse_label = QLabel()
+                    warehouse_label.setText('Warehouse')
+                    warehouse_label.setFixedWidth(150)
+                    warehouse_label.setFont(label_font)
 
-                    customer_box = QLineEdit()
-                    customer_box.setFixedHeight(30)
-                    customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    customer_box.setText(selected[3])
-                    customer_box.setEnabled(False)
+                    warehouse_input = QComboBox()
+                    warehouse_input.setFixedHeight(30)
+                    warehouse_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+                    warehouse_input.addItem("WAREHOUSE 1")
+                    warehouse_input.addItem("WAREHOUSE 2")
+                    warehouse_input.addItem("WAREHOUSE 4")
+
+                    block_label = QLabel()
+                    block_label.setText('Block')
+                    block_label.setFixedWidth(150)
+                    block_label.setFont(label_font)
+
+                    block_input = QComboBox()
+                    block_input.addItem('BLOCK 1')
+                    block_input.addItem('BLOCK 2')
+                    block_input.addItem('BLOCK 3')
+                    block_input.addItem('BLOCK 4')
+                    block_input.addItem('BLOCK 5')
+                    block_input.setFixedHeight(30)
+                    block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+
+                    remarks_label = QLabel()
+                    remarks_label.setText('Remarks')
+                    remarks_label.setFixedWidth(150)
+                    remarks_label.setFont(label_font)
+
+                    remarks_box = QComboBox()
+                    remarks_box.addItem("NEW")
+                    remarks_box.addItem("RETURN PASS")
+                    remarks_box.addItem("RETURN FAIL")
+                    remarks_box.setFixedHeight(30)
+                    remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
 
                     category_label = QLabel()
                     category_label.setFont(label_font)
@@ -7595,25 +7720,16 @@ LIMIT 20
                     product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     product_code_box.setText(selected[4])
 
-                    product_color_label = QLabel()
-                    product_color_label.setText('Color')
-                    product_color_label.setFont(label_font)
-                    product_color_label.setFixedWidth(150)
-
-                    product_color_box = QLineEdit()
-                    product_color_box.setFixedHeight(30)
-                    product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    product_color_box.setText(selected[5])
-
                     layout = QFormLayout(form_layout_widget)
                     layout.addRow(id_number_label, id_number_box)
                     layout.addRow(lot_number_label, lot_number_box)
-                    layout.addRow(customer_label, customer_box)
                     layout.addRow(production_date_label, production_date_box)
                     layout.addRow(product_code_label, product_code_box)
-                    layout.addRow(product_color_label, product_color_box)
                     layout.addRow(category_label, category_box)
                     layout.addRow(quantity_label, quantity_box)
+                    layout.addRow(warehouse_label, warehouse_input)
+                    layout.addRow(block_label, block_input)
+                    layout.addRow(remarks_label, remarks_box)
 
                     layout.setVerticalSpacing(20)
 
@@ -7641,8 +7757,8 @@ LIMIT 20
 
                     control_num_val.setText(selected[0])
                     lot_number_val.setText(selected[1])
-                    code_value.setText(selected[4])
-                    category_value.setText(selected[7])
+                    code_value.setText(selected[3])
+                    category_value.setText(selected[5])
                 except IndexError:
                     QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Item Selected.')
 
@@ -7911,17 +8027,17 @@ LIMIT 20
 
             table_widget = QTableWidget(self.warehouse_widget)
             table_widget.setGeometry(0, 125, 991, 556)
-            table_widget.setColumnCount(6)
+            table_widget.setColumnCount(8)
             table_widget.verticalHeader().setVisible(False)
             table_widget.setHorizontalHeaderLabels(
-                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category"])
+                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Remarks", "Location"])
 
             table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             table_widget.itemSelectionChanged.connect(show_selected)
 
             self.cursor.execute("""
-                    SELECT control_id, lot_number, date, product_code, quantity, category   
+                    SELECT control_id, lot_number, date, product_code, quantity, category, remarks, location   
                     FROM fg_incoming
                     WHERE deleted = false
                     ORDER BY control_id DESC
@@ -7931,9 +8047,11 @@ LIMIT 20
             table_widget.setColumnWidth(0, 90)
             table_widget.setColumnWidth(1, 120)
             table_widget.setColumnWidth(2, 100)
-            table_widget.setColumnWidth(3, 270)
+            table_widget.setColumnWidth(3, 100)
             table_widget.setColumnWidth(4, 100)
             table_widget.setColumnWidth(5, 100)
+            table_widget.setColumnWidth(6, 150)
+            table_widget.setColumnWidth(7, 220)
 
 
             table_widget.horizontalHeader().setStyleSheet("""
@@ -7982,7 +8100,7 @@ LIMIT 20
             add_btn = QPushButton(bottom_button_widget)
             add_btn.setGeometry(650, 18, 60, 25)
             add_btn.setText('ADD')
-            add_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+            add_btn.setStyleSheet("border-radius: 5px;"
                                     "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             add_btn.setCursor(Qt.PointingHandCursor)
             add_btn.clicked.connect(add_entry)
@@ -8151,24 +8269,45 @@ LIMIT 20
                             self.conn.commit()
 
                         else:
-                            self.cursor.execute(f"""
-                                                    INSERT INTO fg_inventory
-                                                    VALUES ('{product_code}', {(num2 - num1) + 1} * {int(quantity_box.text())})
-
-                                                    """)
-                            self.conn.commit()
-
+                            QMessageBox.information(self.widget, 'No Data',
+                                                    'Product Code Does Not Exist in FG INCOMING')
+                            return
 
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
                     else:
+                        num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
+                        code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
+                        product_code = product_code_box.text()
+
                         self.cursor.execute(f"""
                                             INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
                                             VALUES('{product_code_box.text()}', '{production_date_box.text()}',
                                             '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}')
 
-
                                             """)
                         self.conn.commit()
+
+                        self.cursor.execute(f"""
+                                            SELECT * FROM fg_inventory
+                                            WHERE product_code = '{product_code}'
+
+                                            """)
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            # UPDATE THE quantity if the product code exist in the inventory
+                            self.cursor.execute(f"""
+                                                UPDATE fg_inventory
+                                                SET quantity = quantity - {int(quantity_box.text())}
+
+
+                                                """)
+                            self.conn.commit()
+
+                        else:
+                            QMessageBox.information(self.widget, 'No Data', 'Product Code Does Not Exist in FG INCOMING')
+                            return
+
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
 
 
