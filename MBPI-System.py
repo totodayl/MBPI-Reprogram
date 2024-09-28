@@ -1208,7 +1208,6 @@ class Ui_LoginWindow(object):
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
 
-                    print(item)
                     self.cursor.execute(f"""
                     SELECT t_prodid, t_lotnum, t_qtyreq, materials
                     FROM production_merge
@@ -1289,6 +1288,8 @@ class Ui_LoginWindow(object):
                         else:
                             self.total_mats[key] = materials[key]
                             self.total_materialQty += materials[key]
+
+
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
@@ -1515,13 +1516,15 @@ class Ui_LoginWindow(object):
 
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
-                save_prod.setGeometry(660, 570, 70, 30)
+                save_prod.setGeometry(630, 570, 70, 30)
+                save_prod.setStyleSheet("background-color: rgb(194, 232, 255); border: 1px solid rgb(92, 154, 255); border-radius: 5px")
                 save_prod.setText("Push Data")
                 save_prod.clicked.connect(push_data)
                 save_prod.show()
 
                 close = QtWidgets.QPushButton(self.selectProd_widget)
-                close.setGeometry(730, 570, 70, 30)
+                close.setGeometry(700, 570, 70, 30)
+                close.setStyleSheet("background-color: rgb(194, 232, 255); border: 1px solid rgb(92, 154, 255); border-radius: 5px;")
                 close.setText("Close")
                 close.clicked.connect(close_selection)
                 close.show()
@@ -1531,13 +1534,34 @@ class Ui_LoginWindow(object):
 
             self.time_entry = 0
 
-            def add_time():
+            def output_changed(row, column):
+                total_sum = 0
+                if column == 2:
+                    for i in range(time_table.rowCount()):
+                        output = time_table.item(i, 2)
+                        if output == None:
+                            pass
+                        else:
+                            try:
+                                total_sum += float(output.text())
+                            except ValueError:
+                                pass
+                    product_output_input.setText(str(total_sum))
 
-                product_output_input.setText(str(float(product_output_input.text()) + float(output_lineEdit.text())))
+            def add_time():
+                time_table.setRowCount(time_table.rowCount() + 1)
+                try:
+                    product_output_input.setText(
+                        str(float(product_output_input.text()) + float(output_lineEdit.text())))
+
+                except ValueError:
+                    QMessageBox.critical(self.entry_widget, 'Value Error', "Invalid Input")
+                    return
 
                 item1 = QTableWidgetItem(time_start_input.text())
                 item2 = QTableWidgetItem(time_end_input.text())
                 item3 = QTableWidgetItem(output_lineEdit.text())
+
 
                 item3.setTextAlignment(Qt.AlignCenter)
 
@@ -1893,6 +1917,8 @@ class Ui_LoginWindow(object):
             operator_input.addItem('Arjie Galgo')
             operator_input.addItem('Aldrin Villacrusis')
             operator_input.addItem('Joel Miras')
+            operator_input.addItem('Jowie Vasquez')
+            operator_input.addItem('Roselie Mapandi')
             operator_input.setEditable(True)
 
             supervisor_input = QtWidgets.QComboBox()
@@ -1978,12 +2004,13 @@ class Ui_LoginWindow(object):
             time_table = QtWidgets.QTableWidget(self.entry_widget)
             time_table.setGeometry(0, 500, 450, 200)
             time_table.setColumnCount(3)
-            time_table.setRowCount(8)
+            time_table.setRowCount(0)
             time_table.setColumnWidth(0, 150)
             time_table.setColumnWidth(1, 150)
             time_table.setStyleSheet("background-color: white;")
             time_table.setFont(QtGui.QFont("Arial", 10))
-            time_table.setEnabled(False)
+
+            time_table.cellChanged.connect(output_changed)
 
             time_table.setHorizontalHeaderLabels(["Time Start", "Time End", "Output"])
             time_table.show()
@@ -2001,7 +2028,8 @@ class Ui_LoginWindow(object):
 
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
-            select_prod.setGeometry(600, 705, 60, 25)
+            select_prod.setGeometry(605, 705, 60, 25)
+            select_prod.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             select_prod.setText("Select")
             select_prod.clicked.connect(select_production)
             select_prod.setCursor(Qt.PointingHandCursor)
@@ -2009,13 +2037,15 @@ class Ui_LoginWindow(object):
 
             save_btn = QtWidgets.QPushButton(self.entry_widget)
             save_btn.setGeometry(540, 705, 60, 25)
+            save_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             save_btn.clicked.connect(get_entries)
             save_btn.setText("Save")
             save_btn.setCursor(Qt.PointingHandCursor)
             save_btn.show()
 
             clear_btn = QtWidgets.QPushButton(self.entry_widget)
-            clear_btn.setGeometry(660, 705, 60, 25)
+            clear_btn.setGeometry(670, 705, 60, 25)
+            clear_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.setText("Clear")
             clear_btn.show()
@@ -2839,7 +2869,6 @@ class Ui_LoginWindow(object):
             """)
             result = self.cursor.fetchall()
             result = result[0]
-            print(type(result[0]))
             worksheet.column_dimensions['H'].width = 20
             worksheet.column_dimensions['I'].width = 20
 
@@ -2868,7 +2897,6 @@ class Ui_LoginWindow(object):
                 
             """)
             column_names = [i[0] for i in self.cursor.fetchall()]
-            print(column_names)
 
             self.cursor.execute("""
             SELECT * FROM extruder
@@ -2907,13 +2935,11 @@ class Ui_LoginWindow(object):
                     mix_start = datetime.strptime(time_start_input.text(), "%H:%M")
                     mix_end = datetime.strptime(time_end_input.text(), "%H:%M")
 
-                    print(mix_start, mix_end)
 
                     mix_duration = mix_end - mix_start
                     hours = int(str(mix_duration).split(':')[0])
                     minutes = int(str(mix_duration).split(':')[1])
                     mix_duration = (hours * 60) + minutes
-                    print(mix_duration)
                 except Exception as e:
                     print(e)
 
@@ -3174,7 +3200,7 @@ class Ui_LoginWindow(object):
                 pass
 
         except:
-            print('test')
+            pass
 
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 751)
@@ -7535,9 +7561,6 @@ LIMIT 20
                 remarks_box.addItem("RETURN FAIL")
                 remarks_box.setFixedHeight(30)
                 remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-
-
-
 
                 layout = QFormLayout(form_layout_widget)
                 layout.addRow(input_type_label, input_type_box)
