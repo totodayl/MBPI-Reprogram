@@ -3210,6 +3210,18 @@ class Ui_LoginWindow(object):
         buttons_widget.setStyleSheet('background-color: rgb(92, 154, 255)')
         buttons_widget.show()
 
+        search_bar = QLineEdit(self.production_widget)
+        search_bar.setGeometry(705, 35, 150, 25)
+        search_bar.setStyleSheet('background-color: rgb(255, 255, 17); border: 1px solid rgb(171, 173, 179)')
+        search_bar.setPlaceholderText('Lot Number')
+        search_bar.show()
+
+        search_button = QPushButton(self.production_widget)
+        search_button.setGeometry(860, 35, 60, 25)
+        search_button.setText('Search')
+        search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
+        search_button.show()
+
         # Extruder Tab Button
         extruder_btn = QPushButton(buttons_widget)
         extruder_btn.setGeometry(50, 0, 75, 30)
@@ -3230,7 +3242,7 @@ class Ui_LoginWindow(object):
         compounding_btn.show()
 
         self.extruder_table = QtWidgets.QTableWidget(self.production_widget)
-        self.extruder_table.setGeometry(QtCore.QRect(20, 60, 900, 375))
+        self.extruder_table.setGeometry(QtCore.QRect(20, 70, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
         self.extruder_table.setSortingEnabled(True)
 
@@ -3600,33 +3612,36 @@ class Ui_LoginWindow(object):
            # For getting multiple old Lot Numbers from correction input
             def get_old_lotNumbers():
 
-                # Clear Old Lot List
-                old_lot_list.clear()
+                try:
+                    # Clear Old Lot List
+                    old_lot_list.clear()
 
-                correction = correction_input.text().strip()
-                if ',' in correction:
-                    correction = correction.split(',')
-                    for i in correction:
-                        if '-' in i and i[-1] != ')': # Check if it is a multiple Lot
-                            start_lot = re.findall(r'\d+', i)[0]
-                            end_lot = re.findall(r'\d+', i)[1]
-                            string_code = re.findall('[a-zA-Z]+', i)[0]
+                    correction = correction_input.text().strip()
+                    if ',' in correction:
+                        correction = correction.split(',')
+                        for i in correction:
+                            if '-' in i and i[-1] != ')':  # Check if it is a multiple Lot
+                                start_lot = re.findall(r'\d+', i)[0]
+                                end_lot = re.findall(r'\d+', i)[1]
+                                string_code = re.findall('[a-zA-Z]+', i)[0]
 
-                            for num in range(int(start_lot), int(end_lot) + 1):
-                                old_lot_list.append(str(num) + string_code)
-                        else:
-                            old_lot_list.append(i)
+                                for num in range(int(start_lot), int(end_lot) + 1):
+                                    old_lot_list.append(str(num) + string_code)
+                            else:
+                                old_lot_list.append(i)
 
-                elif '-' in correction_input.text() and correction_input.text()[-1] != ')':
-                    start_lot = re.findall(r'\d+', correction_input.text())[0]
-                    end_lot = re.findall(r'\d+', correction_input.text())[1]
-                    string_code = re.findall('[a-zA-Z]+', correction_input.text())[0]
+                    elif '-' in correction_input.text() and correction_input.text()[-1] != ')':
+                        start_lot = re.findall(r'\d+', correction_input.text())[0]
+                        end_lot = re.findall(r'\d+', correction_input.text())[1]
+                        string_code = re.findall('[a-zA-Z]+', correction_input.text())[0]
 
-                    for i in range(int(start_lot), int(end_lot) + 1):
-                        old_lot_list.append(str(i) + string_code)
+                        for i in range(int(start_lot), int(end_lot) + 1):
+                            old_lot_list.append(str(i) + string_code)
 
-                else:
-                    old_lot_list.append(correction_input.text().strip())
+                    else:
+                        old_lot_list.append(correction_input.text().strip())
+                except:
+                    pass
 
             def saveBtn_clicked():
                 def clear_entries():
@@ -3774,7 +3789,7 @@ class Ui_LoginWindow(object):
                                 old_lot_list):  # IF NEW LOT IS HAVE MORE LOT THAN THE CORRECTED LOT
                             while len(old_lot_list) != len(new_lot_list):
                                 old_lot_list.append(old_lot_list[-1])
-
+                            print("3792")
                             for i in range(len(new_lot_list)):
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
@@ -3783,7 +3798,11 @@ class Ui_LoginWindow(object):
                                 """)
 
                                 result = self.cursor.fetchall()
-                                orig_lot = result[0][0]
+
+                                try:
+                                    orig_lot = result[0][0]
+                                except IndexError:
+                                    orig_lot = old_lot_list[i]
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
@@ -3798,10 +3817,9 @@ class Ui_LoginWindow(object):
 
                         elif len(new_lot_list) < len(
                                 old_lot_list):  # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
-
                             while len(new_lot_list) != len(old_lot_list):
                                 new_lot_list.append(new_lot_list[-1])
-
+                            print(new_lot_list, old_lot_list)
                             for i in range(len(new_lot_list)):
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
@@ -3810,7 +3828,10 @@ class Ui_LoginWindow(object):
                                 """)
 
                                 result = self.cursor.fetchall()
-                                orig_lot = result[0][0]
+                                try:
+                                    orig_lot = result[0][0]
+                                except IndexError:
+                                    orig_lot = old_lot_list[i]
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
@@ -3819,9 +3840,9 @@ class Ui_LoginWindow(object):
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
-                                self.conn.commit()
-                                QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
-                                                        "Query Success", "QC Entry Added")
+                            self.conn.commit()
+                            QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
+                                                    "Query Success", "QC Entry Added")
 
                         else:
                             self.conn.rollback()
