@@ -3747,6 +3747,7 @@ class Ui_LoginWindow(object):
                         qc_ID = self.cursor.fetchone()[0]
 
                         # Save To quality_control_tbl2 DB
+                        print('line3750')
                         if len(old_lot_list) == len(new_lot_list):
                             for i in range(len(old_lot_list)):
                                 self.cursor.execute(f"""
@@ -3754,9 +3755,13 @@ class Ui_LoginWindow(object):
                                 WHERE lot_number = '{old_lot_list[i]}'
 
                                 """)
+                                print("test")
 
                                 result = self.cursor.fetchall()
-                                orig_lot = result[0][0]
+                                try:
+                                    orig_lot = result[0][0]
+                                except IndexError:
+                                    orig_lot = old_lot_list[i]
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
