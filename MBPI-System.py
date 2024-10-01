@@ -3189,6 +3189,30 @@ class Ui_LoginWindow(object):
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.show()
 
+        def search_lot_number():
+            self.cursor.execute(f"""
+                SELECT 
+                process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                FROM extruder
+                WHERE '{search_bar.text()}' = ANY(lot_number)
+                ORDER BY process_id DESC
+            """)
+            result = self.cursor.fetchall()
+            self.extruder_table.clearContents()
+
+            # Populate table with data
+            for i in range(len(result)):
+                for j in range(len(column_names)):
+                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                    # Set Alignment for specific columns
+                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7 or j == 5:
+                        item.setTextAlignment(Qt.AlignCenter)
+                    else:
+                        pass
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.extruder_table.setItem(i, j, item)
+            print(result)
+
         try:
             if self.mixer_btn_clicked == True:
                 compounding()
@@ -3220,6 +3244,7 @@ class Ui_LoginWindow(object):
         search_button.setGeometry(860, 35, 60, 25)
         search_button.setText('Search')
         search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
+        search_button.clicked.connect(search_lot_number)
         search_button.show()
 
         # Extruder Tab Button
@@ -3766,7 +3791,6 @@ class Ui_LoginWindow(object):
                                 WHERE lot_number = '{old_lot_list[i]}'
 
                                 """)
-                                print("test")
 
                                 result = self.cursor.fetchall()
                                 try:
@@ -3789,7 +3813,7 @@ class Ui_LoginWindow(object):
                                 old_lot_list):  # IF NEW LOT IS HAVE MORE LOT THAN THE CORRECTED LOT
                             while len(old_lot_list) != len(new_lot_list):
                                 old_lot_list.append(old_lot_list[-1])
-                            print("3792")
+
                             for i in range(len(new_lot_list)):
                                 self.cursor.execute(f"""
                                 SELECT original_lot FROM quality_control_tbl2
@@ -3811,9 +3835,9 @@ class Ui_LoginWindow(object):
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
-                                self.conn.commit()
-                                QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
-                                                        "Query Success", "QC Entry Added")
+                            self.conn.commit()
+                            QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
+                                                    "Query Success", "QC Entry Added")
 
                         elif len(new_lot_list) < len(
                                 old_lot_list):  # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
@@ -5253,61 +5277,61 @@ class Ui_LoginWindow(object):
 
             # Query For The Highest QC day For Each UNIQUE product Code with lot_number and FN
             self.cursor.execute(f"""
-                WITH LotQcDays AS (
-    SELECT t1.original_lot, product_code, formula_id, qc_days - dayoff AS qc_days
-FROM (SELECT
-        original_lot,
-        product_code,
-        formula_id,
-        (MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
-    FROM
-        quality_control_tbl2 
-	WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
-    GROUP BY
-        original_lot, product_code, formula_id
-	 
-	 ) t1
-JOIN qc_dayoff t2 ON t2.original_lot = t1.original_lot
-),
-MaxQcDays AS (
-    SELECT
-        product_code,
-        MAX(qc_days) AS max_qc_days
-    FROM
-        LotQcDays
-    GROUP BY
-        product_code
-),
-RankedQcDays AS (
-    SELECT
-        l.product_code,
-        t.lot_number,
-        l.qc_days,
-        l.formula_id,
-        ROW_NUMBER() OVER (PARTITION BY l.product_code ORDER BY l.qc_days DESC) AS rn
-    FROM
-        LotQcDays l
-    JOIN
-        MaxQcDays m
-    ON
-        l.product_code = m.product_code
-        AND l.qc_days = m.max_qc_days
-    JOIN
-        quality_control_tbl2 t
-    ON
-        l.original_lot = t.original_lot
-)
-SELECT
-    product_code,
-    lot_number,
-    qc_days,
-    formula_id
-FROM
-    RankedQcDays
-WHERE
-    rn = 1
-ORDER BY qc_days DESC
-LIMIT 20
+                                WITH LotQcDays AS (
+                    SELECT t1.original_lot, product_code, formula_id, qc_days - dayoff AS qc_days
+                FROM (SELECT
+                        original_lot,
+                        product_code,
+                        formula_id,
+                        (MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
+                    FROM
+                        quality_control_tbl2 
+                    WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
+                    GROUP BY
+                        original_lot, product_code, formula_id
+                     
+                     ) t1
+                JOIN qc_dayoff t2 ON t2.original_lot = t1.original_lot
+                ),
+                MaxQcDays AS (
+                    SELECT
+                        product_code,
+                        MAX(qc_days) AS max_qc_days
+                    FROM
+                        LotQcDays
+                    GROUP BY
+                        product_code
+                ),
+                RankedQcDays AS (
+                    SELECT
+                        l.product_code,
+                        t.lot_number,
+                        l.qc_days,
+                        l.formula_id,
+                        ROW_NUMBER() OVER (PARTITION BY l.product_code ORDER BY l.qc_days DESC) AS rn
+                    FROM
+                        LotQcDays l
+                    JOIN
+                        MaxQcDays m
+                    ON
+                        l.product_code = m.product_code
+                        AND l.qc_days = m.max_qc_days
+                    JOIN
+                        quality_control_tbl2 t
+                    ON
+                        l.original_lot = t.original_lot
+                )
+                SELECT
+                    product_code,
+                    lot_number,
+                    qc_days,
+                    formula_id
+                FROM
+                    RankedQcDays
+                WHERE
+                    rn = 1
+                ORDER BY qc_days DESC
+                LIMIT 20
 
                                 """)
             result = self.cursor.fetchall()
