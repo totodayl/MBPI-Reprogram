@@ -3739,8 +3739,6 @@ class Ui_LoginWindow(object):
 
                                        """)
 
-                        self.conn.commit()
-
                         # For saving Multiple Lot Number in quality_control_tbl2
 
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
