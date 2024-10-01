@@ -3666,7 +3666,6 @@ class Ui_LoginWindow(object):
                                            '{lotNumber_input.text()}', '{evaluatedBy_dropdown.currentText()}', '{date_started_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}',
                                            '{time_endorsed_input.text()}', '{qcType_dropdown.currentText()}', '{formulaID_input.text()}' )
                                            """)
-                        self.conn.commit()
 
                         # For saving Multiple Lot Number in quality_control_tbl2
                         self.cursor.execute("SELECT MAX(id) FROM quality_control")
@@ -3682,8 +3681,7 @@ class Ui_LoginWindow(object):
                                         '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
 
                                                     """)
-                                self.conn.commit()
-
+                            self.conn.commit()
                             print("Query Successful")
                             clear_entries()  # Clear the entries after successful entry
                         else:
@@ -3769,6 +3767,8 @@ class Ui_LoginWindow(object):
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
                                 self.conn.commit()
+                                QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
+                                                        "Query Success", "QC Entry Added")
 
                         elif len(new_lot_list) > len(
                                 old_lot_list):  # IF NEW LOT IS HAVE MORE LOT THAN THE CORRECTED LOT
@@ -3793,6 +3793,8 @@ class Ui_LoginWindow(object):
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
                                 self.conn.commit()
+                                QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
+                                                        "Query Success", "QC Entry Added")
 
                         elif len(new_lot_list) < len(
                                 old_lot_list):  # IF NEW LOT IS HAVE LESS LOT THAN THE CORRECTED LOT
@@ -3818,16 +3820,16 @@ class Ui_LoginWindow(object):
                                     '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
                                                         """)
                                 self.conn.commit()
+                                QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
+                                                        "Query Success", "QC Entry Added")
 
                         else:
-
+                            self.conn.rollback()
                             QMessageBox.critical(self.body_widget.setStyleSheet("border: none;"),
                                                  "ERROR",
                                                  "CORRECTION AND LOT NUMBER SHOULD BE EQUAL RANGE")
                             return
-
                         clear_entries()
-
 
                 except Exception as e:
                     print(e)
