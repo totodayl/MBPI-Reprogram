@@ -6712,6 +6712,7 @@ class Ui_LoginWindow(object):
                 remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp,
 				status_changed = 
 				    CASE 
+				        WHEN (SELECT status FROM quality_control WHERE lot_number = '{lot_number}') = true THEN true
                         WHEN (SELECT status FROM quality_control WHERE lot_number = '{lot_number}') != '{test_result_dropdown.currentText()}'
                         THEN true
                         else false
