@@ -1062,7 +1062,7 @@ class Ui_LoginWindow(object):
         def add_entry():
 
             self.entry_widget = QtWidgets.QWidget()
-            self.entry_widget.setGeometry(300, 100, 800, 750)
+            self.entry_widget.setGeometry(300, 100, 750, 670)
             self.entry_widget.setWindowIcon(QtGui.QIcon("setting.png"))
             self.entry_widget.setWindowTitle("ADD EXTRUDER DATA")
             self.entry_widget.setStyleSheet("background-color : rgb(240,240,240);")
@@ -1718,11 +1718,11 @@ class Ui_LoginWindow(object):
 
             # Create two new widget for the VBOX Layout
             self.leftInput_side = QtWidgets.QWidget(self.entry_widget)
-            self.leftInput_side.setGeometry(0, 0, 400, 450)
+            self.leftInput_side.setGeometry(0, 0, 375, 400)
             self.leftInput_side.show()
 
             self.right_side = QtWidgets.QWidget(self.entry_widget)
-            self.right_side.setGeometry(400, 0, 400, 450)
+            self.right_side.setGeometry(375, 0, 375, 400)
             self.right_side.show()
 
             # Create Vertical Box Layout
@@ -1966,12 +1966,12 @@ class Ui_LoginWindow(object):
             product_input.textChanged.connect(loss_auto)
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
-            self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
+            self.groupBoxRemarks.setGeometry(550, 450, 190, 150)
             self.groupBoxRemarks.setTitle("Remarks")
             self.groupBoxRemarks.show()
 
             self.remarks_textBox = QtWidgets.QTextEdit(self.groupBoxRemarks)
-            self.remarks_textBox.setGeometry(0, 20, 200, 130)
+            self.remarks_textBox.setGeometry(0, 20, 190, 130)
             self.remarks_textBox.show()
 
             # Left Side of Vertical Box
@@ -2002,11 +2002,11 @@ class Ui_LoginWindow(object):
 
             # Time Table Entry
             time_table = QtWidgets.QTableWidget(self.entry_widget)
-            time_table.setGeometry(0, 500, 450, 200)
+            time_table.setGeometry(0, 450, 400, 180)
             time_table.setColumnCount(3)
             time_table.setRowCount(0)
-            time_table.setColumnWidth(0, 150)
-            time_table.setColumnWidth(1, 150)
+            time_table.setColumnWidth(0, 145)
+            time_table.setColumnWidth(1, 145)
             time_table.setStyleSheet("background-color: white;")
             time_table.setFont(QtGui.QFont("Arial", 10))
 
@@ -2017,7 +2017,7 @@ class Ui_LoginWindow(object):
 
             # Temperature Table Entry
             temperature_table = QtWidgets.QTableWidget(self.entry_widget)
-            temperature_table.setGeometry(450, 500, 150, 200)
+            temperature_table.setGeometry(400, 450, 150, 180)
             temperature_table.setColumnCount(1)
             temperature_table.setRowCount(12)
             temperature_table.setStyleSheet("background-color: white;")
@@ -2028,7 +2028,7 @@ class Ui_LoginWindow(object):
 
             # Select Production Data Button
             select_prod = QtWidgets.QPushButton(self.entry_widget)
-            select_prod.setGeometry(605, 705, 60, 25)
+            select_prod.setGeometry(555, 635, 60, 25)
             select_prod.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             select_prod.setText("Select")
             select_prod.clicked.connect(select_production)
@@ -2036,7 +2036,7 @@ class Ui_LoginWindow(object):
             select_prod.show()
 
             save_btn = QtWidgets.QPushButton(self.entry_widget)
-            save_btn.setGeometry(540, 705, 60, 25)
+            save_btn.setGeometry(490, 635, 60, 25)
             save_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             save_btn.clicked.connect(get_entries)
             save_btn.setText("Save")
@@ -2044,7 +2044,7 @@ class Ui_LoginWindow(object):
             save_btn.show()
 
             clear_btn = QtWidgets.QPushButton(self.entry_widget)
-            clear_btn.setGeometry(670, 705, 60, 25)
+            clear_btn.setGeometry(620, 635, 60, 25)
             clear_btn.setStyleSheet('background-color: rgb(194, 232, 255); border-radius: 5px; border: 1px solid rgb(92, 154, 255)')
             clear_btn.clicked.connect(clear_inputs)
             clear_btn.setText("Clear")
@@ -2053,32 +2053,32 @@ class Ui_LoginWindow(object):
             default_date = QtCore.QDateTime(2024, 1, 1, 0, 0)
 
             time_start_input = QtWidgets.QDateTimeEdit(self.entry_widget)
-            time_start_input.setGeometry(30, 475, 120, 25)
+            time_start_input.setGeometry(30, 425, 120, 25)
             time_start_input.setDisplayFormat("MM-dd-yyyy HH:mm")
             time_start_input.setDateTime(default_date)
             time_start_input.show()
 
             time_end_input = QtWidgets.QDateTimeEdit(self.entry_widget)
-            time_end_input.setGeometry(180, 475, 120, 25)
+            time_end_input.setGeometry(180, 425, 120, 25)
             time_end_input.setDisplayFormat("MM-dd-yyyy HH:mm")
             time_end_input.setDateTime(default_date)
             time_end_input.show()
 
             output_lineEdit = QtWidgets.QLineEdit(self.entry_widget)
-            output_lineEdit.setGeometry(310, 475, 80, 25)
+            output_lineEdit.setGeometry(310, 425, 80, 25)
             output_lineEdit.setAlignment(Qt.AlignCenter)
             output_lineEdit.setStyleSheet("background-color: white; border: 1px solid black")
             output_lineEdit.show()
 
             self.plus_icon = ClickableLabel(self.entry_widget)
-            self.plus_icon.setGeometry(390, 475, 25, 25)
+            self.plus_icon.setGeometry(390, 425, 25, 25)
             self.plus_icon.setPixmap(QtGui.QIcon('plus.png').pixmap(25, 25))
             self.plus_icon.setCursor(Qt.PointingHandCursor)
             self.plus_icon.clicked.connect(add_time)
             self.plus_icon.show()
 
             self.reset_icon = ClickableLabel(self.entry_widget)
-            self.reset_icon.setGeometry(425, 475, 25, 25)
+            self.reset_icon.setGeometry(425, 425, 25, 25)
             self.reset_icon.setPixmap(QtGui.QIcon('reset.png').pixmap(20, 20))
             self.reset_icon.setCursor(Qt.PointingHandCursor)
             self.reset_icon.clicked.connect(reset_table)
