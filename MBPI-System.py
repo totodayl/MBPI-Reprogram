@@ -1275,6 +1275,20 @@ class Ui_LoginWindow(object):
                     remarks = result[16]
                     materials = result[-1]
 
+                    #Get the Range of Lot Number
+                    num1 = int(re.findall(r'\d+', lot_number)[0])
+                    try:
+                        num2 = int(re.findall(r'\d+', lot_number)[1])
+                    except IndexError:
+                        num2 = None
+
+                    print(num1, num2)
+                    if num2 == None:
+                        lot_count = 1
+                    else:
+                        lot_count = (num2 - num1) + 1
+                    print(lot_count)
+
                     self.added_entry += 1
                     self.lot_numberList.append(lot_number)
                     self.total_output += output_quantity
@@ -1288,8 +1302,6 @@ class Ui_LoginWindow(object):
                         else:
                             self.total_mats[key] = materials[key]
                             self.total_materialQty += materials[key]
-
-
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
@@ -3714,12 +3726,12 @@ class Ui_LoginWindow(object):
                         if "-" in lotNumber_input.text() and lotNumber_input.text()[-1] != ')':
                             for lot in new_lot_list:
                                 self.cursor.execute(f"""
-                                        INSERT INTO  quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
-                                         status, product_code, qc_type, formula_id, date_endorsed)
+                                        INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot,
+                                         status, product_code, qc_type, formula_id, date_endorsed, encoded_on)
                                         VALUES('{qc_ID}','{lot.strip()}', '{date_started_input.text()}', '{lot.strip()}',
                                         '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', 
-                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
-
+                                        '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}',
+                                        '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
                                                     """)
                             self.conn.commit()
                             print("Query Successful")
@@ -3727,10 +3739,10 @@ class Ui_LoginWindow(object):
                         else:
                             self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status, 
-                                    product_code, qc_type, formula_id, date_endorsed)
+                                    product_code, qc_type, formula_id, date_endorsed, encoded_on)
                                     VALUES('{qc_ID}', '{lotNumber_input.text().strip()}', '{date_started_input.text()}', '{lotNumber_input.text()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}', '{qcType_dropdown.currentText()}', 
-                                    '{formulaID_input.text()}', '{time_endorsed_input.text()}')    """)
+                                    '{formulaID_input.text()}', '{time_endorsed_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')    """)
                             self.conn.commit()
                             clear_entries()
 
@@ -3800,10 +3812,10 @@ class Ui_LoginWindow(object):
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type, formula_id, date_endorsed)
+                                    product_code, qc_type, formula_id, date_endorsed, encoded_on)
                                     VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
                                                         """)
                                 self.conn.commit()
                                 QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
@@ -3830,10 +3842,11 @@ class Ui_LoginWindow(object):
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type, formula_id, date_endorsed)
+                                    product_code, qc_type, formula_id, date_endorsed, encoded_on)
                                     VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}',
+                                    '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
                                                         """)
                             self.conn.commit()
                             QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
@@ -3859,10 +3872,11 @@ class Ui_LoginWindow(object):
 
                                 self.cursor.execute(f"""
                                     INSERT INTO quality_control_tbl2(id, lot_number, evaluation_date, original_lot, status,
-                                    product_code, qc_type, formula_id, date_endorsed)
+                                    product_code, qc_type, formula_id, date_endorsed, encoded_on)
                                     VALUES({qc_ID}, '{new_lot_list[i].strip()}', '{date_started_input.text()}', '{orig_lot.strip()}',
                                     '{result_dropdown.currentText()}', '{productCode_dropdown.currentText().strip()}',
-                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}')
+                                    '{qcType_dropdown.currentText()}', '{formulaID_input.text()}', '{time_endorsed_input.text()}',
+                                    '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
                                                         """)
                             self.conn.commit()
                             QMessageBox.information(self.body_widget.setStyleSheet("border: none;"),
@@ -3916,9 +3930,9 @@ class Ui_LoginWindow(object):
 
                 if qcType_dropdown.currentText() == "NEW":
                     self.cursor.execute(f"""
-                                    SELECT t_fid as formula_id, t_prodcode, t_customer  
-                                    FROM production_merge
-                                    WHERE t_lotnum = '{lotNumber_input.text()}' AND t_deleted = 'false'              
+                        SELECT t_fid as formula_id, t_prodcode, t_customer  
+                        FROM production_merge
+                        WHERE t_lotnum = '{lotNumber_input.text()}' AND t_deleted = 'false'              
 
                                     """)
                     result = self.cursor.fetchone()
@@ -6712,7 +6726,6 @@ class Ui_LoginWindow(object):
                 remarks = '{remarks_box.toPlainText()}', edited = true, updated_on = '{datetime.now()}'::timestamp,
 				status_changed = 
 				    CASE 
-				        WHEN (SELECT status FROM quality_control WHERE lot_number = '{lot_number}') = true THEN true
                         WHEN (SELECT status FROM quality_control WHERE lot_number = '{lot_number}') != '{test_result_dropdown.currentText()}'
                         THEN true
                         else false
@@ -7398,9 +7411,9 @@ class Ui_LoginWindow(object):
                                 i = '0' + str(i)
 
                             self.cursor.execute(f"""
-                                INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category, remarks, location)
+                                INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
                                 VALUES('{product_code_box.text()}', '{production_date_box.text()}',
-                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}',
+                                '{str(i) + code}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}',
                                 '{remarks_box.currentText()}', '{warehouse_input.currentText() + " " + block_input.currentText()}')
                                                     """)
                             self.conn.commit()
@@ -7442,7 +7455,7 @@ class Ui_LoginWindow(object):
                         product_code = product_code_box.text()
 
                         self.cursor.execute(f"""
-                                            INSERT INTO fg_incoming(product_code, date, lot_number, quantity, category, remarks, location)
+                                            INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
                                             VALUES('{product_code_box.text()}', '{production_date_box.text()}',
                                             '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}',
                                             '{remarks_box.currentText()}', '{warehouse_input.currentText() + " " + block_input.currentText()}')
@@ -7462,7 +7475,7 @@ class Ui_LoginWindow(object):
                             # UPDATE THE quantity if the product code exist in the inventory
                             self.cursor.execute(f"""
                                                     UPDATE fg_inventory
-                                                    SET quantity = quantity + {int(quantity_box.text())})
+                                                    SET quantity = quantity + {int(quantity_box.text())}
 
 
                                                     """)
@@ -7529,6 +7542,7 @@ class Ui_LoginWindow(object):
                 production_date_box.setFixedHeight(30)
                 production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 production_date_box.setDisplayFormat('MM-dd-yyyy')
+                production_date_box.setDate(QtCore.QDate.currentDate())
 
                 category_label = QLabel()
                 category_label.setFont(label_font)
@@ -7587,11 +7601,11 @@ class Ui_LoginWindow(object):
                 block_label.setFont(label_font)
 
                 block_input = QComboBox()
-                block_input.addItem('BLOCK 1')
-                block_input.addItem('BLOCK 2')
-                block_input.addItem('BLOCK 3')
-                block_input.addItem('BLOCK 4')
-                block_input.addItem('BLOCK 5')
+                block_input.addItem('BOX 1')
+                block_input.addItem('BOX 2')
+                block_input.addItem('BOX 3')
+                block_input.addItem('BOX 4')
+                block_input.addItem('BOX 5')
                 block_input.setFixedHeight(30)
                 block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
 
@@ -7601,7 +7615,8 @@ class Ui_LoginWindow(object):
                 remarks_label.setFont(label_font)
 
                 remarks_box = QComboBox()
-                remarks_box.addItem("NEW")
+                remarks_box.addItem("NEW PASSED")
+                remarks_box.addItem("NEW FAILED")
                 remarks_box.addItem("RETURN PASS")
                 remarks_box.addItem("RETURN FAIL")
                 remarks_box.setFixedHeight(30)
@@ -7728,11 +7743,11 @@ class Ui_LoginWindow(object):
                     block_label.setFont(label_font)
 
                     block_input = QComboBox()
-                    block_input.addItem('BLOCK 1')
-                    block_input.addItem('BLOCK 2')
-                    block_input.addItem('BLOCK 3')
-                    block_input.addItem('BLOCK 4')
-                    block_input.addItem('BLOCK 5')
+                    block_input.addItem('BOX 1')
+                    block_input.addItem('BOX 2')
+                    block_input.addItem('BOX 3')
+                    block_input.addItem('BOX 4')
+                    block_input.addItem('BOX 5')
                     block_input.setFixedHeight(30)
                     block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
 
@@ -7747,6 +7762,7 @@ class Ui_LoginWindow(object):
                     remarks_box.addItem("RETURN FAIL")
                     remarks_box.setFixedHeight(30)
                     remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                    remarks_box.setCurrentText(selected[6])
 
                     category_label = QLabel()
                     category_label.setFont(label_font)
@@ -7758,7 +7774,7 @@ class Ui_LoginWindow(object):
                     category_box.addItem('DRYCOLOR')
                     category_box.setFixedHeight(30)
                     category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    category_box.setCurrentText(selected[7])
+                    category_box.setCurrentText(selected[5])
 
                     lot_number_label = QLabel()
                     lot_number_label.setText('LOT Number')
@@ -7778,7 +7794,7 @@ class Ui_LoginWindow(object):
                     quantity_box = QLineEdit()
                     quantity_box.setFixedHeight(30)
                     quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    quantity_box.setText(selected[6])
+                    quantity_box.setText(selected[4])
 
                     product_code_label = QLabel()
                     product_code_label.setText('Product Code')
@@ -7788,7 +7804,7 @@ class Ui_LoginWindow(object):
                     product_code_box = QLineEdit()
                     product_code_box.setFixedHeight(30)
                     product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    product_code_box.setText(selected[4])
+                    product_code_box.setText(selected[3])
 
                     layout = QFormLayout(form_layout_widget)
                     layout.addRow(id_number_label, id_number_box)
@@ -7834,11 +7850,10 @@ class Ui_LoginWindow(object):
 
             def fg_filter():
 
-
                 if masterbatch_checkbox.isChecked() == True and drycolor_checkbox.isChecked() == False:
 
                     self.cursor.execute("""
-                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                    SELECT control_id, lot_number, production_date, product_code,  quantity, category, remarks, location  
                     FROM fg_incoming
                     WHERE deleted = false AND category = 'MASTERBATCH'
                     ORDER BY control_id DESC
@@ -7849,7 +7864,7 @@ class Ui_LoginWindow(object):
 
                     table_widget.clear()
                     table_widget.setHorizontalHeaderLabels(
-                        ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+                        ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", 'Remarks', 'Location'])
 
                     for row in result:
                         for column in range(len(row)):
@@ -7861,7 +7876,7 @@ class Ui_LoginWindow(object):
 
                 elif masterbatch_checkbox.isChecked() == False and drycolor_checkbox.isChecked() == True:
                     self.cursor.execute("""
-                        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                        SELECT control_id, lot_number, production_date, product_code, quantity, category   
                         FROM fg_incoming
                         WHERE deleted = false AND category = 'DRYCOLOR'
                         ORDER BY control_id DESC
@@ -7883,7 +7898,7 @@ class Ui_LoginWindow(object):
 
                 else:
                     self.cursor.execute("""
-                                                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                                                    SELECT control_id, lot_number, production_date,  product_code,  quantity, category, remarks, location  
                                                     FROM fg_incoming
                                                     WHERE deleted = false 
                                                     ORDER BY control_id DESC
@@ -7894,7 +7909,7 @@ class Ui_LoginWindow(object):
 
                     table_widget.clear()
                     table_widget.setHorizontalHeaderLabels(
-                        ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+                        ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Remarks", "Location"])
 
                     for row in result:
                         for column in range(len(row)):
@@ -7908,7 +7923,7 @@ class Ui_LoginWindow(object):
                 lot_num = search_box.text()
 
                 self.cursor.execute(f"""
-                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category
+                SELECT control_id, lot_number, production_date, product_code, quantity, category
                 FROM fg_incoming 
                 WHERE lot_number ILIKE '%{lot_num}%' AND deleted = false
 
@@ -7918,7 +7933,7 @@ class Ui_LoginWindow(object):
 
                 table_widget.clear()
                 table_widget.setHorizontalHeaderLabels(
-                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Quantity", "Category"])
 
                 for row in result:
                     for column in range(len(row)):
@@ -7956,7 +7971,7 @@ class Ui_LoginWindow(object):
 
                 df = pd.DataFrame(result)
 
-                column_names = ['Control ID', 'Customer', 'Product Code', 'Date', 'Lot Number', 'Quantity', 'category', 'deleted', 'Color']
+                column_names = ['Control ID', 'Product Code', 'Date', 'Lot Number', 'Quantity', 'category', 'deleted', 'Color']
 
                 try:
                     filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.warehouse_widget, "Save File",
@@ -8107,7 +8122,7 @@ class Ui_LoginWindow(object):
             table_widget.itemSelectionChanged.connect(show_selected)
 
             self.cursor.execute("""
-                    SELECT control_id, lot_number, date, product_code, quantity, category, remarks, location   
+                    SELECT control_id, lot_number, production_date, product_code, quantity, category, remarks, location   
                     FROM fg_incoming
                     WHERE deleted = false
                     ORDER BY control_id DESC
