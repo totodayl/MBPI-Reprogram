@@ -5249,15 +5249,15 @@ class Ui_LoginWindow(object):
 
             # Query for getting the Average QC days For Each Product Code
             self.cursor.execute(f"""
-                SELECT product_code, ROUND(AVG(dayoff), 2) as avg_dayoff
-                    FROM(SELECT product_code, qc_day - dayoff AS dayoff
-                    FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
+                SELECT product_code, ROUND(AVG(qc_days), 2) as avg_qc_days
+                    FROM(SELECT product_code, qc_day - dayoff AS qc_days
+                    FROM (SELECT t1.product_code, t1.original_lot, dayoff ,(MAX(encoded_on::DATE) - MIN(date_endorsed::DATE)) + 1   as qc_day 
                     FROM quality_control_tbl2 t1
                     JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
-                    WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
+					WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
                     GROUP BY product_code, t1.original_lot, dayoff))
                     GROUP BY product_code
-                    ORDER BY avg_dayoff DESC
+                    ORDER BY avg_qc_days DESC
                     LIMIT 20
 
                             """)
@@ -5297,7 +5297,7 @@ class Ui_LoginWindow(object):
                         original_lot,
                         product_code,
                         formula_id,
-                        (MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
+                        (MAX(encoded_on::DATE) - MIN(date_endorsed::DATE)) + 1 AS qc_days  -- Adjust +1 for inclusive date range
                     FROM
                         quality_control_tbl2 
                     WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
@@ -5380,7 +5380,7 @@ class Ui_LoginWindow(object):
             # Getting the Average QC days of all lot number, Sunday and Holidays are excluded.
             self.cursor.execute(f"""
                 SELECT ROUND(avg(qc_day), 2)
-                FROM (SELECT t1.original_lot, MAX(evaluation_date::DATE) - MIN(date_endorsed::DATE) + 1 as qc_day
+                FROM (SELECT t1.original_lot, MAX(encoded_on::DATE) - MIN(date_endorsed::DATE) + 1 as qc_day
                 FROM quality_control_tbl2 t1
                 JOIN qc_dayoff t2 ON t1.original_lot = t2.original_lot
                 WHERE evaluation_date BETWEEN '{date1}' AND '{date2}'
