@@ -3610,7 +3610,9 @@ class Ui_LoginWindow(object):
                 self.cursor.execute(f"""
                             SELECT id, lot_number, customer, product_code, status, remarks, action
                             FROM quality_control
-                            WHERE lot_number ILIKE '%{search_bar.text()}%'
+                            WHERE lot_number ILIKE '%{search_bar.text()}%' OR product_code ILIKE '%{search_bar.text()}%'
+                            OR customer ILIKE '%{search_bar.text()}%'
+                            ORDER BY id DESC
 
                             """)
                 result = self.cursor.fetchall()
@@ -7294,6 +7296,14 @@ class Ui_LoginWindow(object):
         get_statistics_btn.clicked.connect(lambda : save_to_excel(date1.text(), date2.text()))
         get_statistics_btn.setToolTip("Export")
         get_statistics_btn.show()
+
+        refresh_btn = QtWidgets.QPushButton(self.qc_widget)
+        refresh_btn.setGeometry(530, 663, 60, 25)
+        refresh_btn.setStyleSheet(
+            'border: none; border-radius: 5px; background-color: rgb(194, 232, 255); border: 1px solid rgb(92, 154, 255)')
+        refresh_btn.setText("REFRESH")
+        refresh_btn.clicked.connect(self.quality_control)
+        refresh_btn.show()
 
         update_btn = QtWidgets.QPushButton(self.qc_widget)
         update_btn.setGeometry(595, 663, 60, 25)
