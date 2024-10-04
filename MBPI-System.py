@@ -3623,6 +3623,13 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(result[i][j]))
                         item.setTextAlignment(Qt.AlignCenter)
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+                        if result[i][4] == 'Failed':
+                            item.setBackground(QtGui.QColor(255, 0, 0))
+                        else:
+                            pass
+
+
                         self.qc_table.setItem(i, j, item)
 
                 self.qc_table.itemSelectionChanged.connect(show_items)
