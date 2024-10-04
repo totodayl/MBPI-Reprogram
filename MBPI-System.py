@@ -3611,7 +3611,7 @@ class Ui_LoginWindow(object):
                             SELECT id, lot_number, customer, product_code, status, remarks, action
                             FROM quality_control
                             WHERE lot_number ILIKE '%{search_bar.text()}%' OR product_code ILIKE '%{search_bar.text()}%'
-                            OR customer ILIKE '%{search_bar.text()}%'
+                            OR customer ILIKE '%{search_bar.text()}%' OR status ILIKE '%{search_bar.text()}%'
                             ORDER BY id DESC
 
                             """)
@@ -3628,7 +3628,6 @@ class Ui_LoginWindow(object):
                             item.setBackground(QtGui.QColor(255, 0, 0))
                         else:
                             pass
-
 
                         self.qc_table.setItem(i, j, item)
 
