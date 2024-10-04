@@ -1289,6 +1289,10 @@ class Ui_LoginWindow(object):
                         lot_count = (num2 - num1) + 1
                     print(lot_count)
 
+                    test_material = materials
+
+
+
                     self.added_entry += 1
                     self.lot_numberList.append(lot_number)
                     self.total_output += output_quantity
@@ -1512,7 +1516,7 @@ class Ui_LoginWindow(object):
                 self.table3.show()
 
                 label1 = QtWidgets.QLabel(self.selectProd_widget)
-                label1.setGeometry(230, 570, 120, 30)
+                label1.setGeometry(80, 570, 120, 30)
                 label1.setText("Total QTY (Kg)")
                 label1.setFont(QtGui.QFont("Arial", 11))
                 label1.setAlignment(Qt.AlignCenter)
@@ -1520,11 +1524,15 @@ class Ui_LoginWindow(object):
                 label1.show()
 
                 label2 = QtWidgets.QLabel(self.selectProd_widget)
-                label2.setGeometry(350, 570, 200, 30)
-                label2.setFont(QtGui.QFont("Arial", 15))
+                label2.setGeometry(200, 570, 150, 30)
+                label2.setFont(QtGui.QFont("Arial", 13))
                 label2.setAlignment(Qt.AlignCenter)
                 label2.setStyleSheet("background-color: white; color: blue;")
                 label2.show()
+
+                # cut_label = QLabel(self.selectProd_widget)
+                # cut_label.setGeometry()
+
 
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
@@ -5262,6 +5270,7 @@ class Ui_LoginWindow(object):
 
                             """)
             result = self.cursor.fetchall()
+            print(result)
 
             wb = Workbook()
             ws1 = wb.active
@@ -6989,6 +6998,12 @@ class Ui_LoginWindow(object):
                 item = QTableWidgetItem(str(result[i][j]))
                 item.setTextAlignment(Qt.AlignCenter)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+                if result[i][4] == 'Failed':
+                    item.setBackground(QtGui.QColor(255, 0, 0))
+                else:
+                    pass
+
                 self.qc_table.setItem(i, j, item)
 
         self.qc_table.itemSelectionChanged.connect(show_items)
