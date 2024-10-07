@@ -3275,6 +3275,7 @@ class Ui_LoginWindow(object):
         search_button.setGeometry(860, 35, 60, 25)
         search_button.setText('Search')
         search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
+        search_button.setShortcut('Return')
         search_button.clicked.connect(search_lot_number)
         search_button.show()
 
@@ -3301,7 +3302,6 @@ class Ui_LoginWindow(object):
         self.extruder_table.setGeometry(QtCore.QRect(20, 70, 900, 375))
         self.extruder_table.verticalHeader().setVisible(False)
         self.extruder_table.setSortingEnabled(True)
-
 
         self.cursor.execute("""
         SELECT column_name FROM information_schema.columns
@@ -8074,7 +8074,6 @@ class Ui_LoginWindow(object):
             search_button.setStyleSheet('border: 1px solid rgb(171, 173, 179)')
             search_button.setText('Search')
             search_button.clicked.connect(search)
-            search_button.setShortcut('Return')
             search_button.show()
 
             masterbatch_checkbox = QCheckBox(self.warehouse_widget)
