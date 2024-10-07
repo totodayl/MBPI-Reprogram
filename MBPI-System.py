@@ -1281,17 +1281,16 @@ class Ui_LoginWindow(object):
                         num2 = int(re.findall(r'\d+', lot_number)[1])
                     except IndexError:
                         num2 = None
+                        if int(cut_input.text()) > 0:
+                            QMessageBox.critical(self.selectProd_widget, 'ERROR', 'Unable to Cut a Single Lot!')
+                            return
 
-                    print(num1, num2)
                     if num2 == None:
                         lot_count = 1
                     else:
                         lot_count = (num2 - num1) + 1
-                    print(lot_count)
-
-                    test_material = materials
-
-
+                    for key in materials.keys():
+                        materials[key] = round(materials[key] * (int(cut_input.text()) / lot_count), 3)
 
                     self.added_entry += 1
                     self.lot_numberList.append(lot_number)
@@ -1350,6 +1349,9 @@ class Ui_LoginWindow(object):
                         self.table2.setItem(list(self.total_mats.keys()).index(keys), 1, value)
                         value.setFlags(value.flags() & ~Qt.ItemIsEditable)
                     self.table2.show()
+
+                    # Set It back to 0
+                    cut_input.setText('0')
 
                 def search():
                     try:
@@ -1530,9 +1532,18 @@ class Ui_LoginWindow(object):
                 label2.setStyleSheet("background-color: white; color: blue;")
                 label2.show()
 
-                # cut_label = QLabel(self.selectProd_widget)
-                # cut_label.setGeometry()
+                cut_label = QLabel(self.selectProd_widget)
+                cut_label.setGeometry(400, 570, 70, 30)
+                cut_label.setText('Cut')
+                cut_label.setFont(QtGui.QFont("Arial", 13))
+                cut_label.show()
 
+                cut_input = QLineEdit(self.selectProd_widget)
+                cut_input.setGeometry(470, 570, 100, 30)
+                cut_input.setFont(QtGui.QFont("Arial", 13))
+                cut_input.setStyleSheet('color: rgb(0, 109, 189)')
+                cut_input.setText('0')
+                cut_input.show()
 
                 # Save Button
                 save_prod = QtWidgets.QPushButton(self.selectProd_widget)
@@ -1892,7 +1903,6 @@ class Ui_LoginWindow(object):
             lot_number_input = QtWidgets.QLineEdit()
             lot_number_input.setAlignment(Qt.AlignCenter)
             lot_number_input.setFixedHeight(25)
-            lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             feedRate_input = QtWidgets.QLineEdit()
@@ -3214,7 +3224,8 @@ class Ui_LoginWindow(object):
                 SELECT 
                 process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
                 FROM extruder
-                WHERE '{search_bar.text()}' = ANY(lot_number)
+                WHERE '{search_bar.text()}' = ANY(lot_number) OR product_code ILIKE '%{search_bar.text()}%'
+                OR customer ILIKE '%{search_bar.text()}%' OR machine ILIKE '%{search_bar.text()}%'
                 ORDER BY process_id DESC
             """)
             result = self.cursor.fetchall()
@@ -3231,7 +3242,7 @@ class Ui_LoginWindow(object):
                         pass
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                     self.extruder_table.setItem(i, j, item)
-            print(result)
+
 
         try:
             if self.mixer_btn_clicked == True:
