@@ -3670,6 +3670,7 @@ class Ui_LoginWindow(object):
                     else:
                         new_lot_list.append(lotNumber_input.text().strip())
                         lotNumbers_board.clear()
+
                 except:
                     print("INVALID")
 
@@ -3714,6 +3715,11 @@ class Ui_LoginWindow(object):
                     formulaID_input.clear()
                     result_dropdown.setCurrentIndex(0)
                     remarks_box.clear()
+
+                if len(new_lot_list) > 100:
+                    QMessageBox.information(self.qc_widget, 'ERROR', 'Too Much Lot Number')
+                    return
+
 
                 try:
                     # For saving Multiple Lot Number in quality_control_tbl2
@@ -3822,7 +3828,6 @@ class Ui_LoginWindow(object):
                         qc_ID = self.cursor.fetchone()[0]
 
                         # Save To quality_control_tbl2 DB
-                        print('line3750')
                         if len(old_lot_list) == len(new_lot_list):
                             for i in range(len(old_lot_list)):
                                 self.cursor.execute(f"""
