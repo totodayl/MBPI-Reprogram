@@ -86,7 +86,6 @@ class Ui_LoginWindow(object):
             """)
 
             account = self.cursor.fetchone()
-            print(account)
             global extruder_access
             extruder_access = account[5]
             global qc_access
@@ -109,6 +108,16 @@ class Ui_LoginWindow(object):
         except psycopg2.Error:
             QMessageBox.information(self.login_window, "INVALID CREDENTIALS", "Check your Username and Password")
             return
+
+        # Get log info
+        self.cursor.execute(f"""
+        INSERT INTO logs
+        VALUES('{username}', '{os.environ['COMPUTERNAME']}', '{datetime.now().strftime("%Y-%m-%d %H:%M")}')
+
+        """)
+
+        self.conn.commit()
+
 
         self.launch_main()
 
@@ -9263,3 +9272,4 @@ if __name__ == "__main__":
     ui.setupUi(LoginWindow)
     LoginWindow.show()
     sys.exit(app.exec_())
+
