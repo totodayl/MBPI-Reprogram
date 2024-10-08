@@ -68,15 +68,14 @@ class Ui_LoginWindow(object):
         pass1 = self.password.text()
 
 
-
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="localhost",
+                host="192.168.1.13",
                 port=5432,
-                dbname='test-db',
+                dbname='postgres',
                 user=f'postgres',
-                password=f'postgres'
+                password=f'mbpi'
             )
             self.cursor = self.conn.cursor()
 
