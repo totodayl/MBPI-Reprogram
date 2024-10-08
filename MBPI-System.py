@@ -37,16 +37,12 @@ class Ui_LoginWindow(object):
         self.username.setAutoFillBackground(False)
         self.username.setStyleSheet("background-color: rgb(255, 255, 255); border-radius: 5px")
         self.username.setObjectName("username")
-        self.username.setText("postgres")
-        self.username.setEnabled(False)
         self.password = QtWidgets.QLineEdit(self.login_window)
         self.password.setGeometry(QtCore.QRect(310, 230, 171, 31))
         self.password.setAutoFillBackground(False)
         self.password.setStyleSheet("background-color: rgb(255, 255, 255); border-radius: 5px")
         self.password.setObjectName("password")
         self.password.setEchoMode(QtWidgets.QLineEdit.Password)  # Make the input hidden
-        self.password.setText("mbpi")
-        self.password.setEnabled(False)
         self.login_btn = QtWidgets.QPushButton(self.login_window)
         self.login_btn.setGeometry(QtCore.QRect(360, 340, 75, 23))
         self.login_btn.setStyleSheet("\n"
@@ -71,23 +67,50 @@ class Ui_LoginWindow(object):
         username = self.username.text()
         pass1 = self.password.text()
 
+
+
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="192.168.1.13",
+                host="localhost",
                 port=5432,
-                dbname='postgres',
-                user=f'{username}',
-                password=f'{pass1}'
+                dbname='test-db',
+                user=f'postgres',
+                password=f'postgres'
             )
+            self.cursor = self.conn.cursor()
 
-            self.username.deleteLater()
-            self.password.deleteLater()
-            self.login_btn.deleteLater()
+            self.cursor.execute(f"""
+            SELECT * FROM users 
+            WHERE username = '{username}' AND password = '{pass1}'
+            
+            """)
+
+            account = self.cursor.fetchone()
+            print(account)
+            global extruder_access
+            extruder_access = account[5]
+            global qc_access
+            qc_access = account[6]
+            global warehouse_access
+            warehouse_access = account[7]
+
+
+
+            if account:
+                self.username.deleteLater()
+                self.password.deleteLater()
+                self.login_btn.deleteLater()
+                pass
+            else:
+                QMessageBox.information(self.login_window, "INVALID CREDENTIALS", "Check your Username and Password")
+                return
+
+
         except psycopg2.Error:
             QMessageBox.information(self.login_window, "INVALID CREDENTIALS", "Check your Username and Password")
             return
-        self.cursor = self.conn.cursor()
+
         self.launch_main()
 
     # This is the main window after login screen
@@ -460,7 +483,6 @@ class Ui_LoginWindow(object):
         self.production()
 
     def production(self):
-
         # Delete If there are existing Widgets
         try:
             self.info_widget.deleteLater()
@@ -1060,6 +1082,13 @@ class Ui_LoginWindow(object):
             self.export_btn.show()
 
         def add_entry():
+
+            if extruder_access:
+                pass
+            else:
+                QMessageBox.critical(self.production_widget, 'Restricted Access', "You Dont Have Permission. \n Contact the Admin.")
+                return
+
 
             self.entry_widget = QtWidgets.QWidget()
             self.entry_widget.setGeometry(300, 100, 750, 670)
@@ -2115,6 +2144,14 @@ class Ui_LoginWindow(object):
             self.reset_icon.show()
 
         def update_entry():
+
+            if extruder_access:
+                pass
+            else:
+                QMessageBox.critical(self.production_widget, 'Restricted Access', "You Dont Have Permission. \n Contact the Admin.")
+                return
+
+
             try:
                 selected = self.extruder_table.selectedItems()
                 selected = [i.text() for i in selected]
@@ -3646,6 +3683,14 @@ class Ui_LoginWindow(object):
                 self.qc_table.show()
 
         def evaluation_entry():
+
+            # Check if User have permission to enter QC data.
+            if qc_access:
+                pass
+            else:
+                QMessageBox.critical(self.qc_widget, 'Restricted Access', "You Dont Have Permission. \n Contact the Admin.")
+                return
+
 
             # Getting every single Lot Number in a Multiple Lot Number
             new_lot_list = []
@@ -6749,6 +6794,15 @@ class Ui_LoginWindow(object):
             clear_button.show()
 
         def update_entry():
+
+            # Check if User have permission to enter QC data.
+            if qc_access:
+                pass
+            else:
+                QMessageBox.critical(self.qc_widget, 'Restricted Access',
+                                     "You Dont Have Permission. \n Contact the Admin.")
+                return
+
             def save_update():
                 # Update quality_control table
                 self.cursor.execute(f"""
@@ -7346,9 +7400,16 @@ class Ui_LoginWindow(object):
         self.qc_table.show()
 
     def warehouse(self):
-
         def fg_incoming():
             def add_entry():
+
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
 
                 def autofill():
                     # Set to Capital Letter
@@ -7703,6 +7764,15 @@ class Ui_LoginWindow(object):
 
             def update_entry():
 
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
+
+
                 selected = table_widget.selectedItems()
 
                 if selected:
@@ -7991,6 +8061,15 @@ class Ui_LoginWindow(object):
                         table_widget.setItem(result.index(row), column, item)
 
             def delete_incoming():
+
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
+
                 selected = table_widget.selectedItems()
 
                 if selected:
@@ -8269,6 +8348,14 @@ class Ui_LoginWindow(object):
         def fg_outgoing():
 
             def add_entry():
+
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
 
                 def autofill():
                     # Set to Capital Letter
@@ -8566,6 +8653,14 @@ class Ui_LoginWindow(object):
 
             def update_entry():
 
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
+
                 selected = outgoing_table.selectedItems()
 
                 if selected:
@@ -8837,6 +8932,14 @@ class Ui_LoginWindow(object):
                         outgoing_table.setItem(result.index(row), column, item)
 
             def delete_outgoing():
+
+                # Check if User have permission to enter QC data.
+                if warehouse_access:
+                    pass
+                else:
+                    QMessageBox.critical(self.warehouse_widget, 'Restricted Access',
+                                         "You Dont Have Permission. \n Contact the Admin.")
+                    return
 
                 selected = outgoing_table.selectedItems()
 
