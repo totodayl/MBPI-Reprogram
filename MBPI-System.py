@@ -6847,7 +6847,11 @@ class Ui_LoginWindow(object):
                 QMessageBox.information(self.qc_widget, "Success", "Update Successful")
 
             selected = self.qc_table.selectedItems()
-            lot_number = selected[1].text()
+            try:
+                lot_number = selected[1].text()
+            except IndexError:
+                QMessageBox.information(self.qc_widget, '', 'No Selected Item.')
+                return
 
             self.cursor.execute(f"""
             SELECT * FROM quality_control
@@ -7102,9 +7106,13 @@ class Ui_LoginWindow(object):
 
         # Get the table Items from database
         self.cursor.execute("""
-        SELECT id, lot_number, customer, product_code, status, remarks, action
+        SELECT *
         FROM quality_control
-        ORDER BY id DESC
+        ORDER BY 
+		CASE 
+        WHEN updated_on IS NOT NULL THEN updated_on
+        ELSE encoded_on 
+        END DESC;
         
         """)
 
@@ -7624,6 +7632,9 @@ class Ui_LoginWindow(object):
 
                     result = self.cursor.fetchall()
 
+                    # adjust the length
+                    table_widget.setRowCount(len(result))
+
                     table_widget.clearContents()
                     for row in result:
                         for column in range(len(row)):
@@ -7631,8 +7642,6 @@ class Ui_LoginWindow(object):
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                             item.setTextAlignment(Qt.AlignCenter)
                             table_widget.setItem(result.index(row), column, item)
-
-
 
                 self.widget = QWidget()
                 self.widget.setGeometry(780, 305, 400, 500)
