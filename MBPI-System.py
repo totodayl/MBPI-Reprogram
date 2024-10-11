@@ -71,11 +71,11 @@ class Ui_LoginWindow(object):
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="192.168.1.13",
+                host="localhost",
                 port=5432,
-                dbname='postgres',
+                dbname='test-db',
                 user=f'postgres',
-                password=f'mbpi'
+                password=f'postgres'
             )
             self.cursor = self.conn.cursor()
 
@@ -6830,6 +6830,16 @@ class Ui_LoginWindow(object):
                 
                 """)
 
+
+                self.cursor.execute(f"""
+                    INSERT INTO qc_logs
+                    VALUES('{datetime.now().strftime('%Y-%m-%d %H:%M')}', 'UPDATE', {selected[0].text()}, '{selected[1].text()}', 
+                            '{selected[2].text()}', '{selected[3].text()}', '{selected[4].text()}', '{selected[5].text()}')
+                
+                """)
+
+
+
                 self.conn.commit()
 
                 # Update quality_control_tbl2
@@ -6910,9 +6920,9 @@ class Ui_LoginWindow(object):
                             SELECT customers FROM customer
                             ORDER BY customers
                             """)
-                result = self.cursor.fetchall()
+                customers = self.cursor.fetchall()
 
-                for i in result:
+                for i in customers:
                     customer_list.addItem(i[0])
                 customer_list.setCurrentText(customer)
 
@@ -7018,6 +7028,14 @@ class Ui_LoginWindow(object):
 
                                     """)
 
+                    self.cursor.execute(f"""
+                                        INSERT INTO qc_logs
+                                        VALUES('{datetime.now().strftime('%Y-%m-%d %H:%M')}', 'DELETE', {selected[0].text()}, '{selected[1].text()}', 
+                                                '{selected[2].text()}', '{selected[3].text()}', '{selected[4].text()}', '{selected[5].text()}')
+
+                                    """)
+
+
                     self.conn.commit()
                     QMessageBox.information(self.qc_widget, '', f"{lot_number} successfully deleted.")
 
@@ -7106,7 +7124,7 @@ class Ui_LoginWindow(object):
 
         # Get the table Items from database
         self.cursor.execute("""
-        SELECT *
+        SELECT id, lot_number, customer, product_code, status, remarks, action
         FROM quality_control
         ORDER BY 
 		CASE 
@@ -7129,8 +7147,7 @@ class Ui_LoginWindow(object):
 
                 if result[i][4] == 'Failed':
                     item.setBackground(QtGui.QColor(255,128,128))
-                else:
-                    pass
+
 
                 self.qc_table.setItem(i, j, item)
 
@@ -7572,15 +7589,15 @@ class Ui_LoginWindow(object):
                             self.cursor.execute(f"""
                                 INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
                                 VALUES('{product_code_box.text()}', '{production_date_box.text()}',
-                                '{str(i) + code}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}',
-                                '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.currentText()}')
+                                '{(str(i) + code).upper()}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}',
+                                '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.text()}')
                                                     """)
 
                             # add to inventory
                             self.cursor.execute(f"""
                             INSERT INTO fg_inventory
-                            VALUES('{str(i) + code}', '{product_code_box.text()}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{date.today().strftime('%Y-%m-%d')}',
-                            '{warehouse_input.currentText() + ":" + block_input.currentText()}', '{category_box.currentText()}')
+                            VALUES('{(str(i) + code).upper()}', '{product_code_box.text()}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{date.today().strftime('%Y-%m-%d')}',
+                            '{warehouse_input.currentText() + ":" + block_input.text()}', '{category_box.currentText()}')
                             
                             """)
 
@@ -7601,7 +7618,7 @@ class Ui_LoginWindow(object):
                             INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
                             VALUES('{product_code_box.text()}', '{production_date_box.text()}',
                             '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}',
-                            '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.currentText()}')
+                            '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.text()}')
 
 
                                             """)
@@ -7609,7 +7626,7 @@ class Ui_LoginWindow(object):
                         self.cursor.execute(f"""
                             INSERT INTO fg_inventory
                             VALUES('{lot_number_box.text()}', '{product_code_box.text()}', {quantity_box.text()}, '{date.today().strftime('%Y-%m-%d')}',
-                            '{warehouse_input.currentText() + ":" + block_input.currentText()}', '{category_box.currentText()}')
+                            '{warehouse_input.currentText() + ":" + block_input.text()}', '{category_box.currentText()}')
                         
                         
                         """)
@@ -7643,6 +7660,12 @@ class Ui_LoginWindow(object):
                             item.setTextAlignment(Qt.AlignCenter)
                             table_widget.setItem(result.index(row), column, item)
 
+                    # Clear after saving
+                    lot_number_box.clear()
+                    product_code_box.clear()
+                    quantity_box.clear()
+                    block_input.clear()
+
                 self.widget = QWidget()
                 self.widget.setGeometry(780, 305, 400, 500)
                 self.widget.setFixedSize(400, 500)
@@ -7655,7 +7678,8 @@ class Ui_LoginWindow(object):
                 form_layout_widget.setGeometry(0, 0, 400, 400)
                 form_layout_widget.show()
 
-                label_font = QtGui.QFont("Arial", 11)
+                label_font = QtGui.QFont("Arial", 12)
+                input_font = QtGui.QFont("Arial", 11)
 
                 input_type_label = QLabel()
                 input_type_label.setFont(label_font)
@@ -7668,6 +7692,7 @@ class Ui_LoginWindow(object):
                 input_type_box.addItem('MULTIPLE')
                 input_type_box.setFixedHeight(30)
                 input_type_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                input_type_box.setFont(input_font)
 
                 id_number_label = QLabel()
                 id_number_label.setFont(label_font)
@@ -7679,6 +7704,7 @@ class Ui_LoginWindow(object):
                 id_number_box.setFixedHeight(35)
                 id_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 id_number_box.setEnabled(False)
+                id_number_box.setFont(input_font)
 
                 production_date_label = QLabel()
                 production_date_label.setFont(label_font)
@@ -7690,6 +7716,7 @@ class Ui_LoginWindow(object):
                 production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 production_date_box.setDisplayFormat('MM-dd-yyyy')
                 production_date_box.setDate(QtCore.QDate.currentDate())
+                production_date_box.setFont(input_font)
 
                 category_label = QLabel()
                 category_label.setFont(label_font)
@@ -7701,6 +7728,7 @@ class Ui_LoginWindow(object):
                 category_box.addItem('DRYCOLOR')
                 category_box.setFixedHeight(30)
                 category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                category_box.setFont(input_font)
 
                 lot_number_label = QLabel()
                 lot_number_label.setText('LOT Number')
@@ -7711,6 +7739,7 @@ class Ui_LoginWindow(object):
                 lot_number_box.setFixedHeight(30)
                 lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 lot_number_box.editingFinished.connect(autofill)
+                lot_number_box.setFont(input_font)
 
                 quantity_label = QLabel()
                 quantity_label.setText('Quantity')
@@ -7720,6 +7749,7 @@ class Ui_LoginWindow(object):
                 quantity_box = QLineEdit()
                 quantity_box.setFixedHeight(30)
                 quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                quantity_box.setFont(input_font)
 
                 product_code_label = QLabel()
                 product_code_label.setText('Product Code')
@@ -7729,6 +7759,7 @@ class Ui_LoginWindow(object):
                 product_code_box = QLineEdit()
                 product_code_box.setFixedHeight(30)
                 product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                product_code_box.setFont(input_font)
 
                 warehouse_label = QLabel()
                 warehouse_label.setText('Warehouse')
@@ -7741,20 +7772,18 @@ class Ui_LoginWindow(object):
                 warehouse_input.addItem("WAREHOUSE 1")
                 warehouse_input.addItem("WAREHOUSE 2")
                 warehouse_input.addItem("WAREHOUSE 4")
+                warehouse_input.addItem("WAREHOUSE 5")
+                warehouse_input.setFont(input_font)
 
                 block_label = QLabel()
                 block_label.setText('Block')
                 block_label.setFixedWidth(150)
                 block_label.setFont(label_font)
 
-                block_input = QComboBox()
-                block_input.addItem('BOX 1')
-                block_input.addItem('BOX 2')
-                block_input.addItem('BOX 3')
-                block_input.addItem('BOX 4')
-                block_input.addItem('BOX 5')
+                block_input = QLineEdit()
                 block_input.setFixedHeight(30)
                 block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+                block_input.setFont(input_font)
 
                 remarks_label = QLabel()
                 remarks_label.setText('Remarks')
@@ -7768,6 +7797,7 @@ class Ui_LoginWindow(object):
                 remarks_box.addItem("RETURN FAIL")
                 remarks_box.setFixedHeight(30)
                 remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                remarks_box.setFont(input_font)
 
                 layout = QFormLayout(form_layout_widget)
                 layout.addRow(input_type_label, input_type_box)
@@ -7822,8 +7852,9 @@ class Ui_LoginWindow(object):
                             self.cursor.execute(f"""
                                 UPDATE fg_incoming
                                 SET  product_code = '{product_code_box.text()}', 
-                                production_date = '{production_date_box.text()}', lot_number = '{lot_number_box.text()}',
-                                quantity = {quantity_box.text()}, category = '{category_box.currentText()}'
+                                production_date = '{production_date_box.text()}', lot_number = '{lot_number_box.text().upper()}',
+                                quantity = {quantity_box.text()}, category = '{category_box.currentText()}', 
+                                remarks = '{remarks_box.currentText()}', location = '{warehouse_input.currentText() + ':' + block_input.text()}'
                                 WHERE control_id = {selected[0]}
 
                                                 """)
@@ -7892,18 +7923,15 @@ class Ui_LoginWindow(object):
                     warehouse_input.addItem("WAREHOUSE 1")
                     warehouse_input.addItem("WAREHOUSE 2")
                     warehouse_input.addItem("WAREHOUSE 4")
+                    warehouse_input.addItem("WAREHOUSE 4")
+                    warehouse_input.setCurrentText(selected[7].split(":")[0])
 
                     block_label = QLabel()
                     block_label.setText('Block')
                     block_label.setFixedWidth(150)
                     block_label.setFont(label_font)
 
-                    block_input = QComboBox()
-                    block_input.addItem('BOX 1')
-                    block_input.addItem('BOX 2')
-                    block_input.addItem('BOX 3')
-                    block_input.addItem('BOX 4')
-                    block_input.addItem('BOX 5')
+                    block_input = QLineEdit()
                     block_input.setFixedHeight(30)
                     block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
 
@@ -8341,13 +8369,18 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
 
             table_widget.setRowCount(len(result))
+            print(result)
 
-            for row in result:
-                for column in range(len(row)):
-                    item = QTableWidgetItem(str(row[column]))
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            for i in range(len(result)):
+                for j in range(len(result[i])):
+                    item = QTableWidgetItem(str(result[i][j]))
                     item.setTextAlignment(Qt.AlignCenter)
-                    table_widget.setItem(result.index(row), column, item)
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+                    if result[i][6] == 'NEW FAILED' or result[i][6] == 'RETURN FAIL':
+                        item.setBackground(QtGui.QColor(255, 128, 128))
+
+                    table_widget.setItem(i, j, item)
 
             table_widget.show()
 
@@ -9301,6 +9334,40 @@ class Ui_LoginWindow(object):
 
         def fg_inventory():
 
+            def get_daily_report():
+
+                self.cursor.execute("""
+                    WITH incoming_total AS (
+                        SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_incoming
+                        GROUP BY lot_number, product_code
+                    
+                    ),
+                    outgoing_total AS (
+                        SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_outgoing
+                        GROUP BY lot_number, product_code)
+                    
+                    , lot_location AS (
+                        SELECT lot_number, array_agg(location) as location FROM fg_incoming
+                        GROUP BY lot_number
+                    )
+                    , inventory AS	(SELECT a.lot_number, a.product_code,
+                            CASE WHEN a.total_qty - b.total_qty IS NULL THEN a.total_qty
+                                 ELSE a.total_qty - b.total_qty
+                                 END AS total_qty, 
+                            c.location, split_part(location[1], ':', 1) as wh
+                        FROM incoming_total a
+                        LEFT JOIN outgoing_total b ON a.lot_number = b.lot_number
+                        JOIN lot_location c ON a.lot_number = c.lot_number)
+                        
+                    SELECT lot_number, product_code, ROUND(total_qty::numeric, 2), location FROM inventory
+                """)
+
+                pass
+
+
+
+
+
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
             fg_incoming_btn.setGeometry(30, 0, 100, 30)
             fg_incoming_btn.setText("FG INCOMING")
@@ -9434,24 +9501,46 @@ class Ui_LoginWindow(object):
 
             table_widget = QTableWidget(self.warehouse_widget)
             table_widget.setGeometry(0, 125, 991, 506)
-            table_widget.setColumnCount(6)
+            table_widget.setColumnCount(4)
             table_widget.verticalHeader().setVisible(False)
             table_widget.setHorizontalHeaderLabels(
-                ["Date", "Lot Number", "Product Code", "Quantity", "Location", "Category"])
+                ["Lot Number", "Product Code", "Quantity", "Location"])
 
             table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
             table_widget.setColumnWidth(1, 200)
             table_widget.setColumnWidth(2, 120)
-            table_widget.setColumnWidth(4, 220)
-            table_widget.setColumnWidth(5, 150)
+            table_widget.setColumnWidth(3, 400)
 
 
+            # Query for Getting the Inventory
             self.cursor.execute("""
-                                SELECT date_encoded, lot_number, product_code, quantity, location, category
-                                FROM fg_inventory
-                                ORDER BY date_encoded DESC
+                WITH incoming_total AS (
+                    SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_incoming
+                    GROUP BY lot_number, product_code
+                
+                ),
+                outgoing_total AS (
+                    SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_outgoing
+                    GROUP BY lot_number, product_code)
+                
+                , lot_location AS (
+                    SELECT lot_number, array_agg(location) as location FROM fg_incoming
+                    GROUP BY lot_number
+                
+                )
+                    
+                , inventory AS	(SELECT a.lot_number, a.product_code,
+                        CASE WHEN a.total_qty - b.total_qty IS NULL THEN a.total_qty
+                             ELSE a.total_qty - b.total_qty
+                             END AS total_qty, 
+                        c.location, split_part(location[1], ':', 1) as wh
+                    FROM incoming_total a
+                    LEFT JOIN outgoing_total b ON a.lot_number = b.lot_number
+                    JOIN lot_location c ON a.lot_number = c.lot_number)
+                    
+                SELECT lot_number, product_code, ROUND(total_qty::numeric, 2), location FROM inventory
 
                                 """)
 
@@ -9503,6 +9592,7 @@ class Ui_LoginWindow(object):
             report_logo.setGeometry(335, 18, 20, 20)
             report_logo.setPixmap(QtGui.QIcon('daily_report.png').pixmap(20, 20))
             report_logo.setStyleSheet('border: none')
+            report_logo.clicked.connect(get_daily_report)
             report_logo.setCursor(Qt.PointingHandCursor)
 
             report_logo.show()
