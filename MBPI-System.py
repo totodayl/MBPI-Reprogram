@@ -71,11 +71,11 @@ class Ui_LoginWindow(object):
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="localhost",
+                host="192.168.1.13",
                 port=5432,
-                dbname='test-db',
+                dbname='postgres',
                 user=f'postgres',
-                password=f'postgres'
+                password=f'mbpi'
             )
             self.cursor = self.conn.cursor()
 
@@ -1338,7 +1338,6 @@ class Ui_LoginWindow(object):
                     self.total_output += output_quantity
                     self.total_quantity_order += quantity_order
 
-                    print(materials)
                     # Getting the materials
                     for key in materials.keys():
                         if key in list(self.total_mats.keys()):
@@ -1347,7 +1346,7 @@ class Ui_LoginWindow(object):
                         else:
                             self.total_mats[key] = materials[key]
                             self.total_materialQty += materials[key]
-                    print(self.total_mats)
+
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
@@ -1974,13 +1973,13 @@ class Ui_LoginWindow(object):
             purgeStart_input.setFixedHeight(25)
             purgeStart_input.setAlignment(Qt.AlignCenter)
             purgeStart_input.setStyleSheet("background-color: white; border: 1px solid black")
-            purgeStart_input.setText("00:00")
+            purgeStart_input.setInputMask("99:99;_")
 
             purgeEnd_input = QtWidgets.QLineEdit()
             purgeEnd_input.setFixedHeight(25)
             purgeEnd_input.setAlignment(Qt.AlignCenter)
             purgeEnd_input.setStyleSheet("background-color: white; border: 1px solid black")
-            purgeEnd_input.setText("00:00")
+            purgeEnd_input.setInputMask("99:99;_")
 
             operator_input = QtWidgets.QComboBox()
             operator_input.setFixedHeight(25)
@@ -2036,6 +2035,14 @@ class Ui_LoginWindow(object):
             product_input.setFixedHeight(25)
             product_input.setAlignment(Qt.AlignCenter)
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
+            product_input.setInputMask('')
+
+            validator = QtGui.QDoubleValidator()
+            validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+            product_input.setValidator(validator)
+
+
             product_input.textChanged.connect(loss_auto)
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
@@ -3320,6 +3327,7 @@ class Ui_LoginWindow(object):
         search_bar.setGeometry(705, 35, 150, 25)
         search_bar.setStyleSheet('background-color: rgb(255, 255, 17); border: 1px solid rgb(171, 173, 179)')
         search_bar.setPlaceholderText('Lot Number')
+        search_bar.setFocus()
         search_bar.show()
 
         search_button = QPushButton(self.production_widget)
@@ -7244,6 +7252,7 @@ class Ui_LoginWindow(object):
         search_bar.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);")
         search_bar.setFont(QtGui.QFont("Arial", 9))
         search_bar.setPlaceholderText("Lot Number")
+        search_bar.setFocus()
         search_bar.show()
 
         search_btn = QtWidgets.QPushButton(self.qc_topBorder)
@@ -7756,6 +7765,11 @@ class Ui_LoginWindow(object):
                 quantity_box.setFixedHeight(30)
                 quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 quantity_box.setFont(input_font)
+                validator = QtGui.QDoubleValidator()
+                validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+                quantity_box.setValidator(validator)
+
 
                 product_code_label = QLabel()
                 product_code_label.setText('Product Code')
@@ -7775,10 +7789,10 @@ class Ui_LoginWindow(object):
                 warehouse_input = QComboBox()
                 warehouse_input.setFixedHeight(30)
                 warehouse_input.setStyleSheet('background-color: rgb(255, 255, 17)')
-                warehouse_input.addItem("WAREHOUSE 1")
-                warehouse_input.addItem("WAREHOUSE 2")
-                warehouse_input.addItem("WAREHOUSE 4")
-                warehouse_input.addItem("WAREHOUSE 5")
+                warehouse_input.addItem("WH 1")
+                warehouse_input.addItem("WH 2")
+                warehouse_input.addItem("WH 4")
+                warehouse_input.addItem("WH 5")
                 warehouse_input.setFont(input_font)
 
                 block_label = QLabel()
@@ -7886,7 +7900,8 @@ class Ui_LoginWindow(object):
                     form_layout_widget.setGeometry(0, 0, 400, 400)
                     form_layout_widget.show()
 
-                    label_font = QtGui.QFont("Arial", 11)
+                    label_font = QtGui.QFont("Arial", 12)
+                    input_font = QtGui.QFont("Arial", 11)
 
                     id_number_label = QLabel()
                     id_number_label.setFont(label_font)
@@ -7899,6 +7914,7 @@ class Ui_LoginWindow(object):
                     id_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     id_number_box.setText(selected[0])
                     id_number_box.setEnabled(False)
+                    id_number_box.setFont(input_font)
 
                     production_date_label = QLabel()
                     production_date_label.setFont(label_font)
@@ -7909,6 +7925,7 @@ class Ui_LoginWindow(object):
                     production_date_box.setFixedHeight(30)
                     production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     production_date_box.setDisplayFormat('MM-dd-yyyy')
+                    production_date_box.setFont(input_font)
 
                     my_date = re.findall(r'\d+', selected[2])
                     year = int(my_date[0])
@@ -7926,11 +7943,12 @@ class Ui_LoginWindow(object):
                     warehouse_input = QComboBox()
                     warehouse_input.setFixedHeight(30)
                     warehouse_input.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    warehouse_input.addItem("WAREHOUSE 1")
-                    warehouse_input.addItem("WAREHOUSE 2")
-                    warehouse_input.addItem("WAREHOUSE 4")
-                    warehouse_input.addItem("WAREHOUSE 4")
+                    warehouse_input.addItem("WH 1")
+                    warehouse_input.addItem("WH 2")
+                    warehouse_input.addItem("WH 4")
+                    warehouse_input.addItem("WH 5")
                     warehouse_input.setCurrentText(selected[7].split(":")[0])
+                    warehouse_input.setFont(input_font)
 
                     block_label = QLabel()
                     block_label.setText('Block')
@@ -7940,6 +7958,7 @@ class Ui_LoginWindow(object):
                     block_input = QLineEdit()
                     block_input.setFixedHeight(30)
                     block_input.setStyleSheet('background-color: rgb(255, 255, 17)')
+                    block_input.setFont(input_font)
 
                     remarks_label = QLabel()
                     remarks_label.setText('Remarks')
@@ -7947,12 +7966,14 @@ class Ui_LoginWindow(object):
                     remarks_label.setFont(label_font)
 
                     remarks_box = QComboBox()
-                    remarks_box.addItem("NEW")
+                    remarks_box.addItem("NEW PASSED")
+                    remarks_box.addItem("NEW FAILED")
                     remarks_box.addItem("RETURN PASS")
                     remarks_box.addItem("RETURN FAIL")
                     remarks_box.setFixedHeight(30)
                     remarks_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     remarks_box.setCurrentText(selected[6])
+                    remarks_box.setFont(input_font)
 
                     category_label = QLabel()
                     category_label.setFont(label_font)
@@ -7965,6 +7986,7 @@ class Ui_LoginWindow(object):
                     category_box.setFixedHeight(30)
                     category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     category_box.setCurrentText(selected[5])
+                    category_box.setFont(input_font)
 
                     lot_number_label = QLabel()
                     lot_number_label.setText('LOT Number')
@@ -7975,6 +7997,7 @@ class Ui_LoginWindow(object):
                     lot_number_box.setFixedHeight(30)
                     lot_number_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     lot_number_box.setText(selected[1])
+                    lot_number_box.setFont(input_font)
 
                     quantity_label = QLabel()
                     quantity_label.setText('Quantity')
@@ -7985,6 +8008,12 @@ class Ui_LoginWindow(object):
                     quantity_box.setFixedHeight(30)
                     quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     quantity_box.setText(selected[4])
+                    validator = QtGui.QDoubleValidator()
+                    validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+                    quantity_box.setValidator(validator)
+
+                    quantity_box.setFont(input_font)
 
                     product_code_label = QLabel()
                     product_code_label.setText('Product Code')
@@ -7995,6 +8024,7 @@ class Ui_LoginWindow(object):
                     product_code_box.setFixedHeight(30)
                     product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                     product_code_box.setText(selected[3])
+                    product_code_box.setFont(input_font)
 
                     layout = QFormLayout(form_layout_widget)
                     layout.addRow(id_number_label, id_number_box)
@@ -8706,6 +8736,11 @@ class Ui_LoginWindow(object):
                 quantity_box = QLineEdit()
                 quantity_box.setFixedHeight(30)
                 quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                validator = QtGui.QDoubleValidator()
+                validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+                quantity_box.setValidator(validator)
+
 
                 product_code_label = QLabel()
                 product_code_label.setText('Product Code')
@@ -8853,7 +8888,7 @@ class Ui_LoginWindow(object):
                     category_box.addItem('DRYCOLOR')
                     category_box.setFixedHeight(30)
                     category_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    category_box.setCurrentText(selected[7])
+                    category_box.setCurrentText(selected[5])
 
                     lot_number_label = QLabel()
                     lot_number_label.setText('LOT Number')
@@ -8873,7 +8908,12 @@ class Ui_LoginWindow(object):
                     quantity_box = QLineEdit()
                     quantity_box.setFixedHeight(30)
                     quantity_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    quantity_box.setText(selected[6])
+                    validator = QtGui.QDoubleValidator()
+                    validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
+
+                    quantity_box.setValidator(validator)
+                    quantity_box.setText(selected[4])
+
 
                     product_code_label = QLabel()
                     product_code_label.setText('Product Code')
@@ -8883,17 +8923,12 @@ class Ui_LoginWindow(object):
                     product_code_box = QLineEdit()
                     product_code_box.setFixedHeight(30)
                     product_code_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    product_code_box.setText(selected[4])
+                    product_code_box.setText(selected[3])
 
                     product_color_label = QLabel()
                     product_color_label.setText('Color')
                     product_color_label.setFont(label_font)
                     product_color_label.setFixedWidth(150)
-
-                    product_color_box = QLineEdit()
-                    product_color_box.setFixedHeight(30)
-                    product_color_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    product_color_box.setText(selected[5])
 
                     layout = QFormLayout(form_layout_widget)
                     layout.addRow(id_number_label, id_number_box)
@@ -8901,7 +8936,6 @@ class Ui_LoginWindow(object):
                     layout.addRow(customer_label, customer_box)
                     layout.addRow(production_date_label, production_date_box)
                     layout.addRow(product_code_label, product_code_box)
-                    layout.addRow(product_color_label, product_color_box)
                     layout.addRow(category_label, category_box)
                     layout.addRow(quantity_label, quantity_box)
 
@@ -8931,13 +8965,12 @@ class Ui_LoginWindow(object):
 
                     control_num_val.setText(selected[0])
                     lot_number_val.setText(selected[1])
-                    code_value.setText(selected[4])
-                    category_value.setText(selected[7])
+                    code_value.setText(selected[3])
+                    category_value.setText(selected[5])
                 except IndexError:
-                    QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Item Selected.')
+                    QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Selected!')
 
             def fg_filter():
-
 
                 if masterbatch_checkbox.isChecked() == True and drycolor_checkbox.isChecked() == False:
 
