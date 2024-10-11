@@ -1326,14 +1326,19 @@ class Ui_LoginWindow(object):
                         lot_count = 1
                     else:
                         lot_count = (num2 - num1) + 1
-                    for key in materials.keys():
-                        materials[key] = round(materials[key] * (int(cut_input.text()) / lot_count), 3)
+
+                    if int(cut_input.text()) > 0:
+                        for key in materials.keys():
+                            materials[key] = round(materials[key] * (int(cut_input.text()) / lot_count), 3)
+                    else:
+                        pass
 
                     self.added_entry += 1
                     self.lot_numberList.append(lot_number)
                     self.total_output += output_quantity
                     self.total_quantity_order += quantity_order
 
+                    print(materials)
                     # Getting the materials
                     for key in materials.keys():
                         if key in list(self.total_mats.keys()):
@@ -1342,6 +1347,7 @@ class Ui_LoginWindow(object):
                         else:
                             self.total_mats[key] = materials[key]
                             self.total_materialQty += materials[key]
+                    print(self.total_mats)
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
