@@ -1350,11 +1350,11 @@ class Ui_LoginWindow(object):
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
-                    customer_input.setText(customer)
-                    productCode_input.setText(product_code)
+                    customer_input.setText(customer.strip())
+                    productCode_input.setText(product_code.strip())
                     lot_number_input.setText('/'.join(self.lot_numberList))
-                    self.formulaID_input.setText(str(formula_id))
-                    order_number_input.setText(str(order_number))
+                    self.formulaID_input.setText(str(formula_id).strip())
+                    order_number_input.setText(str(order_number).strip())
                     label2.setText(str(self.total_materialQty))
 
                     self.cursor.execute(f"""
@@ -3301,6 +3301,38 @@ class Ui_LoginWindow(object):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                     self.extruder_table.setItem(i, j, item)
 
+        def delete_entry():
+
+            selected = self.extruder_table.selectedItems()
+
+            if selected:
+                id = selected[0].text()
+
+
+
+                delete = QMessageBox.question(self.production_widget, 'Delete Item', f"Do you want to Delete \n process id {id}?", QMessageBox.Yes | QMessageBox.No,
+                                     QMessageBox.No)
+
+                if delete == QMessageBox.Yes:
+                    self.cursor.execute(f"""
+                        DELETE FROM extruder
+                        WHERE process_id = {id}
+
+                                    """)
+                    self.conn.commit()
+
+
+                else:
+                    print("User chose No.")
+                    return
+
+
+
+
+            else:
+                QMessageBox.critical(self.production_widget, 'Error', "No Item Selected!")
+                return
+
 
         try:
             if self.mixer_btn_clicked == True:
@@ -3467,7 +3499,7 @@ class Ui_LoginWindow(object):
         statsButtonImport.show()
 
         self.view_btn = QtWidgets.QPushButton(self.production_widget)
-        self.view_btn.setGeometry(600, 660, 60, 25)
+        self.view_btn.setGeometry(540, 660, 60, 25)
         self.view_btn.setText("View")
         self.view_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
                                     "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
@@ -3476,7 +3508,7 @@ class Ui_LoginWindow(object):
         self.view_btn.show()
 
         self.add_btn = QtWidgets.QPushButton(self.production_widget)
-        self.add_btn.setGeometry(665, 660, 60, 25)
+        self.add_btn.setGeometry(605, 660, 60, 25)
         self.add_btn.setText("Add")
         self.add_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
                                    " border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
@@ -3485,7 +3517,7 @@ class Ui_LoginWindow(object):
         self.add_btn.show()
 
         self.update_btn = QtWidgets.QPushButton(self.production_widget)
-        self.update_btn.setGeometry(730, 660, 60, 25)
+        self.update_btn.setGeometry(670, 660, 60, 25)
         self.update_btn.setText("Update")
         self.update_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
                                       "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
@@ -3493,8 +3525,17 @@ class Ui_LoginWindow(object):
         self.update_btn.setCursor(Qt.PointingHandCursor)
         self.update_btn.show()
 
+        self.delete_btn = QtWidgets.QPushButton(self.production_widget)
+        self.delete_btn.setGeometry(735, 660, 60, 25)
+        self.delete_btn.setText("Delete")
+        self.delete_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
+                                     "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
+        self.delete_btn.clicked.connect(delete_entry)
+        self.delete_btn.setCursor(Qt.PointingHandCursor)
+        self.delete_btn.show()
+
         self.print_btn = QtWidgets.QPushButton(self.production_widget)
-        self.print_btn.setGeometry(795, 660, 60, 25)
+        self.print_btn.setGeometry(800, 660, 60, 25)
         self.print_btn.setText("Print")
         self.print_btn.setStyleSheet("background-color : rgb(240,240,240); border-radius: 5px;"
                                      "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
@@ -3579,7 +3620,7 @@ class Ui_LoginWindow(object):
             self.cursor.execute(f"""
             SELECT * FROM quality_control
             WHERE evaluated_on::DATE BETWEEN '{date_from}' AND '{date_to}'
-            ORDER BY id 
+            ORDER BY id DESC
             
             """)
 
@@ -7031,27 +7072,38 @@ class Ui_LoginWindow(object):
                 lot_number = selected[1].text()
 
                 try:
-                    self.cursor.execute(f"""
-                                    DELETE FROM quality_control
-                                    WHERE id = {id}
-                                    """)
+                    delete = QMessageBox.question(self.qc_widget, 'Delete Item',
+                                                  f"Do you want to Delete \n Lot Number {lot_number}?",
+                                                  QMessageBox.Yes | QMessageBox.No,
+                                                  QMessageBox.No)
+                    if delete == QMessageBox.Yes:
+                        self.cursor.execute(f"""
+                                                            DELETE FROM quality_control
+                                                            WHERE id = {id}
+                                                            """)
 
-                    self.cursor.execute(f"""
-                                    DELETE FROM quality_control_tbl2
-                                    WHERE id = {id}
+                        self.cursor.execute(f"""
+                                                            DELETE FROM quality_control_tbl2
+                                                            WHERE id = {id}
 
-                                    """)
+                                                            """)
 
-                    self.cursor.execute(f"""
-                                        INSERT INTO qc_logs
-                                        VALUES('{datetime.now().strftime('%Y-%m-%d %H:%M')}', 'DELETE', {selected[0].text()}, '{selected[1].text()}', 
-                                                '{selected[2].text()}', '{selected[3].text()}', '{selected[4].text()}', '{selected[5].text()}')
+                        self.cursor.execute(f"""
+                                                                INSERT INTO qc_logs
+                                                                VALUES('{datetime.now().strftime('%Y-%m-%d %H:%M')}', 'DELETE', {selected[0].text()}, '{selected[1].text()}', 
+                                                                        '{selected[2].text()}', '{selected[3].text()}', '{selected[4].text()}', '{selected[5].text()}')
 
-                                    """)
+                                                            """)
+
+                        self.conn.commit()
+                        QMessageBox.information(self.qc_widget, '', f"{lot_number} successfully deleted.")
+
+                    else:
+                        return
 
 
-                    self.conn.commit()
-                    QMessageBox.information(self.qc_widget, '', f"{lot_number} successfully deleted.")
+
+
 
                 except:
                     pass
@@ -8913,7 +8965,6 @@ class Ui_LoginWindow(object):
 
                     quantity_box.setValidator(validator)
                     quantity_box.setText(selected[4])
-
 
                     product_code_label = QLabel()
                     product_code_label.setText('Product Code')
