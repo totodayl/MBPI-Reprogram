@@ -3404,12 +3404,12 @@ class Ui_LoginWindow(object):
         WHERE TABLE_NAME = 'extruder';
         """)
 
-        column_names = ["process_id", "machine", "customer", "qty_order", "total_output", "formula_id", "product_code",
+        column_names = ["process_id", "machine", "customer", "qty_order", "total_output","output_per_hour", "formula_id", "product_code",
                         "total time(hr)"]
 
         try:
             self.cursor.execute("""SELECT 
-                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        process_id, machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
                         FROM extruder
                         ORDER BY process_id DESC;
                         """)
@@ -8665,27 +8665,6 @@ class Ui_LoginWindow(object):
                                                     """)
                             self.conn.commit()
 
-                        self.cursor.execute(f"""
-                                                SELECT * FROM fg_inventory
-                                                WHERE product_code = '{product_code}'
-
-                                                """)
-                        result = self.cursor.fetchone()
-
-                        if result:
-                            # UPDATE THE quantity if the product code exist in the inventory
-                            self.cursor.execute(f"""
-                                                    UPDATE fg_inventory
-                                                    SET quantity = quantity - ({(num2 - num1) + 1} * {int(quantity_box.text())})
-
-
-                                                    """)
-                            self.conn.commit()
-
-                        else:
-                            QMessageBox.information(self.widget, 'No Data',
-                                                    'Product Code Does Not Exist in FG INCOMING')
-                            return
 
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
                     else:
