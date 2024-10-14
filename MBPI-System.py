@@ -2930,7 +2930,7 @@ class Ui_LoginWindow(object):
                     df.to_excel(excel_writer=filename, index=False,
                                 header=column_names)
                     QMessageBox.information(self.production_widget, "File Imported", "Successfully Imported Data")
-                    print(filename)
+
             except PermissionError:
                 QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
@@ -3476,19 +3476,19 @@ class Ui_LoginWindow(object):
         self.extruder_table.show()
 
         date1 = QDateEdit(self.production_widget)
-        date1.setGeometry(50, 710, 100, 25)
+        date1.setGeometry(50, 660, 100, 25)
         date1.setDate(date.today())
         date1.setDisplayFormat('yyyy-MM-dd')
         date1.show()
 
         date2 = QDateEdit(self.production_widget)
-        date2.setGeometry(170, 710, 100, 25)
+        date2.setGeometry(170, 660, 100, 25)
         date2.setDate(date.today())
         date2.setDisplayFormat('yyyy-MM-dd')
         date2.show()
 
         import_extruder_btn = ClickableLabel(self.production_widget)
-        import_extruder_btn.setGeometry(280, 713, 20, 20)
+        import_extruder_btn.setGeometry(280, 660, 20, 20)
         import_extruder_btn.setPixmap(QtGui.QIcon('export.png').pixmap(20, 20))
         import_extruder_btn.setCursor(Qt.PointingHandCursor)
         import_extruder_btn.setToolTip('Import to Excel')
@@ -3496,7 +3496,7 @@ class Ui_LoginWindow(object):
         import_extruder_btn.show()
 
         statsButtonImport = ClickableLabel(self.production_widget)
-        statsButtonImport.setGeometry(310, 713, 20, 20)
+        statsButtonImport.setGeometry(310, 660, 20, 20)
         statsButtonImport.setPixmap(QtGui.QIcon('statistics-icon.png').pixmap(20,20))
         statsButtonImport.setCursor(Qt.PointingHandCursor)
         statsButtonImport.setToolTip('Export Extruder Data')
@@ -8287,7 +8287,6 @@ class Ui_LoginWindow(object):
                 result = self.cursor.fetchall()
                 print(result)
 
-
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
             fg_incoming_btn.setGeometry(30, 0, 100, 30)
             fg_incoming_btn.setText("FG INCOMING")
@@ -9604,7 +9603,6 @@ class Ui_LoginWindow(object):
             table_widget.setColumnWidth(1, 200)
             table_widget.setColumnWidth(2, 120)
             table_widget.setColumnWidth(3, 400)
-
 
             # Query for Getting the Inventory
             self.cursor.execute("""
