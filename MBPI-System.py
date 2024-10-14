@@ -7865,6 +7865,7 @@ class Ui_LoginWindow(object):
                 remarks_label.setFont(label_font)
 
                 remarks_box = QComboBox()
+                remarks_box.addItem('-')
                 remarks_box.addItem("NEW PASSED")
                 remarks_box.addItem("NEW FAILED")
                 remarks_box.addItem("RETURN PASS")
@@ -8020,6 +8021,7 @@ class Ui_LoginWindow(object):
                     remarks_label.setFont(label_font)
 
                     remarks_box = QComboBox()
+                    remarks_box.addItem('-')
                     remarks_box.addItem("NEW PASSED")
                     remarks_box.addItem("NEW FAILED")
                     remarks_box.addItem("RETURN PASS")
@@ -8240,7 +8242,7 @@ class Ui_LoginWindow(object):
                     self.warehouse()  # Refreshes the Table.
 
                 else:
-                    QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Seleceted Item!')
+                    QMessageBox.information(self.warehouse_widget, 'ERROR', 'No Selected Item!')
 
             def export_to_excel():
 
