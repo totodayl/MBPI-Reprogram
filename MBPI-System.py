@@ -8661,9 +8661,15 @@ class Ui_LoginWindow(object):
                             self.cursor.execute(f"""
                                                 INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
                                                 VALUES('{product_code_box.text()}', '{production_date_box.text()}',
-                                                '{str(i) + code}', {quantity_box.text()}, '{category_box.currentText()}')
+                                                '{str(i) + code}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}')
                                                     """)
-                            self.conn.commit()
+                        self.conn.commit()
+
+                        lot_number_val.clear()
+                        product_code_box.clear()
+                        quantity_box.clear()
+
+
 
 
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
@@ -8690,7 +8696,36 @@ class Ui_LoginWindow(object):
 
                         self.conn.commit()
 
+                        lot_number_val.clear()
+                        product_code_box.clear()
+                        quantity_box.clear()
+
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
+
+                    self.cursor.execute("""
+                        SELECT control_id, lot_number, date, product_code, quantity, category 
+                        FROM fg_outgoing
+                        ORDER BY control_id DESC
+
+                                                            """)
+
+                    result = self.cursor.fetchall()
+
+                    # adjust the length
+                    outgoing_table.setRowCount(len(result))
+
+                    outgoing_table.clearContents()
+                    for row in result:
+                        for column in range(len(row)):
+                            item = QTableWidgetItem(str(row[column]))
+                            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                            item.setTextAlignment(Qt.AlignCenter)
+                            outgoing_table.setItem(result.index(row), column, item)
+
+                    # Clear after saving
+                    lot_number_box.clear()
+                    product_code_box.clear()
+                    quantity_box.clear()
 
 
                 self.widget = QWidget()
@@ -8739,6 +8774,7 @@ class Ui_LoginWindow(object):
                 production_date_box.setFixedHeight(30)
                 production_date_box.setStyleSheet('background-color: rgb(255, 255, 17)')
                 production_date_box.setDisplayFormat('MM-dd-yyyy')
+                production_date_box.setDate(date.today())
 
                 category_label = QLabel()
                 category_label.setFont(label_font)
