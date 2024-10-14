@@ -2867,10 +2867,10 @@ class Ui_LoginWindow(object):
 
             # Populating Time Table
             for i in range(len(t_start)):
-                item1 = QTableWidgetItem(str(t_start[i].strftime("%d-%b-%Y %H:%M")))
+                item1 = QTableWidgetItem(str(t_start[i].strftime("%b-%d-%Y %H:%M")))
                 item1.setTextAlignment(Qt.AlignCenter)
                 item1.setFlags(item1.flags() & ~Qt.ItemIsEditable)
-                item2 = QTableWidgetItem(str(t_end[i].strftime("%d-%b-%Y %H:%M")))
+                item2 = QTableWidgetItem(str(t_end[i].strftime("%b-%d-%Y %H:%M")))
                 item2.setTextAlignment(Qt.AlignCenter)
                 item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)
                 item3 = QTableWidgetItem(str(outputs[i]))
@@ -3303,12 +3303,17 @@ class Ui_LoginWindow(object):
 
         def delete_entry():
 
+            if extruder_access:
+                pass
+            else:
+                QMessageBox.critical(self.production_widget, 'Restricted Access', "You Dont Have Permission. \n Contact the Admin.")
+                return
+
+
             selected = self.extruder_table.selectedItems()
 
             if selected:
                 id = selected[0].text()
-
-
 
                 delete = QMessageBox.question(self.production_widget, 'Delete Item', f"Do you want to Delete \n process id {id}?", QMessageBox.Yes | QMessageBox.No,
                                      QMessageBox.No)
@@ -6205,12 +6210,12 @@ class Ui_LoginWindow(object):
                 productCode_selected.setText(product_code)
                 result_selected.setText(status)
                 evaluatedBy_selected.setText(evaluated_by)
-                evaluatedDate_selected.setText(str(evaluated_date))
-                encodedDate_selected.setText(str(encoded_on))
+                evaluatedDate_selected.setText(str(evaluated_date.strftime("%m-%d-%Y %H:%M:%S")))
+                encodedDate_selected.setText(str(encoded_on.strftime("%m-%d-%Y %H:%M:%S")))
                 remarks_box.setText(remarks)
 
                 updatedBy_val1.setText(updated_by)
-                time_endorsed_val.setText(str(time_endorsed))
+                time_endorsed_val.setText(str(time_endorsed.strftime("%m-%d-%Y %H:%M:%S")))
                 qc_type_selected.setText(qc_type)
             except:
                 QMessageBox.information(self.qc_widget, "Selection Error", "No Items Selected")
@@ -6885,15 +6890,12 @@ class Ui_LoginWindow(object):
                 
                 """)
 
-
                 self.cursor.execute(f"""
                     INSERT INTO qc_logs
                     VALUES('{datetime.now().strftime('%Y-%m-%d %H:%M')}', 'UPDATE', {selected[0].text()}, '{selected[1].text()}', 
                             '{selected[2].text()}', '{selected[3].text()}', '{selected[4].text()}', '{selected[5].text()}')
                 
                 """)
-
-
 
                 self.conn.commit()
 
@@ -7195,8 +7197,8 @@ class Ui_LoginWindow(object):
         ORDER BY 
 		CASE 
         WHEN updated_on IS NOT NULL THEN updated_on
-        ELSE encoded_on 
-        END DESC;
+        ELSE encoded_on
+        END DESC, id DESC
         
         """)
 
@@ -8426,7 +8428,7 @@ class Ui_LoginWindow(object):
             table_widget.itemSelectionChanged.connect(show_selected)
 
             self.cursor.execute("""
-                    SELECT control_id, lot_number, production_date, product_code, quantity, category, remarks, location   
+                    SELECT control_id, lot_number, TO_CHAR(production_date, 'MM-DD-YYYY'), product_code, quantity, category, remarks, location   
                     FROM fg_incoming
                     WHERE deleted = false
                     ORDER BY control_id DESC
