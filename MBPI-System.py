@@ -8230,8 +8230,7 @@ class Ui_LoginWindow(object):
 
                 if selected:
                     self.cursor.execute(f"""
-                    UPDATE fg_incoming
-                    SET deleted = true
+                    DELETE FROM fg_incoming
                     WHERE control_id = {selected[0].text()}
 
                     """)
