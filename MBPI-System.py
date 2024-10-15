@@ -67,15 +67,14 @@ class Ui_LoginWindow(object):
         username = self.username.text()
         pass1 = self.password.text()
 
-
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="192.168.1.13",
+                host="localhost",
                 port=5432,
-                dbname='postgres',
+                dbname='test-db',
                 user=f'postgres',
-                password=f'mbpi'
+                password=f'postgres'
             )
             self.cursor = self.conn.cursor()
 
@@ -1218,6 +1217,28 @@ class Ui_LoginWindow(object):
                         print("query successful")
                         self.conn.commit()
                         clear_inputs()
+
+                        # Refresh the table
+                        self.cursor.execute("""SELECT 
+                                                process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
+                                                FROM extruder
+                                                ORDER BY date DESC;
+                                                """)
+                        result = self.cursor.fetchall()
+                        self.extruder_table.setRowCount(len(result))
+
+                        # Populate table with data
+                        for i in range(len(result)):
+                            for j in range(len(column_names)):
+                                item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                                if j == 3:
+                                    pass
+                                else:
+                                    item.setTextAlignment(Qt.AlignCenter)
+                                item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                                self.extruder_table.setItem(i, j, item)
+
+
                     except Exception as e:
                         print("Insert Failed")
                         QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
@@ -2024,7 +2045,7 @@ class Ui_LoginWindow(object):
 
             resin_quantity_label = QLabel()
             resin_quantity_label.setFont(font)
-            resin_quantity_label.setText('Resin Qty(kg)')
+            resin_quantity_label.setText('Purging Resin Qty')
 
             purging_input = QtWidgets.QLineEdit()
             purging_input.setFixedHeight(25)
@@ -2994,6 +3015,10 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
 
             df = pd.DataFrame(result)
+            df.columns = column_names
+            print(df.columns.tolist(), df['time_start'].dtype)
+            # df['time_start'] = df['time_start'].dt.strftime("%m-%d-%Y %H:%M")
+            print(df)
 
             try:
                 filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.production_widget, "Save File", r"C:\Users\Administrator\Documents",
@@ -4602,7 +4627,7 @@ class Ui_LoginWindow(object):
             self.body_widget.show()
 
             qc_data_table = QTableWidget(self.body_widget)
-            qc_data_table.setGeometry(50, 20, 890, 340)
+            qc_data_table.setGeometry(50, 20, 890, 590)
             qc_data_table.setStyleSheet("border: 1px solid black; ")
             qc_data_table.horizontalHeader().setStyleSheet("""
                     QHeaderView::section{
@@ -4702,98 +4727,98 @@ class Ui_LoginWindow(object):
                                                      "PRODUCT CODE", "QC DAYS"])
             qc_data_table.show()
 
-            self.cursor.execute("""
-            WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
-            FROM quality_control_tbl2)
-            SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn 
-            FROM numbered_row
-
-            """)
-
-            result = self.cursor.fetchall()
-            df = pd.DataFrame(result)
-            try:
-                df.columns = ["original_lot", "status", "product_code", "row_number"]
-            except:
-                QMessageBox.information(self.qc_widget, "No Data", "No Data Found")
-                return
-            passToFail_counter = {}
-            firstTry_failed = {}
-
-            # Getting the number of Lot Number with Passed Status and then become Failed Later
-            for index, row in df.iterrows():
-                original_lot = row['original_lot']
-                status = row['status']
-                product_code = row['product_code']
-                row_number = row['row_number']
-                if status == "Passed" and row_number == 1:
-                    try:
-                        if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
-
-                            if product_code not in passToFail_counter.keys():
-                                passToFail_counter[product_code] = 1
-                            else:
-                                passToFail_counter[product_code] += 1
-                    except Exception as e:
-                        print(e)
-
-                # For getting the Failed Lot on the First Qc
-                elif status == "Failed" and row_number == 1:
-                    if product_code not in firstTry_failed.keys():
-                        firstTry_failed[product_code] = 1
-                    else:
-                        firstTry_failed[product_code] += 1
-
-            passToFail_x = []
-            passToFail_y = []
-
-            # Query For Getting the total Amount of original_lot per Product Code
-            self.cursor.execute("""
-            SELECT product_code, COUNT(*) AS total_quantity
-            FROM (SELECT DISTINCT ON (product_code, original_lot) *
-                  FROM quality_control_tbl2
-                  ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
-            GROUP BY product_code
-            ORDER BY product_code;
-            
-            """)
-            result = self.cursor.fetchall()
-            total_productcode = {}
-            for i in result:
-                total_productcode[i[0]] = i[1]
-
-            # Getting the percentage of Pass to Fail of Product Codes
-            passToFail_percentage = {}
-            for key in passToFail_counter.keys():
-                passToFail_percentage[key] = passToFail_counter[key] / total_productcode[key]
-
-            # Get the DISTINCT OF PRODUCT CODE
-            self.cursor.execute("""
-            SELECT DISTINCT product_code
-            FROM quality_control_tbl2
-            
-            """)
-            result = self.cursor.fetchall()
-            prod_code_list = [i[0] for i in result] # Parse the data
-
-            # Add the other product code and Set the Other Value to 0
-            for i in prod_code_list:
-                if i not in passToFail_percentage.keys():
-                    passToFail_percentage[i] = 0
-
-            # unpacking the dictionary to list
-            for key, value in passToFail_percentage.items():
-                passToFail_x.append(key)
-                passToFail_y.append(value)
-
-            # Table For Showing Average QC days per Product Code
-            aggregated_products_table = QTableWidget(self.body_widget)
-            aggregated_products_table.setGeometry(50, 390, 300, 300)
-            aggregated_products_table.setColumnCount(3)
-            aggregated_products_table.setRowCount(10)
-            aggregated_products_table.verticalHeader().setVisible(False)
-            aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
-            aggregated_products_table.show()
+            # self.cursor.execute("""
+            # WITH numbered_row AS (SELECT * , ROW_NUMBER() OVER (PARTITION BY original_lot order by evaluation_date) AS rn
+            # FROM quality_control_tbl2)
+            # SELECT numbered_row.original_lot, numbered_row.status, product_code, numbered_row.rn
+            # FROM numbered_row
+            #
+            # """)
+            #
+            # result = self.cursor.fetchall()
+            # df = pd.DataFrame(result)
+            # try:
+            #     df.columns = ["original_lot", "status", "product_code", "row_number"]
+            # except:
+            #     QMessageBox.information(self.qc_widget, "No Data", "No Data Found")
+            #     return
+            # passToFail_counter = {}
+            # firstTry_failed = {}
+            #
+            # # Getting the number of Lot Number with Passed Status and then become Failed Later
+            # for index, row in df.iterrows():
+            #     original_lot = row['original_lot']
+            #     status = row['status']
+            #     product_code = row['product_code']
+            #     row_number = row['row_number']
+            #     if status == "Passed" and row_number == 1:
+            #         try:
+            #             if df.iat[index + 1, 1] == 'Failed' and df.iat[index + 1, 0] == original_lot:
+            #
+            #                 if product_code not in passToFail_counter.keys():
+            #                     passToFail_counter[product_code] = 1
+            #                 else:
+            #                     passToFail_counter[product_code] += 1
+            #         except Exception as e:
+            #             print(e)
+            #
+            #     # For getting the Failed Lot on the First Qc
+            #     elif status == "Failed" and row_number == 1:
+            #         if product_code not in firstTry_failed.keys():
+            #             firstTry_failed[product_code] = 1
+            #         else:
+            #             firstTry_failed[product_code] += 1
+            #
+            # passToFail_x = []
+            # passToFail_y = []
+            #
+            # # Query For Getting the total Amount of original_lot per Product Code
+            # self.cursor.execute("""
+            # SELECT product_code, COUNT(*) AS total_quantity
+            # FROM (SELECT DISTINCT ON (product_code, original_lot) *
+            #       FROM quality_control_tbl2
+            #       ORDER BY product_code, original_lot, evaluation_date ) AS distinct_lots
+            # GROUP BY product_code
+            # ORDER BY product_code;
+            #
+            # """)
+            # result = self.cursor.fetchall()
+            # total_productcode = {}
+            # for i in result:
+            #     total_productcode[i[0]] = i[1]
+            #
+            # # Getting the percentage of Pass to Fail of Product Codes
+            # passToFail_percentage = {}
+            # for key in passToFail_counter.keys():
+            #     passToFail_percentage[key] = passToFail_counter[key] / total_productcode[key]
+            #
+            # # Get the DISTINCT OF PRODUCT CODE
+            # self.cursor.execute("""
+            # SELECT DISTINCT product_code
+            # FROM quality_control_tbl2
+            #
+            # """)
+            # result = self.cursor.fetchall()
+            # prod_code_list = [i[0] for i in result] # Parse the data
+            #
+            # # Add the other product code and Set the Other Value to 0
+            # for i in prod_code_list:
+            #     if i not in passToFail_percentage.keys():
+            #         passToFail_percentage[i] = 0
+            #
+            # # unpacking the dictionary to list
+            # for key, value in passToFail_percentage.items():
+            #     passToFail_x.append(key)
+            #     passToFail_y.append(value)
+            #
+            # # Table For Showing Average QC days per Product Code
+            # aggregated_products_table = QTableWidget(self.body_widget)
+            # aggregated_products_table.setGeometry(50, 390, 300, 300)
+            # aggregated_products_table.setColumnCount(3)
+            # aggregated_products_table.setRowCount(10)
+            # aggregated_products_table.verticalHeader().setVisible(False)
+            # aggregated_products_table.setHorizontalHeaderLabels(["Product Code", "Average QC days", "Pass to Fail"])
+            # # aggregated_products_table.show()
 
         def show_dashboards():
 
@@ -7926,7 +7951,7 @@ class Ui_LoginWindow(object):
                             self.cursor.execute(f"""
                                 UPDATE fg_incoming
                                 SET  product_code = '{product_code_box.text()}', 
-                                production_date = '{production_date_box.text()}', lot_number = '{lot_number_box.text().upper()}',
+                                production_date = TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'), lot_number = '{lot_number_box.text().upper()}',
                                 quantity = {quantity_box.text()}, category = '{category_box.currentText()}', 
                                 remarks = '{remarks_box.currentText()}', location = '{warehouse_input.currentText() + ':' + block_input.text()}'
                                 WHERE control_id = {selected[0]}
@@ -7982,9 +8007,10 @@ class Ui_LoginWindow(object):
                     production_date_box.setFont(input_font)
 
                     my_date = re.findall(r'\d+', selected[2])
-                    year = int(my_date[0])
-                    month = int(my_date[1])
-                    day = int(my_date[2])
+                    print(my_date)
+                    year = int(my_date[2])
+                    month = int(my_date[0])
+                    day = int(my_date[1])
 
                     d = QtCore.QDate(year, month, day)
                     production_date_box.setDate(d)
@@ -8275,6 +8301,29 @@ class Ui_LoginWindow(object):
                     QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                                      "Someone is using blank.xlsx")
 
+            def auto_search():
+                item = search_box.text()
+
+                self.cursor.execute(f"""
+                                SELECT control_id, lot_number, production_date, product_code, quantity, category, remarks, location
+                                FROM fg_incoming 
+                                WHERE lot_number ILIKE '%{item}%' OR product_code ILIKE '%{item}%'
+                                ORDER BY control_id DESC
+                                """)
+
+                result = self.cursor.fetchall()
+
+                table_widget.clear()
+                table_widget.setHorizontalHeaderLabels(
+                    ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Remarks", "Location"])
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        table_widget.setItem(result.index(row), column, item)
+
 
             def daily_report():
 
@@ -8324,6 +8373,7 @@ class Ui_LoginWindow(object):
             search_box.setStyleSheet('border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);')
             search_box.setPlaceholderText('Lot Number')
             search_box.setFocus()
+            search_box.textChanged.connect(auto_search)
             search_box.show()
 
             search_button = QPushButton(self.warehouse_widget)
@@ -8536,7 +8586,6 @@ class Ui_LoginWindow(object):
                                     "border: 1px solid rgb(92, 154, 255); background-color: rgb(194, 232, 255)")
             delete_btn.setCursor(Qt.PointingHandCursor)
             delete_btn.clicked.connect(delete_incoming)
-            delete_btn.setShortcut('Delete')
             delete_btn.show()
 
         def fg_outgoing():
@@ -8873,11 +8922,11 @@ class Ui_LoginWindow(object):
 
                         try:
                             self.cursor.execute(f"""
-                                                UPDATE fg_outgoing
-                                                SET customer = '{customer_box.text()}', product_code = '{product_code_box.text()}', 
-                                                date = '{production_date_box.text()}', lot_number = '{lot_number_box.text()}',
-                                                quantity = {quantity_box.text()}, color = '{product_color_box.text()}', category = '{category_box.currentText()}'
-                                                WHERE control_id = {selected[0]}
+                                UPDATE fg_outgoing
+                                SET product_code = '{product_code_box.text()}', 
+                                date = TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'), lot_number = '{lot_number_box.text()}',
+                                quantity = {quantity_box.text()}, category = '{category_box.currentText()}'
+                                WHERE control_id = {selected[0]}
 
 
                                                 """)
@@ -8935,17 +8984,6 @@ class Ui_LoginWindow(object):
                     d = QtCore.QDate(year, month, day)
                     production_date_box.setDate(d)
 
-                    customer_label = QLabel()
-                    customer_label.setFont(label_font)
-                    customer_label.setText('Customer')
-                    customer_label.setFixedWidth(150)
-
-                    customer_box = QLineEdit()
-                    customer_box.setFixedHeight(30)
-                    customer_box.setStyleSheet('background-color: rgb(255, 255, 17)')
-                    customer_box.setText(selected[3])
-                    customer_box.setEnabled(False)
-
                     category_label = QLabel()
                     category_label.setFont(label_font)
                     category_label.setText('Category')
@@ -9000,7 +9038,6 @@ class Ui_LoginWindow(object):
                     layout = QFormLayout(form_layout_widget)
                     layout.addRow(id_number_label, id_number_box)
                     layout.addRow(lot_number_label, lot_number_box)
-                    layout.addRow(customer_label, customer_box)
                     layout.addRow(production_date_label, production_date_box)
                     layout.addRow(product_code_label, product_code_box)
                     layout.addRow(category_label, category_box)
@@ -9191,6 +9228,31 @@ class Ui_LoginWindow(object):
                     QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                                      "Someone is using blank.xlsx")
 
+            def auto_search():
+
+                lot_num = search_box.text()
+
+                self.cursor.execute(f"""
+                                SELECT control_id, lot_number, date, product_code, quantity, category   
+                                FROM fg_outgoing 
+                                WHERE lot_number ILIKE '%{lot_num}%' OR product_code ILIKE '%{lot_num}%'
+                                ORDER BY control_id DESC
+
+                                """)
+
+                result = self.cursor.fetchall()
+
+                outgoing_table.clear()
+                outgoing_table.setHorizontalHeaderLabels(
+                    ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        outgoing_table.setItem(result.index(row), column, item)
+
 
 
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
@@ -9234,6 +9296,8 @@ class Ui_LoginWindow(object):
             search_box.setGeometry(760, 40, 150, 25)
             search_box.setStyleSheet('border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);')
             search_box.setPlaceholderText('Lot Number')
+            search_box.setFocus()
+            search_box.textChanged.connect(auto_search)
             search_box.show()
 
             search_button = QPushButton(fg_incoming_widget)
