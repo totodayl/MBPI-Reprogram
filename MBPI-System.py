@@ -3280,7 +3280,7 @@ class Ui_LoginWindow(object):
         def search_lot_number():
             self.cursor.execute(f"""
                 SELECT 
-                process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date, machine, customer, qty_order, total_output,output_per_hour, formula_id, product_code, total_time
                 FROM extruder
                 WHERE '{search_bar.text()}' = ANY(lot_number) OR product_code ILIKE '%{search_bar.text()}%'
                 OR customer ILIKE '%{search_bar.text()}%' OR machine ILIKE '%{search_bar.text()}%'
@@ -3404,20 +3404,20 @@ class Ui_LoginWindow(object):
         WHERE TABLE_NAME = 'extruder';
         """)
 
-        column_names = ["process_id", "machine", "customer", "qty_order", "total_output","output_per_hour", "formula_id", "product_code",
+        column_names = ["process_id","date","machine", "customer", "qty_order", "total_output","output_per_hour", "formula_id", "product_code",
                         "total time(hr)"]
 
         try:
             self.cursor.execute("""SELECT 
-                        process_id, machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
+                        process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
                         FROM extruder
-                        ORDER BY process_id DESC;
+                        ORDER BY date DESC;
                         """)
             result = self.cursor.fetchall()
         except Exception as e:
             self.cursor.execute("""
                         SELECT 
-                        process_id, machine, customer, qty_order, total_output, formula_id, product_code, total_time
+                        process_id, machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
                         FROM extruder
                         ORDER BY process_id DESC
                         ; 
@@ -3440,11 +3440,10 @@ class Ui_LoginWindow(object):
         for i in range(len(result)):
             for j in range(len(column_names)):
                 item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
-                # Set Alignment for specific columns
-                if j == 2 or j == 6 or j == 3 or j == 4 or j == 7 or j == 5:
-                    item.setTextAlignment(Qt.AlignCenter)
-                else:
+                if j == 3:
                     pass
+                else:
+                    item.setTextAlignment(Qt.AlignCenter)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
                 self.extruder_table.setItem(i, j, item)
 
@@ -3465,8 +3464,8 @@ class Ui_LoginWindow(object):
         # Set Column Width
         self.extruder_table.setColumnWidth(0, 90)
         self.extruder_table.setColumnWidth(1, 90)
-        self.extruder_table.setColumnWidth(2, 198)
-        self.extruder_table.setColumnWidth(8, 90)
+        self.extruder_table.setColumnWidth(3, 198)
+        self.extruder_table.setColumnWidth(9, 90)
 
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
         # Set selection mode to select entire rows and disable single item selection
