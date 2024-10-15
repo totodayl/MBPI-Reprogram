@@ -1240,9 +1240,9 @@ class Ui_LoginWindow(object):
 
 
                     except Exception as e:
-                        print("Insert Failed")
-                        QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
                         print(e)
+                        QMessageBox.critical(self.entry_widget, "ERROR", "INVALID ENTRY")
+
                         self.conn.rollback()
                 except Exception as e:
                     print(e)
@@ -2241,10 +2241,10 @@ class Ui_LoginWindow(object):
 
                 try:
                     for i in range(len(time_start)):
-                        t_start = datetime.strptime(time_start[i], "%Y-%m-%d %H:%M:%S")
-                        t_end = datetime.strptime(time_end[i], "%Y-%m-%d %H:%M:%S")
+                        t_start = datetime.strptime(time_start[i], "%m-%d-%Y %H:%M")
+                        t_end = datetime.strptime(time_end[i], "%m-%d-%Y %H:%M")
                         total_time = total_time + (t_end - t_start)
-
+                    print(total_time)
                 except Exception as e:
                     print(e)
 
@@ -2253,6 +2253,7 @@ class Ui_LoginWindow(object):
                 seconds = str(int(total_time.total_seconds() % 60))
 
                 total_hours = round(abs(total_time.total_seconds() / 3600), 2)
+
 
                 time_start = ', '.join(["'{}'".format(time) for time in time_start])
                 time_end = ', '.join(["'{}'".format(time) for time in time_end])
@@ -2310,7 +2311,7 @@ class Ui_LoginWindow(object):
                         feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                         screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
                         purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
-                        time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
+                        time_start = ARRAY[TO_TIMESTAMP('{time_start}', 'MM-DD-YYYY HH24:MI')]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                         output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                         output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()},
                         qty_order = {orderedQuantity_input.text()}
@@ -2672,9 +2673,11 @@ class Ui_LoginWindow(object):
 
             # Populate the Table
             for i in range(len(result[9])):
-                item = QTableWidgetItem(str(result[9][i]))
-                item2 = QTableWidgetItem(str(result[10][i]))
+                item = QTableWidgetItem(str(result[9][i].strftime('%m-%d-%Y %H:%M')))
+                item2 = QTableWidgetItem(str(result[10][i].strftime('%m-%d-%Y %H:%M')))
                 item3 = QTableWidgetItem(str(result[26][i]))
+
+                print(type(result[9][i]), str(result[10][i]))
                 time_table.setItem(i, 0, item)
                 time_table.setItem(i, 1, item2)
                 time_table.setItem(i, 2, item3)
@@ -2709,13 +2712,13 @@ class Ui_LoginWindow(object):
 
             time_start_input = QtWidgets.QDateTimeEdit(self.entry_widget)
             time_start_input.setGeometry(30, 475, 120, 25)
-            time_start_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+            time_start_input.setDisplayFormat("MM-dd-yyyy HH:mm")
             time_start_input.setDateTime(default_date)
             time_start_input.show()
 
             time_end_input = QtWidgets.QDateTimeEdit(self.entry_widget)
             time_end_input.setGeometry(180, 475, 120, 25)
-            time_end_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+            time_end_input.setDisplayFormat("MM-dd-yyyy HH:mm")
             time_end_input.setDateTime(default_date)
             time_end_input.show()
 
@@ -8722,7 +8725,7 @@ class Ui_LoginWindow(object):
 
                         QMessageBox.information(self.widget, 'Entry Success', 'Data Successfully Entered.')
                     else:
-                        num1 = int(re.findall(r'(\d+)[A-Z]{2}', lot_number_box.text())[0])
+                        num1 = int(re.findall(r'(\d+)[A-Z]+', lot_number_box.text())[0])
                         code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
                         product_code = product_code_box.text()
 
