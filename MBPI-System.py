@@ -1148,6 +1148,7 @@ class Ui_LoginWindow(object):
                     time_start = ', '.join(["'{}'".format(time) for time in time_start])
                     time_end = ', '.join(["'{}'".format(time) for time in time_end])
 
+
                     # Getting the Data for temperature
                     temperature = []
                     for i in range(temperature_table.rowCount()):
@@ -2240,13 +2241,16 @@ class Ui_LoginWindow(object):
                 outputs = [i for i in outputs if i is not None]
                 outputs = [i.text() for i in outputs]
 
+                print(time_start)
+
                 total_time = timedelta()
 
                 try:
                     for i in range(len(time_start)):
-                        t_start = datetime.strptime(time_start[i], "%m-%d-%Y %H:%M")
-                        t_end = datetime.strptime(time_end[i], "%m-%d-%Y %H:%M")
+                        t_start = datetime.strptime(time_start[i], "%Y-%m-%d %H:%M")
+                        t_end = datetime.strptime(time_end[i], "%Y-%m-%d %H:%M")
                         total_time = total_time + (t_end - t_start)
+                        print(total_time)
                     print(total_time)
                 except Exception as e:
                     print(e)
@@ -2279,8 +2283,8 @@ class Ui_LoginWindow(object):
                 try:
                     purge_duration = timedelta()
                     try:
-                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
+                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M:%S")
+                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M:%S")
                         purge_duration = abs(purge_end - purge_start)
 
                     except:
@@ -2314,7 +2318,7 @@ class Ui_LoginWindow(object):
                         feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                         screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
                         purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
-                        time_start = ARRAY[TO_TIMESTAMP({time_start}, 'MM-DD-YYYY HH24:MI')]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
+                        time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                         output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                         output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()},
                         qty_order = {orderedQuantity_input.text()}
@@ -2676,8 +2680,8 @@ class Ui_LoginWindow(object):
 
             # Populate the Table
             for i in range(len(result[9])):
-                item = QTableWidgetItem(str(result[9][i].strftime('%m-%d-%Y %H:%M')))
-                item2 = QTableWidgetItem(str(result[10][i].strftime('%m-%d-%Y %H:%M')))
+                item = QTableWidgetItem(str(result[9][i].strftime("%Y-%m-%d %H:%M")))
+                item2 = QTableWidgetItem(str(result[10][i].strftime("%Y-%m-%d %H:%M")))
                 item3 = QTableWidgetItem(str(result[26][i]))
 
                 print(type(result[9][i]), str(result[10][i]))
@@ -2715,13 +2719,13 @@ class Ui_LoginWindow(object):
 
             time_start_input = QtWidgets.QDateTimeEdit(self.entry_widget)
             time_start_input.setGeometry(30, 475, 120, 25)
-            time_start_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            time_start_input.setDisplayFormat("yyyy-MM-dd HH:mm")
             time_start_input.setDateTime(default_date)
             time_start_input.show()
 
             time_end_input = QtWidgets.QDateTimeEdit(self.entry_widget)
             time_end_input.setGeometry(180, 475, 120, 25)
-            time_end_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            time_end_input.setDisplayFormat("yyyy-MM-dd HH:mm")
             time_end_input.setDateTime(default_date)
             time_end_input.show()
 
