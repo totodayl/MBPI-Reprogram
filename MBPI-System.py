@@ -1166,12 +1166,14 @@ class Ui_LoginWindow(object):
                     outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
                     try:
-                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M")
+                        purge_start = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                        purge_end = datetime.strptime(
+                            datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                            "%Y-%m-%d %H:%M")
 
                         if purge_end < purge_start:
                             purge_end += timedelta(days=1)  # Adjust for next day
-
 
                         purge_duration = purge_end - purge_start
 
@@ -1184,7 +1186,7 @@ class Ui_LoginWindow(object):
                             "%Y-%m-%d %H:%M")
                         purge_duration = (purge_end - purge_start).total_seconds()
 
-                    purge_duration = purge_duration // 60
+                    purge_duration = purge_duration.total_seconds() / 60
                     # SQL command here to insert Items
                     self.cursor.execute(
                         f"SELECT materials FROM production_merge WHERE t_prodid = '{productionID_input.text()}'")
@@ -2281,24 +2283,28 @@ class Ui_LoginWindow(object):
                 outputPerHour = round(float(product_output_input.text()) / total_hours, 4)
 
                 try:
-                    purge_duration = timedelta()
-                    try:
-                        purge_start = datetime.strptime(purgeStart_input.text(), "%Y-%m-%d %H:%M:%S")
-                        purge_end = datetime.strptime(purgeEnd_input.text(), "%Y-%m-%d %H:%M:%S")
-                        purge_duration = abs(purge_end - purge_start)
+                    purge_start = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                        "%Y-%m-%d %H:%M")
 
-                    except:
-                        purge_start = datetime.strptime(
-                            datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
-                        purge_end = datetime.strptime(
-                            datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
-                            "%Y-%m-%d %H:%M")
-                        purge_duration = (purge_end - purge_start).total_seconds()
+                    print(purge_start, purge_end)
+                    if purge_end < purge_start:
+                        purge_end += timedelta(days=1)  # Adjust for next day
+                    purge_duration = purge_end - purge_start
 
-                    purge_duration = purge_duration // 60
                 except:
-                    purge_duration = result[25]
 
+                    purge_start = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d") + " " + purgeStart_input.text(), "%Y-%m-%d %H:%M")
+                    purge_end = datetime.strptime(
+                        datetime.today().strftime("%Y-%m-%d") + " " + purgeEnd_input.text(),
+                        "%Y-%m-%d %H:%M")
+                    purge_duration = (purge_end - purge_start).total_seconds()
+
+                purge_duration = purge_duration.total_seconds() / 60
+                print(purge_duration, type(purge_duration))
                 # SQL command here to insert Items
                 self.cursor.execute(
                     f"SELECT materials FROM production_merge WHERE t_prodid = '{productionID_input.text()}'")
