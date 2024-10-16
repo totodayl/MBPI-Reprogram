@@ -1368,6 +1368,8 @@ class Ui_LoginWindow(object):
                             self.total_mats[key] = materials[key]
                             self.total_materialQty += materials[key]
 
+                    print(self.total_materialQty)
+
 
                     # Set the Text to the Extruder Entry Form
                     productionID_input.setText(str(prod_id))
@@ -1376,6 +1378,7 @@ class Ui_LoginWindow(object):
                     lot_number_input.setText('/'.join(self.lot_numberList))
                     self.formulaID_input.setText(str(formula_id).strip())
                     order_number_input.setText(str(order_number).strip())
+                    product_input.setText(str(round(self.total_materialQty, 2)))
                     label2.setText(str(self.total_materialQty))
 
                     self.cursor.execute(f"""
@@ -2311,7 +2314,7 @@ class Ui_LoginWindow(object):
                         feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
                         screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
                         purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
-                        time_start = ARRAY[TO_TIMESTAMP('{time_start}', 'MM-DD-YYYY HH24:MI')]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
+                        time_start = ARRAY[TO_TIMESTAMP({time_start}, 'MM-DD-YYYY HH24:MI')]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                         output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                         output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()},
                         qty_order = {orderedQuantity_input.text()}
@@ -3002,24 +3005,25 @@ class Ui_LoginWindow(object):
 
         def import_extruder():
 
-            self.cursor.execute("""
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'extruder'
-                ORDER BY ordinal_position
-                
-            """)
-            column_names = [i[0] for i in self.cursor.fetchall()]
+            column_names = ['machine', 'date', 'product_code', 'total_input', 'total_output', 'output_percent',
+                            'output_per_hour', 'loss', 'loss_percent', 'total_time', 'purge_duration']
+
 
             self.cursor.execute("""
-            SELECT * FROM extruder
+            SELECT machine, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY'), product_code,
+            total_input, total_output, output_percent, output_per_hour, loss, loss_percent, 
+            total_time, purge_duration  
+            FROM extruder
+            
+            ORDER BY machine, time_start[1]
             
             """)
 
             result = self.cursor.fetchall()
 
             df = pd.DataFrame(result)
-            df.columns = column_names
-            print(df.columns.tolist(), df['time_start'].dtype)
+
+            print(df.dtypes)
             # df['time_start'] = df['time_start'].dt.strftime("%m-%d-%Y %H:%M")
             print(df)
 
@@ -3039,7 +3043,6 @@ class Ui_LoginWindow(object):
             except PermissionError:
                 QMessageBox.critical(self.production_widget, "Permission Error", "Unable to Export the File. \n "
                                                                          "Someone is using blank.xlsx")
-
 
         def compounding():
 
@@ -3659,7 +3662,7 @@ class Ui_LoginWindow(object):
             result = self.cursor.fetchall()
 
             df = pd.DataFrame(result)
-
+            print(df.dtypes)
             # Get the Column Names
             self.cursor.execute("""
             SELECT column_name FROM information_schema.columns
