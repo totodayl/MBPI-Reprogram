@@ -1205,7 +1205,7 @@ class Ui_LoginWindow(object):
                                         formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
                                         loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
                                         rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
-                                        remarks, lot_number, resin_quantity, encoded_on) 
+                                        remarks, lot_number, resin_quantity, encoded_on, heat_up, shut_off) 
                                         VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
                                         '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                                         '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
@@ -1214,7 +1214,8 @@ class Ui_LoginWindow(object):
                                          '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.currentText()}', '{supervisor_input.currentText()}',
                                          ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                                          {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
-                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()}, '{date.today()}')
+                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()}, '{date.today()}',
+                                         '{heatUp_input.text()}', '{shutoff_input.text()}')
 
                                                 """)
                         print("query successful")
@@ -1789,7 +1790,6 @@ class Ui_LoginWindow(object):
                 try:
 
                     productionID_input.clear()
-                    machine_input.clear()
                     customer_input.clear()
                     orderedQuantity_input.clear()
                     productCode_input.clear()
@@ -1806,7 +1806,6 @@ class Ui_LoginWindow(object):
                     operator_input.clear()
                     supervisor_input.clear()
                     order_number_input.clear()
-                    purging_input.clear()
                     product_input.clear()
                     time_table.clearContents()
                     temperature_table.clearContents()
@@ -1827,11 +1826,11 @@ class Ui_LoginWindow(object):
 
             # Create Vertical Box Layout
             self.left_vbox = QtWidgets.QFormLayout(self.leftInput_side)
-            self.left_vbox.setSpacing(20)
+            self.left_vbox.setSpacing(15)
             self.right_vbox = QtWidgets.QFormLayout(self.right_side)
-            self.right_vbox.setSpacing(20)
+            self.right_vbox.setSpacing(18)
 
-            font = QtGui.QFont("Berlin Sans FB", 14)
+            font = QtGui.QFont("Berlin Sans FB", 13)
 
             productionID_label = QtWidgets.QLabel()
             productionID_label.setText("Production ID")
@@ -1918,6 +1917,14 @@ class Ui_LoginWindow(object):
             product_input_label = QtWidgets.QLabel()
             product_input_label.setText("Input")
             product_input_label.setFont(font)
+
+            heatUp_label = QtWidgets.QLabel()
+            heatUp_label.setText("Heat Up")
+            heatUp_label.setFont(font)
+
+            shutoff_label = QtWidgets.QLabel()
+            shutoff_label.setText("Shutoff")
+            shutoff_label.setFont(font)
 
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
@@ -2064,11 +2071,20 @@ class Ui_LoginWindow(object):
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.setInputMask('')
 
+            heatUp_input = QDateTimeEdit()
+            heatUp_input.setFixedHeight(25)
+            heatUp_input.setStyleSheet("background-color: white; border: 1px solid black")
+            heatUp_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+
+            shutoff_input = QDateTimeEdit()
+            shutoff_input.setFixedHeight(25)
+            shutoff_input.setStyleSheet("background-color: white; border: 1px solid black")
+            shutoff_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+
             validator = QtGui.QDoubleValidator()
             validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
 
             product_input.setValidator(validator)
-
 
             product_input.textChanged.connect(loss_auto)
 
@@ -2093,9 +2109,9 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(machine_label, machine_input)
             self.left_vbox.addRow(formulaID_label, self.formulaID_input)
             self.left_vbox.addRow(order_number_lbl, order_number_input)
-
+            self.left_vbox.addRow(feedrate_label, feedRate_input)
             # Add widgets to the right Form Box
-            self.right_vbox.addRow(feedrate_label, feedRate_input)
+
             self.right_vbox.addRow(rpm_label, rpm_input)
             self.right_vbox.addRow(screenSize_label, screenSize_input)
             self.right_vbox.addRow(screwConf_label, screwConf_input)
@@ -2104,6 +2120,8 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
+            self.right_vbox.addRow(heatUp_label, heatUp_input)
+            self.right_vbox.addRow(shutoff_label, shutoff_input)
             self.right_vbox.addRow(operator_label, operator_input)
             self.right_vbox.addRow(supervisor_label, supervisor_input)
 
@@ -2304,7 +2322,7 @@ class Ui_LoginWindow(object):
                     purge_duration = (purge_end - purge_start).total_seconds()
 
                 purge_duration = purge_duration.total_seconds() / 60
-                print(purge_duration, type(purge_duration))
+
                 # SQL command here to insert Items
                 self.cursor.execute(
                     f"SELECT materials FROM production_merge WHERE t_prodid = '{productionID_input.text()}'")
@@ -2327,7 +2345,7 @@ class Ui_LoginWindow(object):
                         time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                         output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                         output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()},
-                        qty_order = {orderedQuantity_input.text()}
+                        qty_order = {orderedQuantity_input.text()}, heat_up = '{heatUp_input.text()}', shut_off = '{shutoff_input.text()}'
                         WHERE process_id = {selected[0]};
         
                         """)
@@ -2479,6 +2497,14 @@ class Ui_LoginWindow(object):
             product_input_label = QtWidgets.QLabel()
             product_input_label.setText("Input")
             product_input_label.setFont(font)
+
+            heatUp_label = QtWidgets.QLabel()
+            heatUp_label.setText("Heat Up")
+            heatUp_label.setFont(font)
+
+            shutoff_label = QtWidgets.QLabel()
+            shutoff_label.setText("Shutoff")
+            shutoff_label.setFont(font)
 
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
@@ -2637,6 +2663,18 @@ class Ui_LoginWindow(object):
             product_input.textChanged.connect(loss_auto)
             product_input.setText(str(result[29]))
 
+            heatUp_input = QDateTimeEdit()
+            heatUp_input.setFixedHeight(25)
+            heatUp_input.setStyleSheet("background-color: white; border: 1px solid black")
+            heatUp_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            heatUp_input.setDateTime(QtCore.QDateTime.fromString(str(result[35]), 'yyyy-MM-dd HH:mm:ss'))
+
+            shutoff_input = QDateTimeEdit()
+            shutoff_input.setFixedHeight(25)
+            shutoff_input.setStyleSheet("background-color: white; border: 1px solid black")
+            shutoff_input.setDisplayFormat("MM-dd-yyyy HH:mm")
+            shutoff_input.setDateTime(QtCore.QDateTime.fromString(str(result[36]), 'yyyy-MM-dd HH:mm:ss'))
+
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
             self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
             self.groupBoxRemarks.setTitle("Remarks")
@@ -2659,9 +2697,9 @@ class Ui_LoginWindow(object):
             self.left_vbox.addRow(machine_label, machine_input)
             self.left_vbox.addRow(formulaID_label, self.formulaID_input)
             self.left_vbox.addRow(order_number_lbl, order_number_input)
+            self.left_vbox.addRow(feedrate_label, feedRate_input)
 
             # Add widgets to the right Form Box
-            self.right_vbox.addRow(feedrate_label, feedRate_input)
             self.right_vbox.addRow(rpm_label, rpm_input)
             self.right_vbox.addRow(screenSize_label, screenSize_input)
             self.right_vbox.addRow(screwConf_label, screwConf_input)
@@ -2670,6 +2708,8 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
+            self.right_vbox.addRow(heatUp_label, heatUp_input)
+            self.right_vbox.addRow(shutoff_label, shutoff_input)
             self.right_vbox.addRow(operator_label, operator_input)
             self.right_vbox.addRow(supervisor_label, supervisor_input)
 
@@ -3019,11 +3059,12 @@ class Ui_LoginWindow(object):
                             'output_per_hour', 'loss', 'loss_percent', 'total_time', 'purge_duration']
 
 
-            self.cursor.execute("""
+            self.cursor.execute(f"""
             SELECT machine, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY'), product_code,
             total_input, total_output, output_percent, output_per_hour, loss, loss_percent, 
             total_time, purge_duration  
             FROM extruder
+            WHERE time_start[1]::DATE BETWEEN '{date1.text()}' AND '{date2.text()}'
             
             ORDER BY machine, time_start[1]
             
@@ -3321,7 +3362,8 @@ class Ui_LoginWindow(object):
         def search_lot_number():
             self.cursor.execute(f"""
                 SELECT 
-                process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date, machine, customer, qty_order, total_output,output_per_hour, formula_id, product_code, total_time
+                process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, product_code, 
+                        qty_order, total_output, output_per_hour,total_time, formula_id
                 FROM extruder
                 WHERE '{search_bar.text()}' = ANY(lot_number) OR product_code ILIKE '%{search_bar.text()}%'
                 OR customer ILIKE '%{search_bar.text()}%' OR machine ILIKE '%{search_bar.text()}%'
@@ -3367,13 +3409,9 @@ class Ui_LoginWindow(object):
                                     """)
                     self.conn.commit()
 
-
                 else:
                     print("User chose No.")
                     return
-
-
-
 
             else:
                 QMessageBox.critical(self.production_widget, 'Error', "No Item Selected!")
@@ -3445,12 +3483,13 @@ class Ui_LoginWindow(object):
         WHERE TABLE_NAME = 'extruder';
         """)
 
-        column_names = ["process_id","date","machine", "customer", "qty_order", "total_output","output_per_hour", "formula_id", "product_code",
-                        "total time(hr)"]
+        column_names = ["process_id","date","machine", "customer", "product_code", "qty_order", "total_output","output_per_hour","total time(hr)",
+                        "formula_id"]
 
         try:
             self.cursor.execute("""SELECT 
-                        process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, qty_order, total_output, output_per_hour, formula_id, product_code, total_time
+                        process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, product_code, 
+                        qty_order, total_output, output_per_hour,total_time, formula_id
                         FROM extruder
                         ORDER BY date DESC;
                         """)
@@ -3503,9 +3542,10 @@ class Ui_LoginWindow(object):
 
 
         # Set Column Width
-        self.extruder_table.setColumnWidth(0, 90)
+        self.extruder_table.setColumnWidth(0, 70)
         self.extruder_table.setColumnWidth(1, 90)
-        self.extruder_table.setColumnWidth(3, 198)
+        self.extruder_table.setColumnWidth(2, 80)
+        self.extruder_table.setColumnWidth(3, 150)
         self.extruder_table.setColumnWidth(9, 90)
 
         self.extruder_table.setHorizontalHeaderLabels([col.upper() for col in column_names])  # Set column names
@@ -8333,6 +8373,8 @@ class Ui_LoginWindow(object):
                 table_widget.setHorizontalHeaderLabels(
                     ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Remarks", "Location"])
 
+                table_widget.verticalScrollBar().setValue(0)
+
                 for row in result:
                     for column in range(len(row)):
                         item = QTableWidgetItem(str(row[column]))
@@ -9262,14 +9304,14 @@ class Ui_LoginWindow(object):
                 outgoing_table.setHorizontalHeaderLabels(
                     ["Control ID", "Lot No.", "Date", "Customer", "Product Code", "Color", "Quantity", "Category"])
 
+                outgoing_table.verticalScrollBar().setValue(0)
+
                 for row in result:
                     for column in range(len(row)):
                         item = QTableWidgetItem(str(row[column]))
                         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         item.setTextAlignment(Qt.AlignCenter)
                         outgoing_table.setItem(result.index(row), column, item)
-
-
 
             fg_incoming_btn = QPushButton(self.warehouse_tabs)
             fg_incoming_btn.setGeometry(30, 0, 100, 30)
@@ -9550,6 +9592,54 @@ class Ui_LoginWindow(object):
 
                 pass
 
+            def auto_search():
+                self.cursor.execute(f"""
+                    WITH inventory AS (
+                        WITH incoming_total AS (
+                                    SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_incoming
+                                    GROUP BY lot_number, product_code
+
+                                ),
+                                outgoing_total AS (
+                                    SELECT lot_number, product_code, SUM(quantity) as total_qty FROM fg_outgoing
+                                    GROUP BY lot_number, product_code)
+
+                                , lot_location AS (
+                                    SELECT lot_number, array_agg(location) as location FROM fg_incoming
+                                    GROUP BY lot_number
+
+                                )
+
+                                , inventory AS	(SELECT a.lot_number, a.product_code,
+                                        CASE WHEN a.total_qty - b.total_qty IS NULL THEN a.total_qty
+                                             ELSE a.total_qty - b.total_qty
+                                             END AS total_qty, 
+                                        c.location, split_part(location[1], ':', 1) as wh
+                                    FROM incoming_total a
+                                    LEFT JOIN outgoing_total b ON a.lot_number = b.lot_number
+                                    JOIN lot_location c ON a.lot_number = c.lot_number)
+
+                                SELECT lot_number, product_code, ROUND(total_qty::numeric, 2), location FROM inventory
+                    
+                    )
+                    
+                    SELECT * FROM inventory
+                    WHERE lot_number ILIKE '%{search_box.text()}%' OR product_code ILIKE '%{search_box.text()}%'
+                    
+                    
+                                                """)
+                result = self.cursor.fetchall()
+
+                table_widget.clearContents()
+                table_widget.verticalScrollBar().setValue(0)
+
+                for row in result:
+                    for column in range(len(row)):
+                        item = QTableWidgetItem(str(row[column]))
+                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                        item.setTextAlignment(Qt.AlignCenter)
+                        table_widget.setItem(result.index(row), column, item)
+
 
 
 
@@ -9595,6 +9685,7 @@ class Ui_LoginWindow(object):
             search_box.setStyleSheet('border: 1px solid rgb(171, 173, 179); background-color: rgb(255, 255, 17);')
             search_box.setPlaceholderText('Lot Number')
             search_box.setFocus()
+            search_box.textChanged.connect(auto_search)
             search_box.show()
 
             search_button = QPushButton(self.warehouse_widget)
