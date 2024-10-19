@@ -1201,21 +1201,22 @@ class Ui_LoginWindow(object):
 
                     try:
 
-                        self.cursor.execute(f"""INSERT INTO extruder( machine, qty_order, total_output, customer,
-                                        formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
-                                        loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
-                                        rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
-                                        remarks, lot_number, resin_quantity, encoded_on, heat_up, shut_off) 
-                                        VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
-                                        '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
-                                        '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
-                                        '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
-                                         '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
-                                         '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.currentText()}', '{supervisor_input.currentText()}',
-                                         ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
-                                         {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
-                                         ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()}, '{date.today()}',
-                                         '{heatUp_input.text()}', '{shutoff_input.text()}')
+                        self.cursor.execute(f"""
+                            INSERT INTO extruder( machine, qty_order, total_output, customer,
+                            formula_id, product_code, order_id, total_time, time_start, time_end, output_percent,
+                            loss, loss_percent, materials, purging, resin, purge_duration, screw_config, feed_rate, 
+                            rpm, screen_size, operator, supervisor, temperature, outputs, output_per_hour, production_id, total_input,
+                            remarks, lot_number, resin_quantity, encoded_on, machine_start, machine_off) 
+                            VALUES('{machine_input.currentText()}', '{orderedQuantity_input.text()}', '{product_output_input.text()}',
+                            '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
+                            '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
+                            '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
+                             '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
+                             '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.currentText()}', '{supervisor_input.currentText()}',
+                             ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
+                             {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
+                             ARRAY[{self.lot_numberList}]::VARCHAR[], {resin_quantity.text()}, '{date.today()}',
+                             '{machineStart_input.text()}', '{machineOff_input.text()}')
 
                                                 """)
                         print("query successful")
@@ -1663,7 +1664,6 @@ class Ui_LoginWindow(object):
                 item2 = QTableWidgetItem(time_end_input.text())
                 item3 = QTableWidgetItem(output_lineEdit.text())
 
-
                 item3.setTextAlignment(Qt.AlignCenter)
 
                 time_table.setItem(self.time_entry, 0, item1)
@@ -1673,6 +1673,8 @@ class Ui_LoginWindow(object):
                 self.time_entry += 1
 
                 output_lineEdit.clear()
+                # Set the Focus back to date 1 entry
+                date1.setFocus()
 
             def reset_table():
                 time_table.clearContents()
@@ -1828,7 +1830,7 @@ class Ui_LoginWindow(object):
             self.left_vbox = QtWidgets.QFormLayout(self.leftInput_side)
             self.left_vbox.setSpacing(15)
             self.right_vbox = QtWidgets.QFormLayout(self.right_side)
-            self.right_vbox.setSpacing(18)
+            self.right_vbox.setSpacing(15)
 
             font = QtGui.QFont("Berlin Sans FB", 13)
 
@@ -1907,24 +1909,24 @@ class Ui_LoginWindow(object):
             order_number_lbl.setFont(font)
 
             resin_label = QtWidgets.QLabel()
-            resin_label.setText("Resin")
+            resin_label.setText("Resin (Prod)")
             resin_label.setFont(font)
 
             purging_label = QtWidgets.QLabel()
-            purging_label.setText("Purging")
+            purging_label.setText("Purging To")
             purging_label.setFont(font)
 
             product_input_label = QtWidgets.QLabel()
             product_input_label.setText("Input")
             product_input_label.setFont(font)
 
-            heatUp_label = QtWidgets.QLabel()
-            heatUp_label.setText("Heat Up")
-            heatUp_label.setFont(font)
+            machineStart_label = QtWidgets.QLabel()
+            machineStart_label.setText("Machine Start")
+            machineStart_label.setFont(font)
 
-            shutoff_label = QtWidgets.QLabel()
-            shutoff_label.setText("Shutoff")
-            shutoff_label.setFont(font)
+            machineOff_label = QtWidgets.QLabel()
+            machineOff_label.setText("Machine Off")
+            machineOff_label.setFont(font)
 
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
@@ -2071,15 +2073,15 @@ class Ui_LoginWindow(object):
             product_input.setStyleSheet("background-color: white; border: 1px solid black")
             product_input.setInputMask('')
 
-            heatUp_input = QDateTimeEdit()
-            heatUp_input.setFixedHeight(25)
-            heatUp_input.setStyleSheet("background-color: white; border: 1px solid black")
-            heatUp_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+            machineStart_input = QDateTimeEdit()
+            machineStart_input.setFixedHeight(25)
+            machineStart_input.setStyleSheet("background-color: white; border: 1px solid black")
+            machineStart_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
-            shutoff_input = QDateTimeEdit()
-            shutoff_input.setFixedHeight(25)
-            shutoff_input.setStyleSheet("background-color: white; border: 1px solid black")
-            shutoff_input.setDisplayFormat("yyyy-MM-dd HH:mm")
+            machineOff_input = QDateTimeEdit()
+            machineOff_input.setFixedHeight(25)
+            machineOff_input.setStyleSheet("background-color: white; border: 1px solid black")
+            machineOff_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
             validator = QtGui.QDoubleValidator()
             validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
@@ -2120,8 +2122,8 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
-            self.right_vbox.addRow(heatUp_label, heatUp_input)
-            self.right_vbox.addRow(shutoff_label, shutoff_input)
+            self.right_vbox.addRow(machineStart_label, machineStart_input)
+            self.right_vbox.addRow(machineOff_label, machineOff_input)
             self.right_vbox.addRow(operator_label, operator_input)
             self.right_vbox.addRow(supervisor_label, supervisor_input)
 
@@ -2498,13 +2500,13 @@ class Ui_LoginWindow(object):
             product_input_label.setText("Input")
             product_input_label.setFont(font)
 
-            heatUp_label = QtWidgets.QLabel()
-            heatUp_label.setText("Heat Up")
-            heatUp_label.setFont(font)
+            machineStart_label = QtWidgets.QLabel()
+            machineStart_label.setText("Machine Start")
+            machineStart_label.setFont(font)
 
-            shutoff_label = QtWidgets.QLabel()
-            shutoff_label.setText("Shutoff")
-            shutoff_label.setFont(font)
+            machineOff_label = QtWidgets.QLabel()
+            machineOff_label.setText("Machine Off")
+            machineOff_label.setFont(font)
 
             # QLineEdit Boxes
             productionID_input = QtWidgets.QLineEdit()
@@ -2663,17 +2665,15 @@ class Ui_LoginWindow(object):
             product_input.textChanged.connect(loss_auto)
             product_input.setText(str(result[29]))
 
-            heatUp_input = QDateTimeEdit()
-            heatUp_input.setFixedHeight(25)
-            heatUp_input.setStyleSheet("background-color: white; border: 1px solid black")
-            heatUp_input.setDisplayFormat("MM-dd-yyyy HH:mm")
-            heatUp_input.setDateTime(QtCore.QDateTime.fromString(str(result[35]), 'yyyy-MM-dd HH:mm:ss'))
+            machineStart_input = QDateTimeEdit()
+            machineStart_input.setFixedHeight(25)
+            machineStart_input.setStyleSheet("background-color: white; border: 1px solid black")
+            machineStart_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
-            shutoff_input = QDateTimeEdit()
-            shutoff_input.setFixedHeight(25)
-            shutoff_input.setStyleSheet("background-color: white; border: 1px solid black")
-            shutoff_input.setDisplayFormat("MM-dd-yyyy HH:mm")
-            shutoff_input.setDateTime(QtCore.QDateTime.fromString(str(result[36]), 'yyyy-MM-dd HH:mm:ss'))
+            machineOff_input = QDateTimeEdit()
+            machineOff_input.setFixedHeight(25)
+            machineOff_input.setStyleSheet("background-color: white; border: 1px solid black")
+            machineOff_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
             self.groupBoxRemarks.setGeometry(600, 500, 200, 150)
@@ -2708,8 +2708,8 @@ class Ui_LoginWindow(object):
             self.right_vbox.addRow(resin_quantity_label, resin_quantity)
             self.right_vbox.addRow(purgeStart_label, purgeStart_input)
             self.right_vbox.addRow(purgeEnd_label, purgeEnd_input)
-            self.right_vbox.addRow(heatUp_label, heatUp_input)
-            self.right_vbox.addRow(shutoff_label, shutoff_input)
+            self.right_vbox.addRow(machineStart_label, machineStart_input)
+            self.right_vbox.addRow(machineOff_label, machineOff_input)
             self.right_vbox.addRow(operator_label, operator_input)
             self.right_vbox.addRow(supervisor_label, supervisor_input)
 
@@ -7724,6 +7724,7 @@ class Ui_LoginWindow(object):
                             QMessageBox.critical(self.widget, 'ERROR', 'LOT NUMBER not Found!')
 
                 def save_entry():
+
                     if input_type_box.currentText() == 'MULTIPLE':
 
                         num1 = int(re.findall(r'(\d+)[A-Z]+', lot_number_box.text())[0])
@@ -7732,12 +7733,28 @@ class Ui_LoginWindow(object):
                         product_code = product_code_box.text()
 
                         for i in range(num1, num2+1):
+
                             while len(str(i)) != 4:
                                 i = '0' + str(i)
 
+                            # Check if data is already in the database.
+                            self.cursor.execute(f"""
+                                SELECT * FROM fg_incoming
+                                WHERE lot_number = '{(str(i) + code).upper()}' AND quantity = {float(quantity_box.text()) / ((num2 - num1) + 1)}
+                                                    AND location = '{warehouse_input.currentText() + ":" + block_input.text()}'
+                                    """)
+
+                            result = self.cursor.fetchone()
+
+                            if result:
+                                QMessageBox.information(self.widget, 'Data Exist', f'{(str(i) + code).upper()} Already Exist.')
+                                return
+                            else:
+                                pass
+
                             self.cursor.execute(f"""
                                 INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
-                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                VALUES('{product_code_box.text()}', TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'),
                                 '{(str(i) + code).upper()}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}',
                                 '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.text()}')
                                                     """)
@@ -7763,9 +7780,26 @@ class Ui_LoginWindow(object):
                         code = re.findall(r'[A-Z]+', lot_number_box.text())[0]
                         product_code = product_code_box.text()
 
+                        # Check if data is already in the database.
+                        self.cursor.execute(f"""
+                            SELECT * FROM fg_incoming
+                            WHERE lot_number = '{(str(num1) + code).upper()}' AND quantity = {float(quantity_box.text())}
+                                AND location = '{warehouse_input.currentText() + ":" + block_input.text()}'
+                                                            """)
+
+                        result = self.cursor.fetchone()
+
+                        if result:
+                            QMessageBox.information(self.widget, 'Data Exist',
+                                                    f'{(str(num1) + code).upper()} Already Exist.')
+                            return
+                        else:
+                            pass
+
+
                         self.cursor.execute(f"""
                             INSERT INTO fg_incoming(product_code, production_date, lot_number, quantity, category, remarks, location)
-                            VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                            VALUES('{product_code_box.text()}', TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'),
                             '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}',
                             '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.text()}')
 
@@ -8766,7 +8800,7 @@ class Ui_LoginWindow(object):
                         for i in range(num1, num2 + 1):
                             self.cursor.execute(f"""
                                                 INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
-                                                VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                                VALUES('{product_code_box.text()}',  TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'),
                                                 '{str(i) + code}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{category_box.currentText()}')
                                                     """)
                         self.conn.commit()
@@ -8786,7 +8820,7 @@ class Ui_LoginWindow(object):
 
                         self.cursor.execute(f"""
                                             INSERT INTO fg_outgoing(product_code, date, lot_number, quantity, category)
-                                            VALUES('{product_code_box.text()}', '{production_date_box.text()}',
+                                            VALUES('{product_code_box.text()}', TO_DATE('{production_date_box.text()}', 'MM-DD-YYYY'),
                                             '{lot_number_box.text()}', {quantity_box.text()}, '{category_box.currentText()}')
 
                                             """)
