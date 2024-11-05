@@ -1211,7 +1211,7 @@ class Ui_LoginWindow(object):
                             '{customer_input.text().replace("'", "''")}', '{self.formulaID_input.text()}', '{productCode_input.text()}',
                             '{order_number_input.text()}', '{total_hours}', ARRAY[{time_start}]::timestamp[], ARRAY[{time_end}]::timestamp[], 
                             '{str(output_percent)}', '{loss_input.text()}', '{loss_percent}', '{self.total_mats}', '{purging_input.text()}',
-                             '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.text()}', '{feedRate_input.text()}',
+                             '{resin_input.currentText()}', {purge_duration}, '{screwConf_input.currentText()}', '{feedRate_input.text()}',
                              '{rpm_input.text()}','{screenSize_input.text()}', '{operator_input.currentText()}', '{supervisor_input.currentText()}',
                              ARRAY[{temperature}]::INTEGER[], ARRAY[{outputs}]::FLOAT[], {outputPerHour}, {productionID_input.text()},
                              {product_input.text()},'{self.remarks_textBox.toPlainText()}', 
@@ -1271,7 +1271,7 @@ class Ui_LoginWindow(object):
                     item = [i.text() for i in item]
 
                     self.cursor.execute(f"""
-                    SELECT t_prodid, t_lotnum, t_qtyreq, materials
+                    SELECT t_prodid, t_lotnum, t_qtyreq, materials, t_prodcode
                     FROM production_merge
                     WHERE t_prodid = '{item[0]}'
                     """)
@@ -1279,7 +1279,9 @@ class Ui_LoginWindow(object):
                     result = self.cursor.fetchall()
                     result = result[0]
 
-                    material = result[-1]
+                    print(result)
+
+                    material = result[3]
 
                     try:
 
@@ -1292,15 +1294,22 @@ class Ui_LoginWindow(object):
                             value.setFlags(value.flags() & ~Qt.ItemIsEditable)
                             self.table2.show()
 
+
                         label2.setText(str(result[2]))
                         prod_id = QTableWidgetItem(str(result[0]))
                         prod_id.setTextAlignment(Qt.AlignCenter)  # Align Center
                         lot_num = QTableWidgetItem(str(result[1]))
                         lot_num.setTextAlignment(Qt.AlignCenter)
+
+                        prod_code = QTableWidgetItem(str(result[4]))
+                        prod_code.setTextAlignment(Qt.AlignCenter)
+
                         self.table3.setItem(0, 0, prod_id)
                         prod_id.setFlags(prod_id.flags() & ~Qt.ItemIsEditable)
                         self.table3.setItem(0, 1, lot_num)
                         lot_num.setFlags(lot_num.flags() & ~Qt.ItemIsEditable)
+                        self.table3.setItem(0, 2, prod_code)
+                        prod_code.setFlags(prod_code.flags() & ~Qt.ItemIsEditable)
 
                     except Exception as e:
                         print(e)
@@ -1562,11 +1571,12 @@ class Ui_LoginWindow(object):
                 # Table 3 For showing Selected ProdID and Lot Number
                 self.table3 = QtWidgets.QTableWidget(self.selectProd_widget)
                 self.table3.setGeometry(380, 0, 402, 60)
-                self.table3.setColumnCount(2)
+                self.table3.setColumnCount(3)
                 self.table3.setRowCount(1)
-                self.table3.setHorizontalHeaderLabels(["Production ID", "Lot Number"])
-                self.table3.setColumnWidth(0, 200)
-                self.table3.setColumnWidth(1, 200)
+                self.table3.setHorizontalHeaderLabels(["Production ID", "Lot Number", "Product Code"])
+                self.table3.setColumnWidth(0, 133)
+                self.table3.setColumnWidth(1, 133)
+                self.table3.setColumnWidth(2, 133)
                 self.table3.setRowHeight(0, 35)
                 font = QtGui.QFont("Arial", 12)
                 font.setBold(True)
@@ -1690,7 +1700,7 @@ class Ui_LoginWindow(object):
                         loss_input.setText("INVALID")
 
             def autofill_temperature():
-                if machine_input.currentText() == 'MC #1':
+                if machine_input.currentText() == '1':
 
                     temperature_table.clear()
                     temperature_table.setHorizontalHeaderLabels(['Temperature'])
@@ -1714,7 +1724,7 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
-                elif machine_input.currentText() == 'MC #2':
+                elif machine_input.currentText() == '2':
 
                     temperature_table.clear()
                     temperature_table.setHorizontalHeaderLabels(['Temperature'])
@@ -1732,7 +1742,7 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
-                elif machine_input.currentText() == 'MC #3':
+                elif machine_input.currentText() == '3':
 
                     temperature_table.clear()
                     temperature_table.setHorizontalHeaderLabels(['Temperature'])
@@ -1750,7 +1760,7 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
-                elif machine_input.currentText() == 'MC #5':
+                elif machine_input.currentText() == '5':
 
                     temperature_table.clear()
                     temperature_table.setHorizontalHeaderLabels(['Temperature'])
@@ -1768,7 +1778,7 @@ class Ui_LoginWindow(object):
                         item = QTableWidgetItem(str(temp[i]))
                         temperature_table.setItem(i, 0, item)
 
-                elif machine_input.currentText() == 'MC #8':
+                elif machine_input.currentText() == '8':
 
                     temperature_table.clear()
                     temperature_table.setHorizontalHeaderLabels(['Temperature'])
@@ -1801,18 +1811,20 @@ class Ui_LoginWindow(object):
                     feedRate_input.clear()
                     rpm_input.clear()
                     screenSize_input.clear()
-                    screwConf_input.clear()
                     loss_input.clear()
                     purgeStart_input.setText("00:00")
                     purgeEnd_input.setText("00:00")
-                    operator_input.clear()
-                    supervisor_input.clear()
                     order_number_input.clear()
                     product_input.clear()
+                    purging_input.clear()
+                    resin_quantity.clear()
                     time_table.clearContents()
                     temperature_table.clearContents()
                     self.remarks_textBox.clear()
                     self.total_mats = {}
+
+                    # Set the Row to 1 again
+                    self.time_entry = 0
 
                 except:
                     pass
@@ -1937,13 +1949,13 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.addItem("MC #1")
-            machine_input.addItem("MC #2")
-            machine_input.addItem("MC #3")
-            machine_input.addItem("MC #5")
-            machine_input.addItem("MC #6")
-            machine_input.addItem("MC #8")
-            machine_input.addItem("MC #9")
+            machine_input.addItem("1")
+            machine_input.addItem("2")
+            machine_input.addItem("3")
+            machine_input.addItem("5")
+            machine_input.addItem("6")
+            machine_input.addItem("8")
+            machine_input.addItem("9")
             machine_input.activated.connect(autofill_temperature)
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
 
@@ -1995,9 +2007,11 @@ class Ui_LoginWindow(object):
             screenSize_input.setFixedHeight(25)
             screenSize_input.setStyleSheet("background-color: white; border: 1px solid black")
 
-            screwConf_input = QtWidgets.QLineEdit()
+            screwConf_input = QtWidgets.QComboBox()
             screwConf_input.setFixedHeight(25)
             screwConf_input.setStyleSheet("background-color: white; border: 1px solid black ")
+            screwConf_input.addItem('STANDARD')
+            screwConf_input.addItem('COIL')
 
             loss_input = QtWidgets.QLineEdit()
             loss_input.setFixedHeight(25)
@@ -2342,12 +2356,12 @@ class Ui_LoginWindow(object):
                         SET  total_time = {total_hours}, machine = '{machine_input.currentText()}', total_input = {product_input.text()}, outputs = ARRAY[{outputs}]::FLOAT[],
                         temperature = ARRAY[{temperature}]::INTEGER[], remarks = '{self.remarks_textBox.toPlainText()}',
                         feed_rate = '{feedRate_input.text()}', rpm = '{rpm_input.text()}', screen_size = '{screenSize_input.text()}',
-                        screw_config = '{screwConf_input.text()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
+                        screw_config = '{screwConf_input.currentText()}', purging = '{purging_input.text()}', resin = '{resin_input.currentText()}',
                         purge_duration = {purge_duration}, operator = '{operator_input.text()}', supervisor = '{supervisor_input.text()}',
                         time_start = ARRAY[{time_start}]::timestamp[], time_end =  ARRAY[{time_end}]::timestamp[],
                         output_percent = '{str(output_percent)}', loss = '{loss_input.text()}', loss_percent = '{loss_percent}',
                         output_per_hour = '{outputPerHour}', total_output = {product_output_input.text()}, resin_quantity = {resin_quantity.text()},
-                        qty_order = {orderedQuantity_input.text()}, heat_up = '{heatUp_input.text()}', shut_off = '{shutoff_input.text()}'
+                        qty_order = {orderedQuantity_input.text()}, machine_start = '{machineStart_input.text()}', machine_off = '{machineOff_input.text()}'
                         WHERE process_id = {selected[0]};
         
                         """)
@@ -2356,7 +2370,7 @@ class Ui_LoginWindow(object):
                                             f"Successfully Updated \n Form No. {selected[0]}")
 
                     self.conn.commit()
-                    self.production() # Refreshes the Table
+                    self.production()  # Refreshes the Table
                     self.entry_widget.close()
                 except Exception as e:
                     print("Insert Failed")
@@ -2519,13 +2533,13 @@ class Ui_LoginWindow(object):
 
             machine_input = QtWidgets.QComboBox()
             machine_input.setFixedHeight(25)
-            machine_input.addItem("MC #1")
-            machine_input.addItem("MC #2")
-            machine_input.addItem("MC #3")
-            machine_input.addItem("MC #5")
-            machine_input.addItem("MC #6")
-            machine_input.addItem("MC #8")
-            machine_input.addItem("MC #9")
+            machine_input.addItem("1")
+            machine_input.addItem("2")
+            machine_input.addItem("3")
+            machine_input.addItem("5")
+            machine_input.addItem("6")
+            machine_input.addItem("8")
+            machine_input.addItem("9")
             machine_input.setStyleSheet("background-color: white; border: 1px solid black")
             machine_input.setCurrentText(result[1])
 
@@ -2588,10 +2602,12 @@ class Ui_LoginWindow(object):
             screenSize_input.setStyleSheet("background-color: white; border: 1px solid black")
             screenSize_input.setText(result[20])
 
-            screwConf_input = QtWidgets.QLineEdit()
+            screwConf_input = QtWidgets.QComboBox()
             screwConf_input.setFixedHeight(25)
             screwConf_input.setStyleSheet("background-color: white; border: 1px solid black ")
-            screwConf_input.setText(result[17])
+            screwConf_input.addItem('STANDARD')
+            screwConf_input.addItem('COIL')
+            screwConf_input.setCurrentText(result[17])
 
             loss_input = QtWidgets.QLineEdit()
             loss_input.setFixedHeight(25)
@@ -2668,11 +2684,19 @@ class Ui_LoginWindow(object):
             machineStart_input = QDateTimeEdit()
             machineStart_input.setFixedHeight(25)
             machineStart_input.setStyleSheet("background-color: white; border: 1px solid black")
+            try:
+                machineStart_input.setDateTime(result[-2])
+            except TypeError:
+                pass
             machineStart_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
             machineOff_input = QDateTimeEdit()
             machineOff_input.setFixedHeight(25)
             machineOff_input.setStyleSheet("background-color: white; border: 1px solid black")
+            try:
+                machineOff_input.setDateTime(result[-1])
+            except TypeError:
+                pass
             machineOff_input.setDisplayFormat("yyyy-MM-dd HH:mm")
 
             self.groupBoxRemarks = QtWidgets.QGroupBox(self.entry_widget)
