@@ -3452,6 +3452,39 @@ class Ui_LoginWindow(object):
         except:
             pass
 
+        def auto_search():
+
+            self.cursor.execute(f"""
+                SELECT 
+                process_id, TO_CHAR(DATE(time_start[1]), 'MM/DD/YYYY') as date,machine, customer, product_code, 
+                        qty_order, total_output, output_per_hour,total_time, formula_id
+                FROM extruder
+                WHERE '{search_bar.text()}' = ANY(lot_number) OR product_code ILIKE '%{search_bar.text()}%'
+                OR customer ILIKE '%{search_bar.text()}%' OR machine ILIKE '%{search_bar.text()}%'
+                ORDER BY time_start[1] DESC
+             
+            """)
+
+            result = self.cursor.fetchall()
+            self.extruder_table.clearContents()
+
+
+            # Populate table with data
+            for i in range(len(result)):
+                for j in range(len(column_names)):
+                    item = QtWidgets.QTableWidgetItem(str(result[i][j]))  # Convert to string
+                    # Set Alignment for specific columns
+                    if j == 2 or j == 6 or j == 3 or j == 4 or j == 7 or j == 5:
+                        item.setTextAlignment(Qt.AlignCenter)
+                    else:
+                        pass
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Make the cells unable to be edited
+                    self.extruder_table.setItem(i, j, item)
+
+            self.extruder_table.verticalScrollBar().setValue(0)
+
+
+
         self.production_widget = QtWidgets.QWidget(self.main_widget)
         self.production_widget.setGeometry(0, 0, 991, 700)
         self.production_widget.setStyleSheet("background-color: rgb(245, 246, 248);")
@@ -3467,6 +3500,7 @@ class Ui_LoginWindow(object):
         search_bar.setStyleSheet('background-color: rgb(255, 255, 17); border: 1px solid rgb(171, 173, 179)')
         search_bar.setPlaceholderText('Lot Number')
         search_bar.setFocus()
+        search_bar.textChanged.connect(auto_search)
         search_bar.show()
 
         search_button = QPushButton(self.production_widget)
@@ -9208,10 +9242,10 @@ class Ui_LoginWindow(object):
                 if masterbatch_checkbox.isChecked() == True and drycolor_checkbox.isChecked() == False:
 
                     self.cursor.execute("""
-                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
-                    FROM fg_outgoing
-                    WHERE deleted = false AND category = 'MASTERBATCH'
-                    ORDER BY control_id DESC
+                        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                        FROM fg_outgoing
+                        WHERE deleted = false AND category = 'MASTERBATCH'
+                        ORDER BY control_id DESC
 
                     """)
 
@@ -9231,10 +9265,10 @@ class Ui_LoginWindow(object):
 
                 elif masterbatch_checkbox.isChecked() == False and drycolor_checkbox.isChecked() == True:
                     self.cursor.execute("""
-                                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
-                                    FROM fg_outgoing
-                                    WHERE deleted = false AND category = 'DRYCOLOR'
-                                    ORDER BY control_id DESC
+                        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                        FROM fg_outgoing
+                        WHERE deleted = false AND category = 'DRYCOLOR'
+                        ORDER BY control_id DESC
 
                                     """)
 
@@ -9253,12 +9287,12 @@ class Ui_LoginWindow(object):
 
                 else:
                     self.cursor.execute("""
-                                                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
-                                                    FROM fg_outgoing
-                                                    WHERE deleted = false 
-                                                    ORDER BY control_id DESC
+                        SELECT control_id, lot_number, date, customer, product_code, color, quantity, category   
+                        FROM fg_outgoing
+                        WHERE deleted = false 
+                        ORDER BY control_id DESC
 
-                                                    """)
+                                        """)
 
                     result = self.cursor.fetchall()
 
@@ -9278,9 +9312,9 @@ class Ui_LoginWindow(object):
                 lot_num = search_box.text()
 
                 self.cursor.execute(f"""
-                SELECT control_id, lot_number, date, customer, product_code, color, quantity, category
-                FROM fg_outgoing 
-                WHERE lot_number ILIKE '%{lot_num}%' AND deleted = false
+                    SELECT control_id, lot_number, date, customer, product_code, color, quantity, category
+                    FROM fg_outgoing 
+                    WHERE lot_number ILIKE '%{lot_num}%' AND deleted = false
 
                 """)
 
@@ -9311,9 +9345,9 @@ class Ui_LoginWindow(object):
 
                 if selected:
                     self.cursor.execute(f"""
-                    UPDATE fg_outgoing
-                    SET deleted = true
-                    WHERE control_id = {selected[0].text()}
+                        UPDATE fg_outgoing
+                        SET deleted = true
+                        WHERE control_id = {selected[0].text()}
 
                     """)
 
@@ -9330,7 +9364,7 @@ class Ui_LoginWindow(object):
                 SELECT * FROM fg_outgoing
                 ORDER BY control_id
 
-                """)
+                        """)
                 result = self.cursor.fetchall()
 
                 df = pd.DataFrame(result)
@@ -9362,12 +9396,12 @@ class Ui_LoginWindow(object):
                 lot_num = search_box.text()
 
                 self.cursor.execute(f"""
-                                SELECT control_id, lot_number, date, product_code, quantity, category   
-                                FROM fg_outgoing 
-                                WHERE lot_number ILIKE '%{lot_num}%' OR product_code ILIKE '%{lot_num}%'
-                                ORDER BY control_id DESC
+                    SELECT control_id, lot_number, date, product_code, quantity, category   
+                    FROM fg_outgoing 
+                    WHERE lot_number ILIKE '%{lot_num}%' OR product_code ILIKE '%{lot_num}%'
+                    ORDER BY control_id DESC
 
-                                """)
+                        """)
 
                 result = self.cursor.fetchall()
 
