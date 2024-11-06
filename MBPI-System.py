@@ -70,11 +70,11 @@ class Ui_LoginWindow(object):
         # Connect to the Database
         try:
             self.conn = psycopg2.connect(
-                host="localhost",
+                host="192.168.1.13",
                 port=5432,
-                dbname='test-db',
+                dbname='postgres',
                 user=f'postgres',
-                password=f'postgres'
+                password=f'mbpi'
             )
             self.cursor = self.conn.cursor()
 
@@ -1278,8 +1278,6 @@ class Ui_LoginWindow(object):
 
                     result = self.cursor.fetchall()
                     result = result[0]
-
-                    print(result)
 
                     material = result[3]
 
@@ -3137,7 +3135,7 @@ class Ui_LoginWindow(object):
                 except Exception as e:
                     print(e)
 
-
+                print(mix_duration)
                 try:
                     self.cursor.execute(f"""
                                     INSERT INTO mixer
@@ -3212,11 +3210,12 @@ class Ui_LoginWindow(object):
             mixer_table.verticalHeader().setVisible(False)
             mixer_table.setHorizontalHeaderLabels(['Date', 'Production ID', 'Machine', 'Product Code', 'Total Time', 'Processed By', 'Output', 'Remarks'])
             mixer_table.horizontalHeader().setStyleSheet("""
-        QHeaderView::section{
-        font-weight: bold;
-        background-color: rgb(0, 109, 189);
-        color: white;
-        }
+                QHeaderView::section{
+                font-weight: bold;
+                background-color: rgb(0, 109, 189);
+                color: white;
+                }
+        
         """)
 
 
@@ -7783,7 +7782,9 @@ class Ui_LoginWindow(object):
                                 '{remarks_box.currentText()}', '{warehouse_input.currentText() + ":" + block_input.text()}')
                                                     """)
 
+
                             # add to inventory
+
                             self.cursor.execute(f"""
                             INSERT INTO fg_inventory
                             VALUES('{(str(i) + code).upper()}', '{product_code_box.text()}', {float(quantity_box.text()) / ((num2 - num1) + 1)}, '{date.today().strftime('%Y-%m-%d')}',
@@ -7988,7 +7989,7 @@ class Ui_LoginWindow(object):
                 warehouse_input.setFont(input_font)
 
                 block_label = QLabel()
-                block_label.setText('Block')
+                block_label.setText('Box No.')
                 block_label.setFixedWidth(150)
                 block_label.setFont(label_font)
 
@@ -7998,9 +7999,19 @@ class Ui_LoginWindow(object):
                 block_input.setFont(input_font)
 
                 remarks_label = QLabel()
-                remarks_label.setText('Remarks')
+                remarks_label.setText('Status')
                 remarks_label.setFixedWidth(150)
                 remarks_label.setFont(label_font)
+
+                comment_label = QLabel()
+                comment_label.setText('Remarks')
+                comment_label.setFixedWidth(150)
+                comment_label.setFont(label_font)
+
+                comment_box = QTextEdit()
+                comment_box.setFixedHeight(70)
+                comment_box.setStyleSheet('background-color: rgb(255, 255, 17)')
+                comment_box.setFont(input_font)
 
                 remarks_box = QComboBox()
                 remarks_box.addItem('-')
@@ -8145,7 +8156,7 @@ class Ui_LoginWindow(object):
                     warehouse_input.setFont(input_font)
 
                     block_label = QLabel()
-                    block_label.setText('Block')
+                    block_label.setText('Box No.')
                     block_label.setFixedWidth(150)
                     block_label.setFont(label_font)
 
@@ -8155,7 +8166,7 @@ class Ui_LoginWindow(object):
                     block_input.setFont(input_font)
 
                     remarks_label = QLabel()
-                    remarks_label.setText('Remarks')
+                    remarks_label.setText('Status')
                     remarks_label.setFixedWidth(150)
                     remarks_label.setFont(label_font)
 
@@ -8583,17 +8594,18 @@ class Ui_LoginWindow(object):
 
             table_widget = QTableWidget(self.warehouse_widget)
             table_widget.setGeometry(0, 125, 991, 506)
-            table_widget.setColumnCount(8)
+            table_widget.setColumnCount(9)
             table_widget.verticalHeader().setVisible(False)
             table_widget.setHorizontalHeaderLabels(
-                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Remarks", "Location"])
+                ["Control ID", "Lot No.", "Date", "Product Code", "Quantity", "Category", "Status", "Location", "Remarks"])
 
             table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
             table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
             table_widget.itemSelectionChanged.connect(show_selected)
 
             self.cursor.execute("""
-                    SELECT control_id, lot_number, TO_CHAR(production_date, 'MM-DD-YYYY'), product_code, quantity, category, remarks, location   
+                    SELECT control_id, lot_number, TO_CHAR(production_date, 'MM-DD-YYYY'), product_code, quantity,
+                           category, remarks, location, comments 
                     FROM fg_incoming
                     WHERE deleted = false
                     ORDER BY control_id DESC
@@ -8608,6 +8620,7 @@ class Ui_LoginWindow(object):
             table_widget.setColumnWidth(5, 100)
             table_widget.setColumnWidth(6, 150)
             table_widget.setColumnWidth(7, 220)
+            table_widget.setColumnWidth(8, 200)
 
             table_widget.setFont(QtGui.QFont('Arial', 10))
 
