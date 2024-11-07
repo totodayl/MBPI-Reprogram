@@ -4808,13 +4808,11 @@ class Ui_LoginWindow(object):
 
             # get the data from the Database
             self.cursor.execute("""
-            SELECT t1.qc_id, lot_number, evaluation_date, t1.original_lot, status, product_code, t1.qc_days - (t2.dayoff || ' day')::interval AS adjusted_qc_days
-            FROM qc_num_days AS t1
-            JOIN qc_dayoff AS t2 ON t1.original_lot = t2.original_lot
-            ORDER BY t1.qc_id DESC
+                SELECT id, lot_number, evaluated_on, time_endorsed, status, product_code, evaluated_on - time_endorsed as qc_days
+                FROM quality_control
+                ORDER BY id DESC
             
-            ;
-            """)
+                """)
 
             result = self.cursor.fetchall()
 
@@ -4841,9 +4839,9 @@ class Ui_LoginWindow(object):
             qc_data_table.setColumnWidth(1, 150)
             qc_data_table.setColumnWidth(2, 150)
             qc_data_table.setColumnWidth(3, 150)
-            qc_data_table.setColumnWidth(6, 118)
+            qc_data_table.setColumnWidth(6, 120)
             qc_data_table.verticalHeader().setVisible(False)
-            qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "ORIGINAL LOT", "STATUS",
+            qc_data_table.setHorizontalHeaderLabels(["QC ID", "LOT NUMBER", "EVALUATION DATE", "TIME ENDORSED", "STATUS",
                                                      "PRODUCT CODE", "QC DAYS"])
             qc_data_table.show()
 
