@@ -51,6 +51,7 @@ class Ui_LoginWindow(object):
                                      "border-radius: 10px;")
         self.login_btn.setObjectName("Login")
         self.login_btn.clicked.connect(self.login)
+
         LoginWindow.setCentralWidget(self.login_window)
         self.retranslateUi(LoginWindow)
 
@@ -60,7 +61,7 @@ class Ui_LoginWindow(object):
         _translate = QtCore.QCoreApplication.translate
         LoginWindow.setWindowTitle(_translate("LoginWindow", "MBPI"))
         self.login_btn.setText(_translate("LoginWindow", "Login"))
-
+        self.login_btn.setShortcut('Return')
     def login(self):
         import psycopg2
 
@@ -3858,40 +3859,33 @@ class Ui_LoginWindow(object):
                 self.qc_table.itemSelectionChanged.connect(show_items)
                 self.qc_table.show()
 
-        def lotNumber_search():
-            if search_bar.text() != '':
-                self.qc_table.itemSelectionChanged.disconnect(show_items)
-                self.qc_table.clearSelection()
-                self.qc_table.clear()
-                self.qc_table.setHorizontalHeaderLabels(['ID', 'Lot Number', 'Customer', 'Product Code',
-                                                         'Status', 'Remarks', 'Action Taken'])
+        def auto_search():
+            self.cursor.execute(f"""
+                SELECT id, lot_number, customer, product_code, status, remarks, action
+                FROM quality_control
+                WHERE lot_number ILIKE '%{search_bar.text()}%' OR product_code ILIKE '%{search_bar.text()}%'
+                OR customer ILIKE '%{search_bar.text()}%' OR status ILIKE '%{search_bar.text()}%'
+                ORDER BY id DESC
 
-                self.cursor.execute(f"""
-                            SELECT id, lot_number, customer, product_code, status, remarks, action
-                            FROM quality_control
-                            WHERE lot_number ILIKE '%{search_bar.text()}%' OR product_code ILIKE '%{search_bar.text()}%'
-                            OR customer ILIKE '%{search_bar.text()}%' OR status ILIKE '%{search_bar.text()}%'
-                            ORDER BY id DESC
+                                        """)
+            result = self.cursor.fetchall()
+            self.qc_table.clearContents()
 
-                            """)
-                result = self.cursor.fetchall()
+            # Populate the table
+            for i in range(len(result)):
+                for j in range(len(result[i])):
+                    item = QTableWidgetItem(str(result[i][j]))
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
-                # Populate the table
-                for i in range(len(result)):
-                    for j in range(len(result[i])):
-                        item = QTableWidgetItem(str(result[i][j]))
-                        item.setTextAlignment(Qt.AlignCenter)
-                        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    if result[i][4] == 'Failed':
+                        item.setBackground(QtGui.QColor(255, 128, 128))
+                    else:
+                        pass
 
-                        if result[i][4] == 'Failed':
-                            item.setBackground(QtGui.QColor(255,128,128))
-                        else:
-                            pass
+                    self.qc_table.setItem(i, j, item)
+            self.qc_table.verticalScrollBar().setValue(0)
 
-                        self.qc_table.setItem(i, j, item)
-
-                self.qc_table.itemSelectionChanged.connect(show_items)
-                self.qc_table.show()
 
         def evaluation_entry():
 
@@ -7449,13 +7443,13 @@ class Ui_LoginWindow(object):
         search_bar.setFont(QtGui.QFont("Arial", 9))
         search_bar.setPlaceholderText("Lot Number")
         search_bar.setFocus()
+        search_bar.textChanged.connect(auto_search)
         search_bar.show()
 
         search_btn = QtWidgets.QPushButton(self.qc_topBorder)
         search_btn.setGeometry(925, 5, 60, 25)
         search_btn.setStyleSheet("border: 1px solid rgb(171, 173, 179);")
         search_btn.setText("Search")
-        search_btn.clicked.connect(lotNumber_search)
         search_btn.show()
 
         # Bottom Widgets
