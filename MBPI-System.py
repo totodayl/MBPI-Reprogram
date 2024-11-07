@@ -1324,10 +1324,17 @@ class Ui_LoginWindow(object):
                     item = self.table.selectedItems()
                     item = [i.text() for i in item]
 
-                    self.cursor.execute(f"""
-                        SELECT * FROM production_merge
-                        WHERE t_prodid = '{item[0]}' 
-                           """)
+                    try:
+                        self.cursor.execute(f"""
+                            SELECT * FROM production_merge
+                            WHERE t_prodid = '{item[0]}' 
+                            """)
+
+                    except IndexError:
+                        QMessageBox.critical(self.selectProd_widget, 'ERROR', "No Lot Number Selected")
+                        return
+
+
                     result = self.cursor.fetchall()
                     result = result[0]
 
@@ -2577,7 +2584,6 @@ class Ui_LoginWindow(object):
             lot_number_input = QtWidgets.QLineEdit()
             lot_number_input.setAlignment(Qt.AlignCenter)
             lot_number_input.setFixedHeight(25)
-            lot_number_input.setEnabled(False)
             lot_number_input.setStyleSheet("background-color: white; border: 1px solid black")
 
             try:
