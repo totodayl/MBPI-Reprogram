@@ -4514,10 +4514,11 @@ class Ui_LoginWindow(object):
             evaluatedBy_dropdown.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
             evaluatedBy_dropdown.setFixedHeight(25)
             evaluatedBy_dropdown.setFixedWidth(296)
+            evaluatedBy_dropdown.addItem("Chelsea")
             evaluatedBy_dropdown.addItem("Linzy Jam")
             evaluatedBy_dropdown.addItem("Jinky")
             evaluatedBy_dropdown.addItem("Ana")
-            evaluatedBy_dropdown.addItem("Chelsea")
+
 
             date_started_input = QDateTimeEdit()
             date_started_input.setStyleSheet("border: 1px solid rgb(171, 173, 179); background-color: yellow;")
